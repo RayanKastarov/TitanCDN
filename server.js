@@ -38,7 +38,7 @@ const JWT_SECRET = "TITAN_SECURE_" + crypto.randomBytes(32).toString("hex");
 // ------------------------------------------------------
 app.use(helmet()); // Спира XSS и уязвимости от инжектиране на хакерски скриптове в сайта ти
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "..", "public"))); // Свързва дизайна от папката public
+app.use(express.static(path.join(__dirname, "public")));
 
 // АНТИ-БОТ ЗАЩИТА: Блокира автоматизирани хакерски атаки (Brute Force) към входа и регистрацията
 const authLimiter = rateLimit({
@@ -270,7 +270,7 @@ setInterval(() => {
 
 // Fallback за Single Page Application
 app.get("/*splat", (req, res) => { 
-    res.sendFile(path.join(__dirname, "..", "public", "index.html")); 
+    res.sendFile(path.join(__dirname, "public", "index.html")); 
 });
 
 // СТАРТИРАНЕ НА СЪРВЪРА
