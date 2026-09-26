@@ -267,6 +267,85 @@ $("#logSearch").oninput=e=>{$$("#logTable tbody tr").forEach(r=>r.style.display=
     </div>
 
 </div>
+// ======================================================
+// REAL TITANCDN API CONNECTORS (FRONTEND TO BACKEND)
+// ======================================================
+
+// 1. ИСТИНСКО ИЗПРАЩАНЕ НА ДАННИ ЗА РЕГИСТРАЦИЯ КЪМ МОНГО
+const actualRegisterForm = document.getElementById('titan-actual-register-form');
+if (actualRegisterForm) {
+    actualRegisterForm.addEventListener('submit', async function(e) {
+        e.preventDefault(); // Спираме презареждането на страницата
+        
+        // Взимаме точно това, което потребителят е написал в кутиите
+        const username = this.querySelector('input[placeholder="Username"]').value;
+        const email = this.querySelector('input[placeholder="Email Address"]').value;
+        const password = this.querySelector('input[placeholder="Create Password"]').value;
+
+        try {
+            // Пращаме интернет сигнал (POST) до сигурното бекенд ядро на Render/Локално
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert("✨ Security Access Key Generated! Your profile is now saved in MongoDB.");
+                // Автоматично отваряме прозореца за Вход, за да се логне
+                document.getElementById('titan-register-modal').style.display = 'none';
+                document.getElementById('titan-login-modal').style.display = 'flex';
+            } else {
+                alert("❌ Authentication Error: " + result.error);
+            }
+        } catch (err) {
+            alert("❌ Network Error: Cannot establish secure handshake with TitanCDN servers.");
+        }
+    });
+}
+
+// 2. ИСТИНСКИ ВХОД И ОТКЛЮЧВАНЕ НА DASHBOARD СЕСИЯТА
+const actualLoginForm = document.getElementById('titan-actual-login-form');
+if (actualLoginForm) {
+    actualLoginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const email = this.querySelector('input[placeholder="Email Address"]').value;
+        const password = this.querySelector('input[placeholder="Secure Password"]').value;
+
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // ЗАПАЗВАМЕ ДИГИТАЛНИЯ ПАСПОРТ (JWT) В ПАМЕТТА НА БРАУЗЪРА ЗА СИГУРНОСТ
+                localStorage.setItem('titan_jwt_token', result.token);
+                
+                // Сменяме бутоните на екрана с Личния профил, който поиска
+                document.getElementById('profile-username').textContent = result.username;
+                document.getElementById('profile-email').textContent = result.email;
+                
+                document.getElementById('titan-login-modal').style.display = 'none';
+                document.getElementById('titan-guest-view').style.display = 'none';
+                document.getElementById('titan-user-view').style.display = 'block';
+                
+                // Активираме автоматично въртенето на прокси мрежата на екрана
+                alert(`🔓 Access Granted. Welcome back, ${result.username}. Titan Node connection established.`);
+            } else {
+                alert("❌ Access Denied: " + result.error);
+            }
+        } catch (err) {
+            alert("❌ Network Error: Terminal authentication failed.");
+        }
+    });
+}
 
 </body>
 </html>
