@@ -1,289 +1,251 @@
+"use strict";
+
+require("dotenv").config();
+
 const express = require("express");
-const mongoose = require("mongoose"); // Извикваме облачния мост
+const mongoose = require("mongoose");
 const crypto = require("crypto");
 const path = require("path");
-const bcrypt = require("bcrypt"); // ЩИТ 1: BCRYPT КРИПТИРАНЕ НА ПАРОЛИ
-const jwt = require("jsonwebtoken"); // ЩИТ 2: JWT ДИГИТАЛНИ СЕСИИ
-const helmet = require("helmet"); // ЩИТ 3: HELMET МРЕДОВ ШЛЕМ
-const rateLimit = require("express-rate-limit"); // ЩИТ 4: БОТ ФИЛТЪР ПРЕЗ WINDOW
-const axios = require("axios"); // 🕵️‍♂️ ЩИТ 5: ИСТИНСКИЯТ SCRAPER ENGINE
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const axios = require("axios");
+const dns = require("dns").promises;
+const net = require("net");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-// ------------------------------------------------------
-// MONGO_DB PRODUCTION CLOUD CONNECTION
-// ------------------------------------------------------
-// ЗАМЕНИ долния линк с твоя реален Connection String от MongoDB Atlas!
-const MONGO_URI = "mongodb+srv://Rayan:Alaska07@cluster0.i7jijyn.mongodb.net/?appName=Cluster0";
+const PORT = Number(process.env.PORT || 3000);
+const MONGODB_URI = process.env.MONGODB_URI;
+const JWT_SECRET = process.env.JWT_SECRET;
+const NODE_ENV = process.env.NODE_ENV || "development";
 
-mongoose.connect(MONGO_URI)
-    .then(() => console.log("   MongoDB Cloud Server: CONNECTED SUCCESSFULLY (Secure Mode)"))
-    .catch(err => console.error("❌ MongoDB Connection Error:", err.message));
+if (!MONGODB_URI) throw new Error("MONGODB_URI is required in .env");
+if (!JWT_SECRET || JWT_SECRET.length < 32) throw new Error("JWT_SECRET must be at least 32 characters");
 
-// СХЕМА ЗА ПОТРЕБИТЕЛИТЕ (Записва се сигурно на твърдия диск в облака)
+app.disable("x-powered-by");
+if (NODE_ENV === "production") app.set("trust proxy", 1);
+app.use(helmet({ crossOriginResourcePolicy: { policy: "same-origin" } }));
+app.use(express.json({ limit: "64kb" }));
+app.use(express.urlencoded({ extended: false, limit: "64kb" }));
+app.use(express.static(__dirname, { dotfiles: "deny", etag: true, maxAge: NODE_ENV === "production" ? "1h" : 0 }));
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { success: false, error: "Too many authentication attempts. Try again later." }
+});
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 120,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { success: false, error: "API rate limit exceeded." }
+});
+app.use("/api", apiLimiter);
+
 const UserSchema = new mongoose.Schema({
-    username: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now }
+  username: { type: String, required: true, trim: true, minlength: 2, maxlength: 60 },
+  email: { type: String, required: true, unique: true, lowercase: true, trim: true, maxlength: 254 },
+  passwordHash: { type: String, required: true, select: false },
+  tokenVersion: { type: Number, default: 0 },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const ApiKeySchema = new mongoose.Schema({
+  keyId: { type: String, required: true, unique: true, index: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+  name: { type: String, required: true, trim: true, maxlength: 80 },
+  prefix: { type: String, required: true },
+  keyHash: { type: String, required: true, unique: true, select: false },
+  scopes: { type: [String], default: ["scrape:read"] },
+  revokedAt: { type: Date, default: null },
+  lastUsedAt: { type: Date, default: null },
+  createdAt: { type: Date, default: Date.now }
 });
 
 const User = mongoose.model("User", UserSchema);
+const ApiKey = mongoose.model("ApiKey", ApiKeySchema);
 
-// ТАЙНИЯТ КЛЮЧ НА РАЯН ЗА ПОДПИСВАНЕ НА СЕСИИТЕ (ГЕНЕРИРА СЕ СЛУЧАЙНО ПРИ СТАРТ)
-const JWT_SECRET = "TITAN_SECURE_" + crypto.randomBytes(32).toString("hex");
+const sha256 = value => crypto.createHash("sha256").update(value).digest("hex");
+const normalizeEmail = value => String(value || "").trim().toLowerCase();
+const validEmail = value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+const safeEqualHex = (a, b) => {
+  try {
+    const x = Buffer.from(a, "hex"), y = Buffer.from(b, "hex");
+    return x.length === y.length && crypto.timingSafeEqual(x, y);
+  } catch { return false; }
+};
 
-// ------------------------------------------------------
-// КИБЕРСИГУРНОСТ: ГЛОБАЛНИ СЕРВЪРНИ ФИЛТРИ
-// ------------------------------------------------------
-app.use(helmet()); // Спира XSS и уязвимости от инжектиране на хакерски скриптове в сайта ти
-app.use(express.json());
-app.use(express.static(__dirname));
+async function requireJwt(req, res, next) {
+  const header = req.get("authorization") || "";
+  if (!header.startsWith("Bearer ")) return res.status(401).json({ success: false, error: "Authentication required." });
+  try {
+    const payload = jwt.verify(header.slice(7), JWT_SECRET, { algorithms: ["HS256"], issuer: "titancdn" });
+    const user = await User.findById(payload.sub).lean();
+    if (!user || user.tokenVersion !== payload.tv) return res.status(401).json({ success: false, error: "Session is no longer valid." });
+    req.user = user;
+    next();
+  } catch {
+    return res.status(401).json({ success: false, error: "Invalid or expired session." });
+  }
+}
 
+async function requireApiKey(req, res, next) {
+  const raw = String(req.get("x-api-key") || "");
+  if (!/^titan_live_[a-f0-9]{64}$/.test(raw)) return res.status(401).json({ success: false, error: "Valid TitanCDN API key required." });
+  const hash = sha256(raw);
+  const candidates = await ApiKey.find({ prefix: raw.slice(0, 22), revokedAt: null }).select("+keyHash");
+  const record = candidates.find(k => safeEqualHex(k.keyHash, hash));
+  if (!record) return res.status(401).json({ success: false, error: "Invalid or revoked API key." });
+  if (!record.scopes.includes("scrape:read")) return res.status(403).json({ success: false, error: "API key lacks scrape:read scope." });
+  record.lastUsedAt = new Date();
+  await record.save();
+  req.apiKey = record;
+  next();
+}
 
-// АНТИ-БОТ ЗАЩИТА: Блокира автоматизирани хакерски атаки (Brute Force) към входа и регистрацията
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 минути заключване
-    max: 20, // Максимум 20 опита от едно IP
-    message: { success: false, error: "Too many attempts from this IP. Terminals locked for 15 minutes." }
+function isBlockedIp(ip) {
+  if (net.isIPv4(ip)) {
+    const p = ip.split(".").map(Number);
+    return p[0] === 10 || p[0] === 127 || p[0] === 0 ||
+      (p[0] === 169 && p[1] === 254) || (p[0] === 172 && p[1] >= 16 && p[1] <= 31) ||
+      (p[0] === 192 && p[1] === 168) || (p[0] === 100 && p[1] >= 64 && p[1] <= 127) ||
+      p[0] >= 224;
+  }
+  if (net.isIPv6(ip)) {
+    const v = ip.toLowerCase();
+    return v === "::1" || v === "::" || v.startsWith("fc") || v.startsWith("fd") || v.startsWith("fe8") || v.startsWith("fe9") || v.startsWith("fea") || v.startsWith("feb");
+  }
+  return true;
+}
+
+async function validatePublicTarget(rawUrl) {
+  let url;
+  try { url = new URL(rawUrl); } catch { throw new Error("Invalid target URL."); }
+  if (!["http:", "https:"].includes(url.protocol)) throw new Error("Only HTTP(S) targets are allowed.");
+  if (url.username || url.password) throw new Error("Credentials in target URLs are not allowed.");
+  if (["localhost", "localhost.localdomain"].includes(url.hostname.toLowerCase())) throw new Error("Local targets are blocked.");
+  const records = await dns.lookup(url.hostname, { all: true, verbatim: true });
+  if (!records.length || records.some(r => isBlockedIp(r.address))) throw new Error("Private or reserved network targets are blocked.");
+  return url;
+}
+
+app.get("/api/health", (req, res) => res.json({ success: true, service: "TitanCDN", status: "ONLINE", database: mongoose.connection.readyState === 1 ? "CONNECTED" : "UNAVAILABLE" }));
+
+app.post("/api/auth/register", authLimiter, async (req, res, next) => {
+  try {
+    const username = String(req.body.username || "").trim();
+    const email = normalizeEmail(req.body.email);
+    const password = String(req.body.password || "");
+    if (username.length < 2 || username.length > 60 || !validEmail(email) || password.length < 12 || password.length > 128)
+      return res.status(400).json({ success: false, error: "Use a valid username/email and a password of 12–128 characters." });
+    if (await User.exists({ email })) return res.status(409).json({ success: false, error: "Email already registered." });
+    const passwordHash = await bcrypt.hash(password, 12);
+    await User.create({ username, email, passwordHash });
+    return res.status(201).json({ success: true, message: "Account created." });
+  } catch (err) { next(err); }
 });
 
-// ------------------------------------------------------
-// СИМУЛАЦИЯ НА БАЗА ДАННИ В ПАМЕТТА (MONGO SIMULATION)
-// ------------------------------------------------------
-const users = [];
-const apiKeys = []; // Тук се съхраняват генерираните уникални ключове
-let requestsProcessed = 1452984312;
-let engineRunning = false;
-
-// ------------------------------------------------------
-// ------------------------------------------------------
-// РЕАЛНИ ОБЛАЧНИ ЕНДПОЙНТИ ПРЕЗ MONGOOSE & BCRYPT
-// ------------------------------------------------------
-
-// 1. СИГУРНА ОБЛАЧНА РЕГИСТРАЦИЯ
-app.post("/api/auth/register", authLimiter, async (req, res) => {
-    const { username, email, password } = req.body;
-
-    if (!username || !email || !password) {
-        return res.status(400).json({ success: false, error: "All fields are required" });
-    }
-
-    try {
-        // Проверяваме в реалната MongoDB база данни дали имейлът съществува
-        const userExists = await User.findOne({ email: email });
-        if (userExists) {
-            return res.status(400).json({ success: false, error: "Email already registered in TitanCDN network." });
-        }
-
-        // Разбиваме паролата с 10 нива на Bcrypt защита
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Създаваме новия документ за MongoDB
-        const newUser = new User({
-            username,
-            email,
-            password: hashedPassword // Записва се само шифърът!
-        });
-
-        // ЗАПИСВАМЕ ДИРЕКТНО В ОБЛАКА В ИНТЕРНЕТ
-        await newUser.save();
-        
-        res.status(201).json({ success: true, message: "Secure profile stored in MongoDB successfully." });
-    } catch (err) {
-        console.error("MongoDB Save Error:", err.message);
-        res.status(500).json({ success: false, error: "Internal server database encryption error." });
-    }
+app.post("/api/auth/login", authLimiter, async (req, res, next) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const password = String(req.body.password || "");
+    const user = await User.findOne({ email }).select("+passwordHash");
+    const valid = user ? await bcrypt.compare(password, user.passwordHash) : false;
+    if (!valid) return res.status(401).json({ success: false, error: "Invalid email or password." });
+    const token = jwt.sign({ tv: user.tokenVersion }, JWT_SECRET, { algorithm: "HS256", subject: String(user._id), issuer: "titancdn", expiresIn: "2h" });
+    return res.json({ success: true, token, user: { id: user._id, username: user.username, email: user.email } });
+  } catch (err) { next(err); }
 });
 
-// 2. СИГУРЕН ОБЛАЧЕН ВХОД (LOGIN)
-app.post("/api/auth/login", authLimiter, async (req, res) => {
-    const { email, password } = req.body;
+app.post("/api/auth/logout-all", requireJwt, async (req, res, next) => {
+  try {
+    await User.updateOne({ _id: req.user._id }, { $inc: { tokenVersion: 1 } });
+    res.json({ success: true });
+  } catch (err) { next(err); }
+});
 
-    try {
-        // Търсим потребителя в реалната MongoDB
-        const user = await User.findOne({ email: email });
-        if (!user) {
-            return res.status(401).json({ success: false, error: "Access denied. Invalid credentials." });
-        }
+app.get("/api/profile", requireJwt, (req, res) => res.json({ success: true, user: { id: req.user._id, username: req.user.username, email: req.user.email, createdAt: req.user.createdAt } }));
 
-        // Сравняваме Bcrypt шифъра с написаната парола
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            return res.status(401).json({ success: false, error: "Access denied. Invalid credentials." });
-        }
+app.post("/api/keys", requireJwt, async (req, res, next) => {
+  try {
+    const name = String(req.body.name || "Production Key").trim().slice(0, 80);
+    const rawKey = `titan_live_${crypto.randomBytes(32).toString("hex")}`;
+    const record = await ApiKey.create({ keyId: `key_${crypto.randomBytes(12).toString("hex")}`, userId: req.user._id, name, prefix: rawKey.slice(0, 22), keyHash: sha256(rawKey), scopes: ["scrape:read"] });
+    res.status(201).json({ success: true, key: { id: record.keyId, name: record.name, value: rawKey, prefix: record.prefix, scopes: record.scopes, createdAt: record.createdAt }, warning: "Copy this key now. TitanCDN does not store the plaintext key." });
+  } catch (err) { next(err); }
+});
 
-        // Генерираме дигиталния JWT паспорт
-        const token = jwt.sign({ userId: user._id, username: user.username }, JWT_SECRET, { expiresIn: "24h" });
+app.get("/api/keys", requireJwt, async (req, res, next) => {
+  try {
+    const keys = await ApiKey.find({ userId: req.user._id }).sort({ createdAt: -1 }).lean();
+    res.json({ success: true, keys: keys.map(k => ({ id: k.keyId, name: k.name, prefix: k.prefix, scopes: k.scopes, createdAt: k.createdAt, lastUsedAt: k.lastUsedAt, revokedAt: k.revokedAt })) });
+  } catch (err) { next(err); }
+});
 
-        res.json({
-            success: true,
-            token,
-            username: user.username,
-            email: user.email
-        });
-    } catch (err) {
-        res.status(500).json({ success: false, error: "Internal server login error." });
-    }
+app.delete("/api/keys/:keyId", requireJwt, async (req, res, next) => {
+  try {
+    const result = await ApiKey.updateOne({ keyId: req.params.keyId, userId: req.user._id, revokedAt: null }, { $set: { revokedAt: new Date() } });
+    if (!result.modifiedCount) return res.status(404).json({ success: false, error: "Active key not found." });
+    res.json({ success: true });
+  } catch (err) { next(err); }
+});
 
-
-    // Генерираме дигиталния токен паспорт, който никой не може да фалшифицира
-    const token = jwt.sign({ userId: user.id, username: user.username }, JWT_SECRET, { expiresIn: "24h" });
-
-    res.json({
-        success: true,
-        token,
-        username: user.username,
-        email: user.email
+app.post("/api/v1/scrape", requireApiKey, async (req, res, next) => {
+  try {
+    const targetUrl = String(req.body.targetUrl || "").trim();
+    const outputFormat = String(req.body.outputFormat || "JSON").toUpperCase();
+    if (!targetUrl) return res.status(400).json({ success: false, error: "targetUrl is required." });
+    const url = await validatePublicTarget(targetUrl);
+    const response = await axios.get(url.toString(), {
+      timeout: 10000,
+      maxRedirects: 0,
+      maxContentLength: 2 * 1024 * 1024,
+      maxBodyLength: 2 * 1024 * 1024,
+      responseType: "text",
+      transformResponse: [data => data],
+      validateStatus: status => status >= 200 && status < 400,
+      headers: { "User-Agent": "TitanCDN/1.0 (+data-fetch-service)", "Accept": "text/html,application/json;q=0.9,*/*;q=0.5" }
     });
+    const body = typeof response.data === "string" ? response.data : JSON.stringify(response.data);
+    const payload = body.slice(0, 5000);
+    res.json({ success: true, source: url.toString(), format: outputFormat, responseCode: response.status, byteSize: Buffer.byteLength(body), timestamp: new Date().toISOString(), data: outputFormat === "JSON" ? { rawPayload: payload } : payload });
+  } catch (err) {
+    if (err.message && /blocked|Invalid target|HTTP\(S\)|Credentials|Local targets|Private/.test(err.message)) return res.status(400).json({ success: false, error: err.message });
+    if (err.response) return res.status(502).json({ success: false, error: `Target returned HTTP ${err.response.status}.` });
+    if (err.code === "ECONNABORTED") return res.status(504).json({ success: false, error: "Target request timed out." });
+    next(err);
+  }
 });
 
-// ------------------------------------------------------
-// АВТОМАТИЧНО ГЕНЕРИРАНЕ НА УНИКАЛЕН API КЛЮЧ ВСЕКИ ПЪТ
-// ------------------------------------------------------
-app.post("/api/keys", (req, res) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({ success: false, error: "Unauthorized. Valid JWT token required." });
-    }
+app.get("/api/status", (req, res) => res.json({ success: true, engine: "ONLINE", database: mongoose.connection.readyState === 1 ? "CONNECTED" : "UNAVAILABLE", uptimeSeconds: Math.floor(process.uptime()) }));
 
-    const token = authHeader.split(" ")[1];
-    
-    try {
-        // Проверяваме дали потребителят има валидна сесия през неговия JWT токен
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const name = req.body.name || "Production_Node";
-        
-        // 🔑 АВТОМАТИЧНО СЪЗДАВАНЕ НА ИСТИНСКИ УНИКАЛЕН НОВ API КЛЮЧ ОД КРИПТОГРАФСКО НИВО
-        const secureKey = `titan_live_${crypto.randomBytes(24).toString("hex")}`;
+app.use("/api", (req, res) => res.status(404).json({ success: false, error: "API route not found." }));
+app.get("/*splat", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 
-        const keyRecord = {
-            id: `key_${crypto.randomBytes(8).toString("hex")}`,
-            userId: decoded.userId,
-            name,
-            key: secureKey, // Този ключ се праща на потребителя за неговите ботове
-            createdAt: new Date().toISOString()
-        };
-
-        apiKeys.push(keyRecord);
-
-        res.status(201).json({
-            success: true,
-            key: { id: keyRecord.id, name: keyRecord.name, key: keyRecord.key }
-        });
-    } catch (err) {
-        return res.status(401).json({ success: false, error: "Invalid or expired session token." });
-    }
+app.use((err, req, res, next) => {
+  console.error(`[TitanCDN] ${err.name}: ${err.message}`);
+  if (res.headersSent) return next(err);
+  res.status(500).json({ success: false, error: "Internal server error." });
 });
 
-// ------------------------------------------------------
-// ИСТИНСКИЯТ SCRAPER ENGINE (ИЗСМУКВАНЕ НА ДАННИ ПРЕЗ AXIOS)
-// ------------------------------------------------------
-app.post("/api/v1/scrape", async (req, res) => {
-    const apiKey = req.headers['x-api-key'];
-    const { targetUrl, outputFormat = "JSON" } = req.body;
-    
-    if (!apiKey) {
-        return res.status(401).json({ success: false, error: "Access denied. Valid TitanCDN API Key required." });
-    }
+async function start() {
+  await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
+  app.listen(PORT, () => console.log(`TitanCDN API listening on port ${PORT} (${NODE_ENV})`));
+}
 
-    if (!targetUrl) {
-        return res.status(400).json({ success: false, error: "Target URL is missing in the payload." });
-    }
-
-    try {
-        new URL(targetUrl); // Проверяваме дали линкът е истински
-    } catch {
-        return res.status(400).json({ success: false, error: "The provided Target URL is completely invalid." });
-    }
-
-    try {
-        console.log(`[TitanCDN] Processing high-frequency request to: ${targetUrl}`);
-
-        // АНТИ-ДЕTEКЦИЯ (TLS MASKING): Лъжем Cloudflare, че сме истински браузър Chrome на Windows
-        const secureHeaders = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.9",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Cache-Control": "max-age=0",
-            "Sec-Ch-Ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
-            "Sec-Ch-Ua-Mobile": "?0",
-            "Sec-Ch-Ua-Platform": '"Windows"',
-            "Upgrade-Insecure-Requests": "1"
-        };
-
-        // Извличане на сайта в реално време през Axios с 10-секундна защита от забиване
-        const response = await axios.get(targetUrl, { headers: secureHeaders, timeout: 10000 });
-        let extractedData = response.data;
-
-        if (outputFormat.toUpperCase() === "JSON") {
-            extractedData = {
-                source: targetUrl,
-                status: response.status,
-                byteSize: Buffer.byteLength(JSON.stringify(response.data)),
-                timestamp: new Date().toISOString(),
-                rawPayload: response.data.toString().substring(0, 5000) // Връщаме първите 5000 символа
-            };
-        }
-
-        requestsProcessed += 1; // Увеличаваме живия брояч на Твоя Dashboard
-
-        res.json({
-            success: true,
-            networkNode: "NODE_EUROPE_SOFIA_04", // Наш локален мрежов сървър
-            format: outputFormat,
-            responseCode: response.status,
-            data: extractedData
-        });
-
-    } catch (err) {
-        console.log(`[TitanCDN Error] Target blocked or offline: ${err.message}`);
-        res.status(500).json({ 
-            success: false, 
-            error: "Target security shield too strong or website offline. CDN node IP automatic rotation engaged." 
-        });
-    }
+start().catch(err => {
+  console.error("TitanCDN failed to start:", err.message);
+  process.exit(1);
 });
 
-// ------------------------------------------------------
-// ТЕЛЕМЕТРИЯ И ДАННИ КЪМ DASHBOARD
-// ------------------------------------------------------
-app.get("/api/status", (req, res) => {
-    res.json({
-        success: true,
-        engine: engineRunning ? "ONLINE" : "PAUSED",
-        requestsProcessed,
-        bandwidth: `${(8 + Math.random() * 2).toFixed(2)} TB/s`,
-        latency: `${Math.floor(9 + Math.random() * 8)} ms`,
-        uptime: "99.999%"
-    });
-});
-
-app.post("/api/engine/start", (req, res) => { engineRunning = true; res.json({ success: true, status: "ONLINE" }); });
-app.post("/api/engine/stop", (req, res) => { engineRunning = false; res.json({ success: true, status: "PAUSED" }); });
-
-// Автоматичен брояч на мрежовия трафик за Твоя Dashboard
-setInterval(() => {
-    if (!engineRunning) return;
-    requestsProcessed += Math.floor(Math.random() * 8500 + 1200);
-}, 500);
-
-// Fallback за Single Page Application
-app.get("/*splat", (req, res) => { 
-    res.sendFile(path.join(__dirname, "index.html")); 
-});
-
-
-// СТАРТИРАНЕ НА СЪРВЪРА
-app.listen(PORT, () => {
-    console.log(`
-╔══════════════════════════════════════╗
-║     TITANCDN CYBER SECURITY ACTIVE   ║
-╠══════════════════════════════════════╣
-║ Server Routing: http://localhost:${PORT}║
-║ Security Firewalls: ENGAGED (100%)   ║
-║ Token Encryption: AES-256 / BCRYPT   ║
-╚══════════════════════════════════════╝
-    `);
-});
+async function shutdown(signal) {
+  console.log(`${signal}: shutting down TitanCDN...`);
+  await mongoose.disconnect();
+  process.exit(0);
+}
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
