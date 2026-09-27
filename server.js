@@ -222,6 +222,10 @@ app.post("/api/v1/scrape", requireApiKey, async (req, res, next) => {
 });
 
 app.get("/api/status", (req, res) => res.json({ success: true, engine: "ONLINE", database: mongoose.connection.readyState === 1 ? "CONNECTED" : "UNAVAILABLE", uptimeSeconds: Math.floor(process.uptime()) }));
+// GOOGLE VERIFICATION HANDSHAKE ROUTE
+app.get("/google1a515c3efc6e5a68.html", (req, res) => {
+  res.send("google-site-verification: google1a515c3efc6e5a68.html");
+});
 
 app.use("/api", (req, res) => res.status(404).json({ success: false, error: "API route not found." }));
 app.get("/*splat", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
