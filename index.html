@@ -1,351 +1,342 @@
-<html lang="en"><head>
- 
-
-<!-- LUXURY TITANCDN ACTION BUTTON -->
-<button class="titan-trigger-btn" style="background: #111111; color: #d4af37; border: 1px solid #d4af37; border-radius: 4px; padding: 14px 28px; font-size: 0.95rem; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.1); display: inline-flex; align-items: center; justify-content: center; font-family: 'Segoe UI', sans-serif;"
-        onmouseover="this.style.background='#d4af37'; this.style.color='#000000'; this.style.boxShadow='0 0 20px rgba(212, 175, 55, 0.4)';" 
-        onmouseout="this.style.background='#111111'; this.style.color='#d4af37'; this.style.boxShadow='0 4px 15px rgba(212, 175, 55, 0.1)';"
-        onclick="document.getElementById('titan-register-modal').style.display='flex'">
-    Sign Up For TitanCDN
-</button>
-
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="bg"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TitanCDN — Data Infrastructure Control Plane</title>
+<meta name="theme-color" content="#060606">
 <style>
-:root{--bg:#040506;--panel:#090b0d;--panel2:#0d1013;--gold:#d4af37;--gold2:#f0d46b;--text:#f5f5f2;--muted:#7e858c;--line:#20252a;--green:#61f59a;--blue:#67a7ff;--red:#ff6d6d;--orange:#ffb65c}
-*{box-sizing:border-box}html,body{margin:0;background:#040506;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Arial,sans-serif}body{min-height:100vh;overflow-x:hidden}
-body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 75% 0,#3c2d0c22,transparent 32%),radial-gradient(circle at 10% 50%,#0a315018,transparent 30%),linear-gradient(#fff003 1px,transparent 1px),linear-gradient(90deg,#fff002 1px,transparent 1px);background-size:auto,auto,48px 48px,48px 48px;mask-image:linear-gradient(to bottom,#000,transparent 85%);opacity:.2}
-button,input,select{font:inherit}.shell{display:grid;grid-template-columns:250px 1fr;min-height:100vh}.side{position:sticky;top:0;height:100vh;border-right:1px solid var(--line);background:#070809ee;backdrop-filter:blur(20px);padding:22px 14px;z-index:20}.logo{font-weight:950;letter-spacing:.18em;font-size:20px;padding:8px 10px 28px}.logo i{font-style:normal;color:var(--gold)}.workspace{color:#555e66;font-size:9px;letter-spacing:.2em;padding:0 10px 10px}.nav{display:grid;gap:3px}.nav button{background:transparent;border:1px solid transparent;color:#9299a0;text-align:left;border-radius:7px;padding:12px 12px;cursor:pointer}.nav button:hover,.nav button.active{color:#fff;background:linear-gradient(90deg,#d4af3710,transparent);border-color:#292b2c;box-shadow:inset 2px 0 var(--gold)}.ico{display:inline-block;width:22px;color:#69717a}.sidebottom{position:absolute;bottom:18px;left:18px;right:18px;border:1px solid var(--line);padding:13px;border-radius:8px;background:#090b0d}.tiny{font-size:9px;letter-spacing:.15em;color:var(--muted)}.main{min-width:0}.top{height:70px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 30px;background:#050606d9;backdrop-filter:blur(20px);position:sticky;top:0;z-index:15}.crumb{font-size:11px;color:var(--muted);letter-spacing:.12em}.crumb b{color:#fff}.topright{display:flex;gap:10px;align-items:center}.health{display:flex;gap:8px;align-items:center;font-size:10px;color:#9da6ad}.led{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green)}.avatar{width:30px;height:30px;border:1px solid #51451f;border-radius:50%;display:grid;place-items:center;color:var(--gold);font-size:10px}.content{padding:28px;max-width:1700px;margin:auto}.page{display:none}.page.active{display:block}.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:22px}.eyebrow{color:var(--gold);font-size:9px;letter-spacing:.25em}.hero h1{font-size:40px;letter-spacing:-.045em;margin:7px 0 5px}.desc{color:var(--muted);font-size:13px}.actions{display:flex;gap:8px}.btn{border:1px solid #55471e;background:#151208;color:var(--gold2);padding:10px 14px;border-radius:6px;cursor:pointer;font-weight:800;font-size:11px;letter-spacing:.06em}.btn:hover{background:#241d0c;box-shadow:0 0 24px #d4af3715}.btn.gray{background:#0b0d0f;border-color:var(--line);color:#c2c7ca}.btn.red{border-color:#512a2a;color:#ff8b8b;background:#170c0c}.grid{display:grid;gap:12px}.stats{grid-template-columns:repeat(5,1fr)}.card{background:linear-gradient(145deg,#0d1012,#080a0b);border:1px solid var(--line);border-radius:9px;padding:17px;box-shadow:0 18px 55px #0007}.label{font-size:9px;color:#717981;letter-spacing:.16em;text-transform:uppercase}.value{font-size:25px;font-weight:900;margin-top:8px}.green{color:var(--green)}.gold{color:var(--gold2)}.blue{color:var(--blue)}.muted{color:var(--muted)}.dashboard{grid-template-columns:1.6fr .8fr;margin-top:12px}.chartcard{height:320px}.charthead{display:flex;justify-content:space-between}.live{font-size:9px;color:var(--green);letter-spacing:.15em}.chart{height:225px;margin-top:15px;background:linear-gradient(#ffffff03 1px,transparent 1px),linear-gradient(90deg,#ffffff03 1px,transparent 1px);background-size:60px 45px;border:1px solid #161a1d;position:relative;overflow:hidden}.chart svg{width:100%;height:100%}.line{fill:none;stroke:var(--green);stroke-width:2.5;filter:drop-shadow(0 0 7px #61f59a77)}.area{fill:url(#grad);opacity:.28}.axis{fill:#5e666c;font-size:9px}.spark{width:100%;height:40px}.corelist{display:grid;gap:0;margin-top:12px}.row{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:11px}.row b{color:#ddd}.mini-up{color:var(--green);font-size:10px}.lower{grid-template-columns:1.15fr .85fr;margin-top:12px}.worldcard{min-height:355px;position:relative;overflow:hidden}.world{height:285px;position:relative;margin-top:10px;border:1px solid #161b1e;border-radius:7px;background:radial-gradient(circle at 50% 50%,#14202a,#07090a 67%);overflow:hidden}.world:before{content:"";position:absolute;inset:20px;border-radius:50%;border:1px solid #26333b;box-shadow:inset 0 0 90px #000}.latitude,.longitude{position:absolute;inset:20px;border:1px solid #182126;border-radius:50%}.longitude{transform:rotate(60deg) scaleX(.48)}.lat2{transform:rotate(-25deg) scaleY(.45)}.node{position:absolute;width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 15px var(--gold);animation:blink 1.7s infinite}.node.g{background:var(--green);box-shadow:0 0 17px var(--green)}@keyframes blink{50%{opacity:.35;transform:scale(1.8)}}.route{position:absolute;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);transform-origin:left center;opacity:.5}.feed{height:355px;display:flex;flex-direction:column}.feedbody{overflow:auto;margin-top:10px}.log{display:grid;grid-template-columns:70px 1fr 70px;gap:8px;padding:11px 0;border-bottom:1px solid var(--line);font:10px ui-monospace,monospace}.ok{color:var(--green)}.warn{color:var(--orange)}.err{color:var(--red)}.quota{grid-template-columns:1fr 1fr;margin-top:12px}.ringbox{display:flex;align-items:center;justify-content:center}.ring{width:180px;height:180px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--gold) 0 67%,#202326 67%);box-shadow:0 0 40px #d4af3716}.ring:after{content:"";position:absolute;width:140px;height:140px;background:#090b0d;border-radius:50%}.ringin{z-index:2;text-align:center}.ringin strong{display:block;font-size:27px}.ringin span{font-size:9px;color:var(--muted);letter-spacing:.1em}.console{margin-top:12px;background:#060708;border:1px solid var(--line);border-radius:9px;overflow:hidden}.consolehead{padding:11px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;font-size:9px;letter-spacing:.15em}.consolebody{height:175px;padding:14px;font:11px ui-monospace,monospace;color:#8e989f;overflow:auto}.consolebody .gold{color:var(--gold)}.consoleform{display:flex;border-top:1px solid var(--line)}.consoleform input{flex:1;background:transparent;border:0;outline:0;color:#fff;padding:13px}.consoleform button{background:#141108;color:var(--gold);border:0;padding:0 18px;cursor:pointer}.toolbar{display:flex;justify-content:space-between;gap:10px;margin-bottom:12px}.search{background:#090b0c;border:1px solid var(--line);color:#fff;padding:10px;border-radius:6px;outline:0;min-width:280px}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:13px 10px;border-bottom:1px solid var(--line);text-align:left;font-size:11px}.table th{font-size:9px;color:#687178;letter-spacing:.14em}.pill{border:1px solid #285638;color:var(--green);border-radius:20px;padding:4px 7px;font-size:8px}.pill.goldpill{border-color:#5a4a20;color:var(--gold2)}.form{grid-template-columns:1.4fr .6fr}.field{display:grid;gap:6px}.field label{font-size:9px;color:var(--muted);letter-spacing:.13em}.field input,.field select,.field textarea{background:#080a0b;border:1px solid var(--line);color:#fff;padding:12px;border-radius:6px;outline:0}.field textarea{min-height:130px;resize:vertical}.plans{grid-template-columns:repeat(3,1fr)}.plan{position:relative}.plan.featured{border-color:#66531f;box-shadow:0 0 40px #d4af3712}.plan h2{font-size:20px;margin:8px 0}.money{font-size:34px;font-weight:950}.plan ul{list-style:none;padding:0;color:#9ca3a8;font-size:11px;line-height:2}.plan li:before{content:"✓";color:var(--gold);margin-right:8px}.modal{position:fixed;inset:0;background:#000c;display:none;place-items:center;z-index:100}.modal.show{display:grid}.modalbox{width:min(520px,92vw);background:#0b0d0f;border:1px solid #56461d;border-radius:10px;padding:22px;box-shadow:0 40px 120px #000}.toast{position:fixed;right:22px;bottom:22px;padding:13px 16px;background:#101214;border:1px solid #3c3f41;border-radius:7px;transform:translateY(80px);opacity:0;transition:.25s;z-index:110;font-size:11px}.toast.show{transform:none;opacity:1}.focus .side,.focus .top{opacity:0;pointer-events:none}.focus .content{max-width:1700px}.focus .card{background:#050607}.focus:after{content:"TITANCDN // PANORAMIC MODE";position:fixed;inset:0;display:grid;place-items:center;color:#383d40;letter-spacing:.45em;font-size:10px;pointer-events:none}
-@media(max-width:1150px){.shell{grid-template-columns:210px 1fr}.stats{grid-template-columns:repeat(3,1fr)}.dashboard,.lower,.quota{grid-template-columns:1fr}.plans{grid-template-columns:1fr}.side{position:fixed;left:-210px;transition:.25s}.shell.menu .side{left:0}.content{padding:20px}}
-@media(max-width:650px){.stats{grid-template-columns:1fr 1fr}.hero{flex-direction:column;align-items:flex-start}.hero h1{font-size:31px}.top{padding:0 14px}.content{padding:14px}.stats .card:last-child{grid-column:span 2}.search{min-width:0;width:100%}.toolbar{flex-direction:column}}
-/* ======================================================
-   TITANCDN HIGH-INTELLIGENCE MOBILE RESPONSIVE ENGINE
-   ====================================================== */
-@media screen and (max-width: 768px) {
-    /* 1. Мащабиране на главния контейнер */
-    .container, .titan-container {
-        padding: 15px !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-    }
-
-    /* 2. Превръщане на големите мрежови табла в единични колони */
-    .dashboard-grid, .pricing-grid {
-        grid-template-columns: 1fr !important;
-        gap: 20px !important;
-    }
-
-    /* 3. Оправяне на изскачащите прозорци (Регистрация / Вход) за малък екран */
-    .modal-content, #titan-login-modal > div, #titan-register-modal > div {
-        width: 92% !important;
-        padding: 25px 20px !important;
-        margin: 0 auto !important;
-    }
-
-    /* 4. Мащабиране на текстовете, за да не излизат от екрана */
-    h2 {
-        font-size: 1.6rem !important;
-    }
-    h3 {
-        font-size: 1.2rem !important;
-    }
-
-    /* 5. Напасване на бутоните – да стават лесни за натискане с пръст */
-    .action-btn, .titan-trigger-btn, button {
-        width: 100% !important;
-        box-sizing: border-box !important;
-    }
+:root{
+  --bg:#060606;--panel:#0d0d0d;--panel2:#111;--panel3:#151515;
+  --gold:#d4af37;--gold2:#f1d46a;--muted:#8d8d8d;--text:#f4f4f4;
+  --line:rgba(212,175,55,.18);--green:#22d47b;--red:#ff4040;--blue:#5fa8ff;
 }
-
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:radial-gradient(circle at 75% -10%,rgba(212,175,55,.08),transparent 28%),var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{display:flex;min-height:100vh}
+.sidebar{width:260px;background:linear-gradient(180deg,#101010,#080808);border-right:1px solid #292929;padding:24px 14px;position:fixed;inset:0 auto 0 0;z-index:20}
+.brand{display:flex;align-items:center;gap:12px;padding:8px 10px 28px}
+.logo{width:38px;height:38px;border:1px solid var(--gold);display:grid;place-items:center;transform:rotate(45deg);box-shadow:0 0 24px rgba(212,175,55,.12)}
+.logo span{transform:rotate(-45deg);font-weight:900;color:var(--gold)}
+.brand h1{font-size:17px;letter-spacing:2px;margin:0}.brand small{color:#777;display:block;font-size:9px;letter-spacing:1.5px;margin-top:3px}
+.nav{display:grid;gap:7px}
+.nav button{border:0;background:transparent;color:#999;text-align:left;padding:14px 14px;border-radius:7px;position:relative;transition:.2s;display:flex;gap:12px;align-items:center}
+.nav button:hover,.nav button.active{background:rgba(212,175,55,.045);color:var(--gold2)}
+.nav button.active:before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;background:var(--gold);box-shadow:0 0 12px var(--gold)}
+.sidebar-bottom{position:absolute;left:18px;right:18px;bottom:22px;border-top:1px solid #222;padding-top:15px;color:#666;font-size:11px}
+.status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 9px var(--green);margin-right:7px}
+.main{margin-left:260px;width:calc(100% - 260px);padding:26px;max-width:1700px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+.eyebrow{color:var(--gold);font-size:11px;letter-spacing:2px;text-transform:uppercase}.topbar h2{margin:5px 0 0;font-size:27px}
+.engine{display:flex;align-items:center;gap:12px}
+.engine-state{font-size:11px;color:#777}
+.switch{width:58px;height:31px;background:#222;border:1px solid #333;border-radius:30px;padding:3px;transition:.2s}
+.switch i{display:block;width:23px;height:23px;border-radius:50%;background:#777;transition:.25s}
+.switch.on{background:rgba(212,175,55,.18);border-color:var(--gold)}
+.switch.on i{transform:translateX(25px);background:var(--gold);box-shadow:0 0 14px var(--gold)}
+.page{display:none;animation:fade .25s ease}.page.active{display:block}
+@keyframes fade{from{opacity:.2;transform:translateY(4px)}to{opacity:1;transform:none}}
+.grid{display:grid;gap:16px}.stats{grid-template-columns:repeat(4,1fr)}
+.card{background:linear-gradient(145deg,rgba(22,22,22,.95),rgba(10,10,10,.95));border:1px solid #242424;border-radius:10px;padding:20px;box-shadow:0 15px 40px rgba(0,0,0,.2)}
+.card.gold{border-color:var(--line);box-shadow:inset 0 1px rgba(212,175,55,.08),0 15px 50px rgba(0,0,0,.25)}
+.card-label{color:#777;font-size:10px;letter-spacing:1.5px;text-transform:uppercase}.big{font-size:31px;font-weight:800;margin-top:9px}.sub{color:#777;font-size:11px;margin-top:6px}
+.green{color:var(--green)}.red{color:var(--red)}.gold-text{color:var(--gold)}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin:26px 0 12px}.section-title h3{margin:0;font-size:14px;letter-spacing:.5px}.section-title span{font-size:11px;color:#666}
+.telemetry{grid-template-columns:1.7fr 1fr;margin-top:16px}
+.chart{height:220px;display:flex;align-items:end;gap:7px;padding-top:25px}
+.bar{flex:1;min-width:3px;background:linear-gradient(to top,rgba(212,175,55,.18),var(--gold));border-radius:3px 3px 0 0;box-shadow:0 0 8px rgba(212,175,55,.08);height:25%;transition:height .35s}
+.bar.live{box-shadow:0 0 15px rgba(212,175,55,.65)}
+.builder{display:grid;grid-template-columns:1fr 160px 150px auto;gap:9px}
+input,select{background:#080808;color:#eee;border:1px solid #2c2c2c;border-radius:7px;padding:12px;outline:none}
+input:focus,select:focus{border-color:var(--gold)}
+.btn{border:1px solid #333;background:#171717;color:#ddd;padding:11px 15px;border-radius:7px;transition:.18s}
+.btn:hover{border-color:var(--gold);color:var(--gold2);transform:translateY(-1px)}
+.btn.primary{background:linear-gradient(135deg,#b99324,#e0bd4b);border-color:#e0bd4b;color:#090909;font-weight:800}
+.btn.danger{border-color:rgba(255,64,64,.35);color:#ff7070}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.preview{margin-top:12px;background:#050505;border:1px solid #1f1f1f;border-radius:7px;min-height:130px;padding:15px;font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:#7df0aa;white-space:pre-wrap;overflow:auto}
+.nodes-head{display:grid;grid-template-columns:1fr 110px 130px 130px;gap:10px;padding:0 12px 9px;color:#666;font-size:10px;text-transform:uppercase;letter-spacing:1px}
+.node{display:grid;grid-template-columns:1fr 110px 130px 130px;gap:10px;align-items:center;padding:15px 12px;border:1px solid #222;background:#0d0d0d;border-radius:7px;margin-bottom:7px}
+.node.blocked{border-color:rgba(255,64,64,.3);background:linear-gradient(90deg,rgba(255,64,64,.07),#0d0d0d)}
+.domain{font-weight:700}.node small{color:#666;display:block;margin-top:4px}
+.badge{font-size:9px;letter-spacing:1px;padding:5px 8px;border-radius:20px;width:max-content}.badge.active{color:var(--green);background:rgba(34,212,123,.08);border:1px solid rgba(34,212,123,.2)}.badge.blocked{color:#ff6b6b;background:rgba(255,64,64,.08);border:1px solid rgba(255,64,64,.2)}
+.search-row{display:flex;gap:10px}.search-row input{flex:1}
+.plans{grid-template-columns:repeat(3,1fr)}.plan{position:relative;overflow:hidden}.plan.featured{border-color:var(--gold);box-shadow:0 0 35px rgba(212,175,55,.07)}.ribbon{position:absolute;right:-32px;top:15px;transform:rotate(35deg);background:var(--gold);color:#080808;padding:5px 35px;font-size:9px;font-weight:900}
+.price{font-size:34px;font-weight:900;margin:16px 0 5px}.price small{font-size:12px;color:#666;font-weight:400}.features{list-style:none;padding:0;color:#aaa;font-size:12px;line-height:2.2}.features li:before{content:"✓";color:var(--gold);margin-right:8px}
+.analytics-grid{grid-template-columns:repeat(2,1fr)}.metric-row{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid #1e1e1e;font-size:12px}.progress{height:6px;background:#1c1c1c;border-radius:20px;overflow:hidden;margin-top:8px}.progress i{display:block;height:100%;background:linear-gradient(90deg,#8d6c1d,var(--gold));width:var(--w)}
+.toast{position:fixed;right:22px;bottom:22px;background:#121212;border:1px solid var(--gold);padding:13px 16px;border-radius:7px;box-shadow:0 15px 40px #000;transform:translateY(30px);opacity:0;pointer-events:none;transition:.25s;z-index:100;font-size:12px}.toast.show{transform:none;opacity:1}
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:90;place-items:center}.modal-backdrop.show{display:grid}.modal{width:min(520px,92vw);background:#101010;border:1px solid #333;border-radius:12px;padding:24px;box-shadow:0 30px 100px #000}.modal h3{margin-top:0}.modal p{color:#999;font-size:12px;line-height:1.6}
+.mobile-menu{display:none}
+@media(max-width:1050px){.stats{grid-template-columns:repeat(2,1fr)}.telemetry,.analytics-grid{grid-template-columns:1fr}.plans{grid-template-columns:1fr}.builder{grid-template-columns:1fr 1fr}.builder .wide{grid-column:1/-1}}
+@media(max-width:720px){
+ .sidebar{transform:translateX(-100%);transition:.25s;width:260px}.sidebar.open{transform:none}.main{margin-left:0;width:100%;padding:17px}.mobile-menu{display:block}.topbar{gap:10px}.topbar h2{font-size:21px}.stats{grid-template-columns:1fr 1fr}.nodes-head{display:none}.node{grid-template-columns:1fr auto;gap:8px}.node>*:nth-child(2){grid-column:2;grid-row:1}.node>*:nth-child(3){grid-column:1}.node>*:nth-child(4){grid-column:2;grid-row:2}.builder{grid-template-columns:1fr}.builder .wide{grid-column:auto}.card{padding:16px}.big{font-size:25px}
+}
 </style>
 </head>
 <body>
-<div class="shell" id="shell">
-<aside class="side">
-<div class="logo">TITAN<i>CDN</i></div>
-<div class="workspace">CONTROL PLANE</div>
-<nav class="nav">
-<button class="active" data-page="overview"><span class="ico">◈</span>Overview</button>
-<button data-page="jobs" class=""><span class="ico">▦</span>Scrape Jobs</button>
-<button data-page="builder" class=""><span class="ico">⌁</span>Request Builder</button>
-<button data-page="nodes" class=""><span class="ico">◎</span>Edge Network</button>
-<button data-page="analytics" class=""><span class="ico">◒</span>Analytics</button>
-<button data-page="logs" class=""><span class="ico">≡</span>Request Logs</button>
-<button data-page="api" class=""><span class="ico">⌘</span>API &amp; Webhooks</button>
-<button data-page="billing" class=""><span class="ico">◇</span>Billing</button>
-</nav>
-<div class="sidebottom"><div class="tiny">SYSTEM HEALTH</div><div style="margin-top:8px;color:var(--green);font-size:11px">● OPERATIONAL</div><div class="tiny" style="margin-top:9px">REGION // GLOBAL</div></div>
+<div class="app">
+<aside class="sidebar" id="sidebar">
+  <div class="brand"><div class="logo"><span>T</span></div><div><h1>TITANCDN</h1><small>DATA INFRASTRUCTURE</small></div></div>
+  <nav class="nav">
+    <button class="active" data-page="overview">◈ <span>Overview</span></button>
+    <button data-page="edge" class="">◎ <span>Edge Network</span></button>
+    <button data-page="analytics" class="">◒ <span>Analytics</span></button>
+    <button data-page="billing" class="">◇ <span>Billing Plans</span></button>
+  </nav>
+  <div class="sidebar-bottom"><span class="status-dot"></span>CONTROL PLANE ONLINE<br><span style="margin-left:14px">v1.0.0 • LOCAL DEMO</span></div>
 </aside>
-<div class="main">
-<header class="top"><div class="crumb">TITANCDN / <b id="crumb">OVERVIEW</b></div><div class="topright"><div class="health"><span class="led"></span> 99.999% SYSTEM HEALTH</div><button class="btn gray" id="focus">TAB / FOCUS</button><div class="avatar">TC</div></div></header>
-<main class="content">
+
+<main class="main">
+<header class="topbar">
+  <div><button class="btn mobile-menu" id="menuBtn">☰</button><div class="eyebrow">TitanCDN / Control Plane</div><h2 id="pageTitle">Overview</h2></div>
+  <div class="engine"><span class="engine-state" id="engineText">ENGINE OFFLINE</span><button class="switch" id="engineBtn" aria-label="Start Engine"><i></i></button></div>
+</header>
 
 <section class="page active" id="overview">
-<div class="hero"><div><div class="eyebrow">GLOBAL DATA INFRASTRUCTURE</div><h1>Command your data layer.</h1><div class="desc">High-performance web data orchestration, telemetry and edge execution from one control plane.</div></div><div class="actions"><button class="btn gray" id="refresh">REFRESH</button><button class="btn" id="engine">START ENGINE</button></div></div>
-<div class="grid stats">
-<div class="card"><div class="label">Requests / 24h</div><div class="value" id="req">18,492,731</div><div class="mini-up">▲ 14.8%</div></div>
-<div class="card"><div class="label">Throughput</div><div class="value green" id="rps">4,029 RPS</div><div class="mini-up">▲ 8.2%</div></div>
-<div class="card"><div class="label">P50 Latency</div><div class="value gold" id="lat">1.10s</div><div class="muted" style="font-size:9px">GLOBAL EDGE</div></div>
-<div class="card"><div class="label">Success Rate</div><div class="value green">99.98%</div><div class="muted" style="font-size:9px">LAST 60 MIN</div></div>
-<div class="card"><div class="label">Data Processed</div><div class="value blue">8.42 TB</div><div class="muted" style="font-size:9px">THIS MONTH</div></div>
-</div>
-<div class="grid dashboard">
-<div class="card chartcard"><div class="charthead"><div><div class="label">REQUEST THROUGHPUT</div><div class="value" style="font-size:19px">4,029 <span class="muted" style="font-size:10px">requests / sec</span></div></div><div class="live">● LIVE TELEMETRY</div></div><div class="chart"><svg viewBox="0 0 900 220" preserveAspectRatio="none"><defs><linearGradient id="grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#61f59a" stop-opacity=".35"></stop><stop offset="1" stop-color="#61f59a" stop-opacity="0"></stop></linearGradient></defs><path class="area" d="M0 170 C55 90 80 185 130 130 S210 70 270 150 S340 195 400 105 S475 55 520 125 S590 180 650 92 S720 60 780 120 S840 155 900 70 V220 H0Z"></path><path class="line" d="M0 170 C55 90 80 185 130 130 S210 70 270 150 S340 195 400 105 S475 55 520 125 S590 180 650 92 S720 60 780 120 S840 155 900 70"></path></svg></div></div>
-<div class="card"><div class="label">CORE TELEMETRY</div><div class="corelist"><div class="row"><span>Active workers</span><b id="workers">128</b></div><div class="row"><span>Queue depth</span><b id="queue">342</b></div><div class="row"><span>Edge nodes</span><b>64</b></div><div class="row"><span>Browser sessions</span><b>1,842</b></div><div class="row"><span>API availability</span><b class="green">99.999%</b></div></div></div>
-</div>
-<div class="grid lower">
-<div class="card worldcard"><div class="label">EDGE NETWORK // GLOBAL</div><div class="world"><div class="latitude"></div><div class="longitude"></div><div class="latitude lat2"></div><span class="node g" style="left:20%;top:38%"></span><span class="node" style="left:31%;top:57%"></span><span class="node g" style="left:48%;top:44%"></span><span class="node" style="left:57%;top:59%"></span><span class="node g" style="left:73%;top:43%"></span><span class="node" style="left:83%;top:64%"></span><span class="route" style="left:21%;top:40%;width:30%;transform:rotate(9deg)"></span><span class="route" style="left:49%;top:45%;width:25%;transform:rotate(-3deg)"></span></div></div>
-<div class="card feed"><div class="label">LIVE REQUEST STREAM</div><div class="feedbody" id="feed"><div class="log"><span>22:43:09</span><span>GET /catalog</span><b class="ok">200 · 0.84s</b></div><div class="log"><span>22:43:08</span><span>POST /extract</span><b class="ok">200 · 1.12s</b></div><div class="log"><span>22:43:07</span><span>GET /products</span><b class="ok">200 · 0.71s</b></div><div class="log"><span>22:43:06</span><span>GET /render</span><b class="warn">429 · retry</b></div><div class="log"><span>22:43:05</span><span>GET /search</span><b class="ok">200 · 0.62s</b></div></div></div>
-</div>
-<div class="grid quota">
-<div class="card ringbox"><div class="ring"><div class="ringin"><strong>23.4M</strong><span>OF 35M CREDITS</span></div></div></div>
-<div class="card"><div class="label">USAGE &amp; COST</div><div class="row"><span>Credits remaining</span><b>11.6M</b></div><div class="row"><span>Projected usage</span><b>31.2M</b></div><div class="row"><span>Estimated bill</span><b>€339.99</b></div><div class="row"><span>Renewal</span><b>18 days</b></div><button class="btn gray" style="margin-top:12px;width:100%">MANAGE PLAN</button></div>
-</div>
-<div class="console"><div class="consolehead"><span>TITAN AI CONSOLE</span><span class="gold">LOCAL CONTROL</span></div><div class="consolebody" id="console">[22:43:01] <span class="gold">CORE</span> telemetry connected.<br>[22:43:02] edge mesh synchronized.<br>[22:43:03] request pipeline healthy.<br>[READY] Type <span class="gold">status</span>, <span class="gold">nodes</span>, <span class="gold">clear</span>.</div><form class="consoleform" id="consoleForm"><input id="command" placeholder="Execute a control command..."><button>RUN</button></form></div>
+  <div class="grid stats">
+    <div class="card gold"><div class="card-label">Request Throughput</div><div class="big" id="rps">0</div><div class="sub">requests / second</div></div>
+    <div class="card"><div class="card-label">Edge Nodes</div><div class="big">12</div><div class="sub green" id="nodeHealthy">7 healthy • 2 blocked</div></div>
+    <div class="card"><div class="card-label">Latency</div><div class="big" id="latency">--</div><div class="sub">global median</div></div>
+    <div class="card"><div class="card-label">Uptime</div><div class="big">99.98%</div><div class="sub">last 30 days</div></div>
+  </div>
+  <div class="grid telemetry">
+    <div class="card gold"><div class="section-title"><h3>LIVE TELEMETRY</h3><span id="telemetryState">Engine stopped</span></div><div class="chart" id="chart"><div class="bar" style="height: 46.67%;"></div><div class="bar" style="height: 36.536%;"></div><div class="bar" style="height: 61.6379%;"></div><div class="bar" style="height: 55.5945%;"></div><div class="bar" style="height: 56.844%;"></div><div class="bar" style="height: 44.5561%;"></div><div class="bar" style="height: 15.5042%;"></div><div class="bar" style="height: 40.8085%;"></div><div class="bar" style="height: 69.4034%;"></div><div class="bar" style="height: 53.7163%;"></div><div class="bar" style="height: 42.1075%;"></div><div class="bar" style="height: 56.6586%;"></div><div class="bar" style="height: 72.8271%;"></div><div class="bar" style="height: 70.8988%;"></div><div class="bar" style="height: 51.167%;"></div><div class="bar" style="height: 36.3394%;"></div><div class="bar" style="height: 47.7628%;"></div><div class="bar" style="height: 48.2273%;"></div><div class="bar" style="height: 58.9834%;"></div><div class="bar" style="height: 73.901%;"></div><div class="bar" style="height: 65.8406%;"></div><div class="bar" style="height: 66.4165%;"></div><div class="bar" style="height: 35.297%;"></div><div class="bar" style="height: 18.7881%;"></div><div class="bar" style="height: 72.9602%;"></div><div class="bar" style="height: 19.93%;"></div><div class="bar" style="height: 59.5921%;"></div><div class="bar" style="height: 27.9745%;"></div><div class="bar" style="height: 62.2367%;"></div><div class="bar live" style="height: 93.825%;"></div></div></div>
+    <div class="card"><div class="section-title"><h3>SYSTEM SIGNAL</h3><span>REAL-TIME</span></div>
+      <div class="metric-row"><span>API Gateway</span><b class="green">HEALTHY</b></div>
+      <div class="metric-row"><span>Database</span><b class="green">CONNECTED</b></div>
+      <div class="metric-row"><span>Auth Layer</span><b class="green">SECURE</b></div>
+      <div class="metric-row"><span>Scraper</span><b id="scraperStatus" class="">STANDBY</b></div>
+      <div style="margin-top:20px"><button class="btn primary" id="pingBtn">PING INFRASTRUCTURE</button></div>
+    </div>
+  </div>
+  <div class="section-title"><h3>DEVELOPER WORKBENCH</h3><span>SAFE DEMO REQUEST BUILDER</span></div>
+  <div class="card">
+    <div class="builder">
+      <input class="wide" id="targetUrl" placeholder="https://example.com" value="https://example.com">
+      <select id="method"><option>GET</option><option>POST</option></select>
+      <select id="format"><option>JSON</option><option>HTML</option></select>
+      <button class="btn primary" id="sendBtn">SEND TEST</button>
+    </div>
+    <div class="preview" id="preview">{
+  "status": "READY",
+  "message": "Enter a target URL and press SEND TEST.",
+  "mode": "safe-local-demo"
+}</div>
+  </div>
 </section>
 
-<section class="page" id="jobs"><div class="hero"><div><div class="eyebrow">EXECUTION ORCHESTRATION</div><h1>Scrape jobs.</h1><div class="desc">Create, monitor and stop authorized data collection jobs.</div></div><button class="btn" onclick="go('builder')">NEW JOB</button></div><div class="card"><div class="toolbar"><input class="search" id="jobSearch" placeholder="Search jobs..."><button class="btn gray" id="jobRefresh">REFRESH</button></div><table class="table"><thead><tr><th>JOB</th><th>MODE</th><th>TARGET</th><th>STATUS</th><th>REQUESTS</th><th>LATENCY</th><th>ACTION</th></tr></thead><tbody id="jobRows"><tr><td>global-catalog</td><td>HTTP</td><td>example.com/catalog</td><td><span class="pill">RUNNING</span></td><td>18,420</td><td>840ms</td><td><button class="btn gray stop">STOP</button></td></tr><tr><td>market-monitor</td><td>RENDER</td><td>example.com/market</td><td><span class="pill goldpill">QUEUED</span></td><td>0</td><td>—</td><td><button class="btn gray stop">STOP</button></td></tr></tbody></table></div></section>
+<section class="page" id="edge">
+  <div class="card gold">
+    <div class="section-title"><h3>DOMAIN NODE OPERATIONS</h3><span id="globalStatus"><span class="status-dot" style="background:var(--red);box-shadow:0 0 9px var(--red)"></span>2 NODE ALERT</span></div>
+    <div class="search-row"><input id="nodeSearch" placeholder="Search domain..."><button class="btn" id="resetNodes">RESET DEMO NODES</button></div>
+  </div>
+  <div class="section-title"><h3>EDGE PARTICLES</h3><span id="nodeCount">9 visible nodes</span></div>
+  <div class="nodes-head"><span>DOMAIN</span><span>STATUS</span><span>ROUTE</span><span>ACTION</span></div>
+  <div id="nodes">
+    <div class="node blocked">
+      <div><div class="domain">Amazon</div><small>node-amazon-01</small></div>
+      <span class="badge blocked">BLOCKED</span>
+      <span style="font-size:11px;color:#aaa">US-EAST</span>
+      <div><button class="btn danger heal" data-domain="Amazon">HEAL NODE</button></div>
+    </div>
+    <div class="node blocked">
+      <div><div class="domain">Walmart</div><small>node-walmart-01</small></div>
+      <span class="badge blocked">BLOCKED</span>
+      <span style="font-size:11px;color:#aaa">US-CENTRAL</span>
+      <div><button class="btn danger heal" data-domain="Walmart">HEAL NODE</button></div>
+    </div>
+    <div class="node active">
+      <div><div class="domain">Adidas</div><small>node-adidas-01</small></div>
+      <span class="badge active">ACTIVE</span>
+      <span style="font-size:11px;color:#aaa">EU-CENTRAL</span>
+      <div><span style="font-size:11px;color:#666">STABLE</span></div>
+    </div>
+    <div class="node active">
+      <div><div class="domain">AliExpress</div><small>node-aliexpress-01</small></div>
+      <span class="badge active">ACTIVE</span>
+      <span style="font-size:11px;color:#aaa">EU-WEST</span>
+      <div><span style="font-size:11px;color:#666">STABLE</span></div>
+    </div>
+    <div class="node active">
+      <div><div class="domain">eBay</div><small>node-ebay-01</small></div>
+      <span class="badge active">ACTIVE</span>
+      <span style="font-size:11px;color:#aaa">EU-CENTRAL</span>
+      <div><span style="font-size:11px;color:#666">STABLE</span></div>
+    </div>
+    <div class="node active">
+      <div><div class="domain">Emag</div><small>node-emag-01</small></div>
+      <span class="badge active">ACTIVE</span>
+      <span style="font-size:11px;color:#aaa">EU-EAST</span>
+      <div><span style="font-size:11px;color:#666">STABLE</span></div>
+    </div>
+    <div class="node active">
+      <div><div class="domain">Nike</div><small>node-nike-01</small></div>
+      <span class="badge active">ACTIVE</span>
+      <span style="font-size:11px;color:#aaa">EU-WEST</span>
+      <div><span style="font-size:11px;color:#666">STABLE</span></div>
+    </div>
+    <div class="node active">
+      <div><div class="domain">Shopify</div><small>node-shopify-01</small></div>
+      <span class="badge active">ACTIVE</span>
+      <span style="font-size:11px;color:#aaa">US-EAST</span>
+      <div><span style="font-size:11px;color:#666">STABLE</span></div>
+    </div>
+    <div class="node active">
+      <div><div class="domain">Target</div><small>node-target-01</small></div>
+      <span class="badge active">ACTIVE</span>
+      <span style="font-size:11px;color:#aaa">US-CENTRAL</span>
+      <div><span style="font-size:11px;color:#666">STABLE</span></div>
+    </div></div>
+</section>
 
-<section class="page" id="builder"><div class="hero"><div><div class="eyebrow">DEVELOPER WORKBENCH</div><h1>Request builder.</h1><div class="desc">Configure a request and preview the API payload before sending it.</div></div><button class="btn" id="sendRequest">SEND TEST</button></div><div class="grid form"><div class="card"><div class="field"><label>TARGET URL</label><input id="url" value="https://example.com/products"></div><br><div class="grid" style="grid-template-columns:1fr 1fr"><div class="field"><label>METHOD</label><select id="method"><option>GET</option><option>POST</option></select></div><div class="field"><label>OUTPUT</label><select><option>HTML</option><option>JSON</option><option>MARKDOWN</option></select></div></div><br><div class="field"><label>HEADERS / OPTIONS</label><textarea id="headers">{
-  "Accept": "text/html",
-  "User-Agent": "TitanCDN/1.0"
-}</textarea></div></div><div class="card"><div class="label">GENERATED REQUEST</div><pre id="code" style="white-space:pre-wrap;color:#b8c0c6;font:11px ui-monospace,monospace;line-height:1.7;margin-top:16px">curl -X GET \
-  "https://example.com/products" \
-  -H "Authorization: Bearer TITAN_API_KEY"</pre><div class="label" style="margin-top:25px">RESPONSE PREVIEW</div><div id="preview" style="margin-top:12px;color:#707980;font:11px ui-monospace,monospace">No request sent.</div></div></div></section>
+<section class="page" id="analytics">
+  <div class="grid analytics-grid">
+    <div class="card gold"><div class="card-label">Traffic Volume</div><div class="big" id="traffic">0.14 TB</div><div class="sub">simulated control-plane telemetry</div><div class="progress"><i style="--w:74%"></i></div></div>
+    <div class="card"><div class="card-label">Success Rate</div><div class="big">99.42%</div><div class="sub">last 24 hours</div><div class="progress"><i style="--w:99%"></i></div></div>
+    <div class="card"><h3>Regional Performance</h3><div class="metric-row"><span>Europe</span><b>42 ms</b></div><div class="metric-row"><span>North America</span><b>71 ms</b></div><div class="metric-row"><span>Asia Pacific</span><b>89 ms</b></div></div>
+    <div class="card"><h3>Security Events</h3><div class="metric-row"><span>Rate-limit events</span><b>24</b></div><div class="metric-row"><span>Rejected auth</span><b>7</b></div><div class="metric-row"><span>Blocked targets</span><b class="red">2</b></div></div>
+  </div>
+</section>
 
-<section class="page" id="nodes"><div class="hero"><div><div class="eyebrow">EDGE FABRIC</div><h1>Node operations.</h1><div class="desc">Regional health, capacity and routing telemetry.</div></div></div><div class="grid stats"><div class="card"><div class="label">GLOBAL</div><div class="value green">HEALTHY</div></div><div class="card"><div class="label">ACTIVE NODES</div><div class="value">64</div></div><div class="card"><div class="label">AVG LATENCY</div><div class="value gold">184ms</div></div><div class="card"><div class="label">CAPACITY</div><div class="value">72%</div></div><div class="card"><div class="label">FAILOVER</div><div class="value green">READY</div></div></div><div class="card" style="margin-top:12px"><table class="table"><thead><tr><th>REGION</th><th>NODES</th><th>LOAD</th><th>LATENCY</th><th>HEALTH</th></tr></thead><tbody><tr><td>EU West</td><td>18</td><td>61%</td><td>112ms</td><td class="green">● HEALTHY</td></tr><tr><td>US East</td><td>17</td><td>74%</td><td>141ms</td><td class="green">● HEALTHY</td></tr><tr><td>Asia Pacific</td><td>16</td><td>79%</td><td>209ms</td><td class="green">● HEALTHY</td></tr><tr><td>US West</td><td>13</td><td>53%</td><td>98ms</td><td class="green">● HEALTHY</td></tr></tbody></table></div></section>
+<section class="page" id="billing">
+  <div class="section-title"><h3>CAPACITY PLANS</h3><span>DEMO CHECKOUT</span></div>
+  <div class="grid plans">
+    <div class="card plan"><div class="card-label">PRO DEVELOPER</div><div class="price">€69.99 <small>/ month</small></div><ul class="features"><li>800K requests</li><li>Developer workbench</li><li>Core telemetry</li><li>Standard support</li></ul><button class="btn primary buy" data-plan="Pro Developer">SELECT PLAN</button></div>
+    <div class="card plan featured"><div class="ribbon">POPULAR</div><div class="card-label">BUSINESS CORE</div><div class="price">€339.99 <small>/ month</small></div><ul class="features"><li>35M requests</li><li>Edge Network console</li><li>Advanced analytics</li><li>Priority support</li></ul><button class="btn primary buy" data-plan="Business Core">SELECT PLAN</button></div>
+    <div class="card plan"><div class="card-label">ENTERPRISE TITAN</div><div class="price">€1,099.99 <small>/ month</small></div><ul class="features"><li>100M requests</li><li>Enterprise telemetry</li><li>Custom integrations</li><li>Dedicated support</li></ul><button class="btn primary buy" data-plan="Enterprise Titan">SELECT PLAN</button></div>
+  </div>
+  <div class="card" style="margin-top:16px"><b>Payment integration status</b><p style="color:#777;font-size:12px">This HTML version uses a demo checkout modal. Connect Stripe Checkout on the backend before accepting real payments.</p></div>
+</section>
+</main>
+</div>
 
-<section class="page" id="analytics"><div class="hero"><div><div class="eyebrow">OBSERVABILITY</div><h1>Analytics.</h1><div class="desc">Understand throughput, latency, failures and cost across your workloads.</div></div></div><div class="grid stats"><div class="card"><div class="label">TOTAL REQUESTS</div><div class="value">181.4M</div></div><div class="card"><div class="label">SUCCESS</div><div class="value green">99.98%</div></div><div class="card"><div class="label">P50</div><div class="value gold">1.10s</div></div><div class="card"><div class="label">P95</div><div class="value">2.83s</div></div><div class="card"><div class="label">BANDWIDTH</div><div class="value blue">38.1 TB</div></div></div><div class="card" style="margin-top:12px;height:300px"><div class="label">30-DAY REQUEST VOLUME</div><svg style="width:100%;height:240px;margin-top:15px" viewBox="0 0 900 240" preserveAspectRatio="none"><path d="M0 190 L45 160 L90 178 L135 120 L180 145 L225 110 L270 132 L315 85 L360 120 L405 70 L450 104 L495 60 L540 92 L585 45 L630 76 L675 54 L720 80 L765 38 L810 66 L855 31 L900 50" fill="none" stroke="#d4af37" stroke-width="2.5"></path></svg></div></section>
+<div class="toast" id="toast">Engine stopped</div>
+<div class="modal-backdrop" id="modal"><div class="modal"><h3 id="modalTitle">TitanCDN</h3><p id="modalText"></p><div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn" id="modalClose">CLOSE</button><button class="btn primary" id="modalAction">CONTINUE DEMO</button></div></div></div>
 
-<section class="page" id="logs"><div class="hero"><div><div class="eyebrow">OBSERVABILITY / LOGS</div><h1>Request stream.</h1></div></div><div class="card"><div class="toolbar"><input class="search" id="logSearch" placeholder="Filter by URL, status or mode..."><button class="btn gray" id="clearLogs">CLEAR VIEW</button></div><table class="table" id="logTable"><thead><tr><th>TIME</th><th>METHOD</th><th>PATH</th><th>STATUS</th><th>LATENCY</th><th>MODE</th></tr></thead><tbody><tr><td>22:43:09</td><td>GET</td><td>/catalog</td><td class="green">200</td><td>840ms</td><td>HTTP</td></tr><tr><td>22:43:08</td><td>POST</td><td>/extract</td><td class="green">200</td><td>1.12s</td><td>RENDER</td></tr><tr><td>22:43:07</td><td>GET</td><td>/products</td><td class="green">200</td><td>710ms</td><td>HTTP</td></tr><tr><td>22:43:06</td><td>GET</td><td>/render</td><td style="color:var(--orange)">429</td><td>2.1s</td><td>RETRY</td></tr></tbody></table></div></section>
-
-<section class="page" id="api"><div class="hero"><div><div class="eyebrow">DEVELOPER PLATFORM</div><h1>API &amp; webhooks.</h1><div class="desc">Credentials, endpoints and event delivery.</div></div><button class="btn" id="newKey">GENERATE KEY</button></div><div class="grid" style="grid-template-columns:1.3fr .7fr"><div class="card"><div class="label">API KEYS</div><table class="table" id="keyTable"><tbody><tr><td>Production</td><td style="font-family:monospace">titan_live_••••••91A2</td><td><button class="btn gray copy">COPY</button></td></tr></tbody></table></div><div class="card"><div class="label">WEBHOOKS</div><div class="row"><span>Job completed</span><b class="green">ACTIVE</b></div><div class="row"><span>Job failed</span><b class="green">ACTIVE</b></div><div class="row"><span>Usage alert</span><b class="muted">OFF</b></div><button class="btn gray" style="width:100%;margin-top:12px">CONFIGURE</button></div></div></section>
-
-<section class="page" id="billing"><div class="hero"><div><div class="eyebrow">COMMERCIAL CONTROL</div><h1>Capacity plans.</h1><div class="desc">Example product tiers for the TitanCDN prototype.</div></div></div><div class="grid plans"><div class="card plan"><div class="label">PRO DEVELOPER</div><h2>€69.99</h2><div class="money">800K</div><div class="muted">successful requests / month</div><ul><li>10 concurrent requests</li><li>Standard API access</li><li>Usage analytics</li><li>Developer support</li></ul><button class="btn buy" data-plan="PRO DEVELOPER">SELECT PLAN</button></div><div class="card plan featured"><div class="label gold">BUSINESS CORE</div><h2>€339.99</h2><div class="money">35M</div><div class="muted">requests / month</div><ul><li>100 concurrent requests</li><li>Priority infrastructure</li><li>Advanced analytics</li><li>Team workflows</li></ul><button class="btn buy" data-plan="BUSINESS CORE">SELECT PLAN</button></div><div class="card plan"><div class="label">ENTERPRISE TITAN</div><h2>€1,099.99</h2><div class="money">100M</div><div class="muted">requests / month</div><ul><li>Dedicated capacity</li><li>Enterprise controls</li><li>Priority support</li><li>Custom integrations</li></ul><button class="btn buy" data-plan="ENTERPRISE TITAN">SELECT PLAN</button></div></div></section>
-
-</main></div></div>
-<div class="toast" id="toast"></div>
 <script>
-const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
-const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)};
-const names={overview:"OVERVIEW",jobs:"SCRAPE JOBS",builder:"REQUEST BUILDER",nodes:"EDGE NETWORK",analytics:"ANALYTICS",logs:"REQUEST LOGS",api:"API & WEBHOOKS",billing:"BILLING"};
-function go(id){$$(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===id));$$(".page").forEach(p=>p.classList.toggle("active",p.id===id));$("#crumb").textContent=names[id]||id.toUpperCase()}
-$$(".nav button").forEach(b=>b.onclick=()=>go(b.dataset.page));
-$("#focus").onclick=()=>document.body.classList.toggle("focus");
-document.addEventListener("keydown",e=>{if(e.key==="Tab"){e.preventDefault();document.body.classList.toggle("focus")}});
-let running=false,requests=18492731;
-$("#engine").onclick=()=>{running=!running;$("#engine").textContent=running?"ENGINE ONLINE":"START ENGINE";$("#engine").classList.toggle("red",running);toast(running?"Edge execution engine online.":"Engine paused.")};
-$("#refresh").onclick=()=>toast("Telemetry refreshed.");
-setInterval(()=>{if(running){requests+=Math.floor(Math.random()*700+120);$("#req").textContent=requests.toLocaleString();$("#rps").textContent=Math.floor(3800+Math.random()*700).toLocaleString()+" RPS";$("#lat").textContent=(.85+Math.random()*.5).toFixed(2)+"s";$("#queue").textContent=Math.floor(250+Math.random()*200)}},700);
+const pages={overview:"Overview",edge:"Edge Network",analytics:"Analytics",billing:"Billing Plans"};
+const nav=[...document.querySelectorAll(".nav button")];
+const pageTitle=document.getElementById("pageTitle");
+const toast=document.getElementById("toast");
+let engine=false, timer=null, traffic=0;
 
-$("#consoleForm").onsubmit=e=>{e.preventDefault();let c=$("#command").value.trim().toLowerCase(),box=$("#console");if(!c)return;if(c==="clear")box.innerHTML="";else{let out=c==="status"?"ALL SYSTEMS OPERATIONAL":c==="nodes"?"64 EDGE NODES / HEALTHY":c==="help"?"status | nodes | clear":"COMMAND ACCEPTED";box.innerHTML+=`<br>[CMD] <span class="gold">$ ${c}</span><br>[CORE] ${out}`;box.scrollTop=box.scrollHeight}$("#command").value=""};
-
-$("#sendRequest").onclick=()=>{const url=$("#url").value;$("#code").textContent=`curl -X ${$("#method").value} \\\n  "${url}" \\\n  -H "Authorization: Bearer TITAN_API_KEY"`;$("#preview").innerHTML='<span class="green">200 OK</span> — demo response generated locally.<br><br>{"status":"ok","mode":"http","latency":"0.84s"}';toast("Test request simulated.")};
-
-$("#newKey").onclick=()=>{const key="titan_live_"+Math.random().toString(36).slice(2,14).toUpperCase();const r=document.createElement("tr");r.innerHTML=`<td>New key</td><td style="font-family:monospace">${key}</td><td><button class="btn gray copy">COPY</button></td>`;$("#keyTable").querySelector("tbody").prepend(r);toast("API key generated for this demo.")};
-document.addEventListener("click",e=>{if(e.target.classList.contains("copy")){navigator.clipboard?.writeText(e.target.parentElement.previousElementSibling.textContent);toast("Key copied.")}if(e.target.classList.contains("stop")){e.target.closest("tr").querySelector(".pill").textContent="STOPPED";e.target.closest("tr").querySelector(".pill").style.color="#ff8b8b";toast("Job stopped.")}if(e.target.classList.contains("buy"))toast(e.target.dataset.plan+" selected. Connect billing backend to activate checkout.")});
-$("#jobRefresh").onclick=()=>toast("Jobs refreshed.");
-$("#clearLogs").onclick=()=>toast("Log view cleared.");
-$("#jobSearch").oninput=e=>{$$("#jobRows tr").forEach(r=>r.style.display=r.textContent.toLowerCase().includes(e.target.value.toLowerCase())?"":"none")};
-$("#logSearch").oninput=e=>{$$("#logTable tbody tr").forEach(r=>r.style.display=r.textContent.toLowerCase().includes(e.target.value.toLowerCase())?"":"none")};
-</script>
-<!-- OFFICIAL AUTHENTICATION MODULE FOR TITANCDN (ENGLISH VERSION) -->
-
-<!-- 1. LOGIN MODAL -->
-<div id="titan-login-modal" style="display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(5, 5, 5, 0.92); backdrop-filter: blur(8px); justify-content: center; align-items: center; font-family: 'Segoe UI', sans-serif;">
-    <div style="background: #111111; border: 1px solid #d4af37; border-radius: 8px; padding: 40px; width: 100%; max-width: 400px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.15); position: relative; box-sizing: border-box;">
-        <span onclick="document.getElementById('titan-login-modal').style.display='none'" style="position: absolute; top: 15px; right: 20px; color: #666; font-size: 1.6rem; cursor: pointer; transition: 0.2s;" onmouseover="this.style.color='#d4af37'" onmouseout="this.style.color='#666'">&times;</span>
-        <h3 style="color: #d4af37; margin: 0 0 5px 0; font-size: 1.5rem; letter-spacing: 1px; text-transform: uppercase; text-align: center; font-weight: bold;">Sign In to TitanCDN</h3>
-        <p style="color: #444; font-size: 0.75rem; text-align: center; margin-top: 0; font-weight: bold; letter-spacing: 1px;">AUTHORIZED PERSONNEL ONLY</p>
-        
-        <form id="titan-actual-login-form" style="margin-top: 25px; display: flex; flex-direction: column; gap: 15px;">
-            <input type="email" placeholder="Email Address" required style="width: 100%; background: #0a0a0a; border: 1px solid #222; padding: 12px; color: #fff; font-size: 0.9rem; border-radius: 4px; outline: none; box-sizing: border-box; transition: 0.3s;" onfocus="this.style.borderColor='#d4af37'" onblur="this.style.borderColor='#222'">
-            <input type="password" placeholder="Secure Password" required style="width: 100%; background: #0a0a0a; border: 1px solid #222; padding: 12px; color: #fff; font-size: 0.9rem; border-radius: 4px; outline: none; box-sizing: border-box; transition: 0.3s;" onfocus="this.style.borderColor='#d4af37'" onblur="this.style.borderColor='#222'">
-            <button type="submit" style="width: 100%; background: #d4af37; color: #000; border: none; padding: 14px; font-weight: bold; font-size: 0.95rem; border-radius: 4px; cursor: pointer; transition: 0.3s; letter-spacing: 0.5px; margin-top: 10px; box-shadow: 0 4px 15px rgba(212,175,55,0.2);" onmouseover="this.style.background='#ffffff'; this.style.boxShadow='0 4px 20px #ffffff';" onmouseout="this.style.background='#d4af37'; this.style.boxShadow='0 4px 15px rgba(212,175,55,0.2)';">ACCESS TERMINAL</button>
-        </form>
-
-        <!-- INTER-PANEL LINK -->
-        <div style="text-align: center; margin-top: 20px; font-size: 0.85rem; color: #666;">
-            Don't have an account? <span onclick="document.getElementById('titan-login-modal').style.display='none'; document.getElementById('titan-register-modal').style.display='flex';" style="color: #d4af37; cursor: pointer; font-weight: bold; text-decoration: underline; margin-left: 5px;">Sign up here</span>
-        </div>
-    </div>
-</div>
-
-<!-- 2. REGISTER MODAL -->
-<div id="titan-register-modal" style="display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(5, 5, 5, 0.92); backdrop-filter: blur(8px); justify-content: center; align-items: center; font-family: 'Segoe UI', sans-serif;">
-    <div style="background: #111111; border: 1px solid #d4af37; border-radius: 8px; padding: 40px; width: 100%; max-width: 400px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.15); position: relative; box-sizing: border-box;">
-        <span onclick="document.getElementById('titan-register-modal').style.display='none'" style="position: absolute; top: 15px; right: 20px; color: #666; font-size: 1.6rem; cursor: pointer; transition: 0.2s;" onmouseover="this.style.color='#d4af37'" onmouseout="this.style.color='#666'">&times;</span>
-        <h3 style="color: #d4af37; margin: 0 0 5px 0; font-size: 1.5rem; letter-spacing: 1px; text-transform: uppercase; text-align: center; font-weight: bold;">Create Secure Account</h3>
-        <p style="color: #444; font-size: 0.75rem; text-align: center; margin-top: 0; font-weight: bold; letter-spacing: 1px;">GENERATE REQ ACCESS KEY</p>
-        
-        <form id="titan-actual-register-form" style="margin-top: 25px; display: flex; flex-direction: column; gap: 15px;">
-            <input type="text" placeholder="Username" required style="width: 100%; background: #0a0a0a; border: 1px solid #222; padding: 12px; color: #fff; font-size: 0.9rem; border-radius: 4px; outline: none; box-sizing: border-box; transition: 0.3s;" onfocus="this.style.borderColor='#d4af37'" onblur="this.style.borderColor='#222'">
-            <input type="email" placeholder="Email Address" required style="width: 100%; background: #0a0a0a; border: 1px solid #222; padding: 12px; color: #fff; font-size: 0.9rem; border-radius: 4px; outline: none; box-sizing: border-box; transition: 0.3s;" onfocus="this.style.borderColor='#d4af37'" onblur="this.style.borderColor='#222'">
-            <input type="password" placeholder="Create Password" required style="width: 100%; background: #0a0a0a; border: 1px solid #222; padding: 12px; color: #fff; font-size: 0.9rem; border-radius: 4px; outline: none; box-sizing: border-box; transition: 0.3s;" onfocus="this.style.borderColor='#d4af37'" onblur="this.style.borderColor='#222'">
-            <button type="submit" style="width: 100%; background: #d4af37; color: #000; border: none; padding: 14px; font-weight: bold; font-size: 0.95rem; border-radius: 4px; cursor: pointer; transition: 0.3s; letter-spacing: 0.5px; margin-top: 10px; box-shadow: 0 4px 15px rgba(212,175,55,0.2);" onmouseover="this.style.background='#ffffff'; this.style.boxShadow='0 4px 20px #ffffff';" onmouseout="this.style.background='#d4af37'; this.style.boxShadow='0 4px 15px rgba(212,175,55,0.2)';" >INITIALIZE PROFILE</button>
-        </form>
-
-        <!-- INTER-PANEL LINK -->
-        <div style="text-align: center; margin-top: 20px; font-size: 0.85rem; color: #666;">
-            Already have an account? <span onclick="document.getElementById('titan-register-modal').style.display='none'; document.getElementById('titan-login-modal').style.display='flex';" style="color: #d4af37; cursor: pointer; font-weight: bold; text-decoration: underline; margin-left: 5px;">Sign in from here</span>
-        </div>
-    </div>
-</div>
-
-<!-- BLOCK AUTONOMOUS INTERFACE TRIGGERS -->
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const allButtons = document.querySelectorAll("button");
-        allButtons.forEach(btn => {
-            const btnText = btn.textContent.trim().toUpperCase();
-            if (btnText === "LOGIN" || btnText === "SIGN IN" || btnText === "ВХОД") {
-                btn.removeAttribute("onclick");
-                btn.addEventListener("click", function(e) {
-                    e.preventDefault();
-                    document.getElementById("titan-login-modal").style.display = "flex";
-                });
-            }
-            if (btnText === "REGISTER" || btnText === "SIGN UP" || btnText === "РЕГИСТРАЦИЯ") {
-                btn.removeAttribute("onclick");
-                btn.addEventListener("click", function(e) {
-                    e.preventDefault();
-                    document.getElementById("titan-register-modal").style.display = "flex";
-                });
-            }
-        });
-    });
-</script>
-<!-- INTELLECTUAL PROFILE & AUTH PANEL (TITANCDN CORE) -->
-<div style="width: 100%; display: flex; justify-content: center; align-items: center; padding: 40px 0; background: #080808; box-sizing: border-box;">
-    
-    <!-- 1. АКО ПОТРЕБИТЕЛЯТ НЕ Е ЛОГНАТ (ВИЖДА СЕ ПО ПОДРАЗБИРАНЕ) -->
-    <div id="titan-guest-view" style="background: #111111; border: 1px solid #222; border-left: 4px solid #d4af37; padding: 25px 40px; border-radius: 6px; display: flex; align-items: center; gap: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); max-width: 800px; width: 100%; box-sizing: border-box;">
-        <div style="flex: 1; font-family: 'Segoe UI', sans-serif;">
-            <h4 style="color: #ffffff; margin: 0; font-size: 1.1rem; letter-spacing: 0.5px;">Ready to deploy TitanCDN network?</h4>
-            <p style="color: #555; margin: 5px 0 0 0; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Initialize your secure high-frequency API terminal</p>
-        </div>
-        <button style="background: #111111; color: #d4af37; border: 1px solid #d4af37; border-radius: 4px; padding: 14px 28px; font-size: 0.9rem; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.1); display: inline-flex; align-items: center; justify-content: center; font-family: 'Segoe UI', sans-serif; white-space: nowrap;"
-                onmouseover="this.style.background='#d4af37'; this.style.color='#000000'; this.style.boxShadow='0 0 20px rgba(212, 175, 55, 0.4)';" 
-                onmouseout="this.style.background='#111111'; this.style.color='#d4af37'; this.style.boxShadow='0 4px 15px rgba(212, 175, 55, 0.1)';"
-                onclick="document.getElementById('titan-register-modal').style.display='flex'">
-            Sign Up Now
-        </button>
-    </div>
-
-    <!-- 2. АКО ПОТРЕБИТЕЛЯТ Е ЛОГНАТ (СКРИТ В НАЧАЛОТО, СВЕТВА СЛЕД ВХОД/РЕГИСТРАЦИЯ) -->
-    <div id="titan-user-view" style="display: none; background: #111111; border: 1px solid #d4af37; padding: 30px; border-radius: 8px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.15); max-width: 800px; width: 100%; box-sizing: border-box; font-family: 'Segoe UI', sans-serif;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; padding-bottom: 15px; margin-bottom: 15px;">
-            <h4 style="color: #d4af37; margin: 0; font-size: 1.2rem; letter-spacing: 1px; text-transform: uppercase;">🛡️ SECURE USER PROFILE</h4>
-            <span style="color: #00ff00; font-size: 0.75rem; font-weight: bold; background: rgba(0,255,0,0.05); padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(0,255,0,0.2);">SESSION: ACTIVE</span>
-        </div>
-        
-        <!-- ДАННИ НА ПОТРЕБИТЕЛЯ -->
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; color: #fff;">
-            <div>
-                <div style="color: #444; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Username</div>
-                <div id="profile-username" style="font-size: 1rem; margin-top: 5px; font-weight: 500; color: #fff;">-</div>
-            </div>
-            <div>
-                <div style="color: #444; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Email Address</div>
-                <div id="profile-email" style="font-size: 1rem; margin-top: 5px; font-weight: 500; color: #aaa;">-</div>
-            </div>
-            <div>
-                <div style="color: #444; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Password Status</div>
-                <div style="display: flex; align-items: center; gap: 8px; margin-top: 5px;">
-                    <!-- Скрита парола за защита -->
-                    <span id="profile-password" style="font-size: 1rem; font-weight: bold; color: #666; letter-spacing: 2px;">••••••••</span>
-                    <button onclick="togglePasswordVisibility()" style="background: none; border: none; color: #d4af37; cursor: pointer; font-size: 0.8rem; font-weight: bold; padding: 0; text-decoration: underline;">SHOW</button>
-                </div>
-            </div>
-        </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid #222;">
-            <div style="color: #555; font-size: 0.75rem; font-weight: bold;">TITANCDN NODE SECURITY ENGAGED</div>
-            <button onclick="logoutTitanUser()" style="background: transparent; color: #ff3333; border: 1px solid #ff3333; padding: 8px 18px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='#ff3333'; this.style.color='#000';" onmouseout="this.style.background='transparent'; this.style.color='#ff3333';">LOGOUT</button>
-        </div>
-    </div>
-
-</div>
-// ======================================================
-// REAL TITANCDN API CONNECTORS (FRONTEND TO BACKEND)
-// ======================================================
-
-// 1. ИСТИНСКО ИЗПРАЩАНЕ НА ДАННИ ЗА РЕГИСТРАЦИЯ КЪМ МОНГО
-const actualRegisterForm = document.getElementById('titan-actual-register-form');
-if (actualRegisterForm) {
-    actualRegisterForm.addEventListener('submit', async function(e) {
-        e.preventDefault(); // Спираме презареждането на страницата
-        
-        // Взимаме точно това, което потребителят е написал в кутиите
-        const username = this.querySelector('input[placeholder="Username"]').value;
-        const email = this.querySelector('input[placeholder="Email Address"]').value;
-        const password = this.querySelector('input[placeholder="Create Password"]').value;
-
-        try {
-            // Пращаме интернет сигнал (POST) до сигурното бекенд ядро на Render/Локално
-            const response = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, email, password })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                alert("✨ Security Access Key Generated! Your profile is now saved in MongoDB.");
-                // Автоматично отваряме прозореца за Вход, за да се логне
-                document.getElementById('titan-register-modal').style.display = 'none';
-                document.getElementById('titan-login-modal').style.display = 'flex';
-            } else {
-                alert("❌ Authentication Error: " + result.error);
-            }
-        } catch (err) {
-            alert("❌ Network Error: Cannot establish secure handshake with TitanCDN servers.");
-        }
-    });
+function showToast(msg){
+  toast.textContent=msg;toast.classList.add("show");
+  clearTimeout(showToast.t);showToast.t=setTimeout(()=>toast.classList.remove("show"),2600);
 }
+nav.forEach(btn=>btn.addEventListener("click",()=>{
+  nav.forEach(x=>x.classList.remove("active"));btn.classList.add("active");
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(btn.dataset.page).classList.add("active");
+  pageTitle.textContent=pages[btn.dataset.page];
+  document.getElementById("sidebar").classList.remove("open");
+}));
+document.getElementById("menuBtn").onclick=()=>document.getElementById("sidebar").classList.toggle("open");
 
-// 2. ИСТИНСКИ ВХОД И ОТКЛЮЧВАНЕ НА DASHBOARD СЕСИЯТА
-const actualLoginForm = document.getElementById('titan-actual-login-form');
-if (actualLoginForm) {
-    actualLoginForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const email = this.querySelector('input[placeholder="Email Address"]').value;
-        const password = this.querySelector('input[placeholder="Secure Password"]').value;
+const chart=document.getElementById("chart");
+for(let i=0;i<30;i++){const b=document.createElement("div");b.className="bar";b.style.height=(18+Math.random()*42)+"%";chart.appendChild(b)}
+const bars=[...document.querySelectorAll(".bar")];
 
-        try {
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                // ЗАПАЗВАМЕ ДИГИТАЛНИЯ ПАСПОРТ (JWT) В ПАМЕТТА НА БРАУЗЪРА ЗА СИГУРНОСТ
-                localStorage.setItem('titan_jwt_token', result.token);
-                
-                // Сменяме бутоните на екрана с Личния профил, който поиска
-                document.getElementById('profile-username').textContent = result.username;
-                document.getElementById('profile-email').textContent = result.email;
-                
-                document.getElementById('titan-login-modal').style.display = 'none';
-                document.getElementById('titan-guest-view').style.display = 'none';
-                document.getElementById('titan-user-view').style.display = 'block';
-                
-                // Активираме автоматично въртенето на прокси мрежата на екрана
-                alert(`🔓 Access Granted. Welcome back, ${result.username}. Titan Node connection established.`);
-            } else {
-                alert("❌ Access Denied: " + result.error);
-            }
-        } catch (err) {
-            alert("❌ Network Error: Terminal authentication failed.");
-        }
-    });
+function setEngine(on){
+  engine=on;
+  document.getElementById("engineBtn").classList.toggle("on",on);
+  document.getElementById("engineText").textContent=on?"ENGINE ONLINE":"ENGINE OFFLINE";
+  document.getElementById("telemetryState").textContent=on?"Live telemetry running":"Engine stopped";
+  document.getElementById("scraperStatus").textContent=on?"READY":"STANDBY";
+  document.getElementById("scraperStatus").className=on?"green":"";
+  if(timer)clearInterval(timer);
+  if(on){
+    tick();
+    timer=setInterval(tick,400);
+    showToast("START ENGINE • telemetry online");
+  }else{
+    document.getElementById("rps").textContent="0";
+    document.getElementById("latency").textContent="--";
+    showToast("Engine stopped");
+  }
 }
+function tick(){
+  const r=Math.floor(3800+Math.random()*801);
+  document.getElementById("rps").textContent=r.toLocaleString("en-US");
+  document.getElementById("latency").textContent=Math.floor(34+Math.random()*28)+" ms";
+  bars.forEach((b,i)=>{if(i<bars.length-1)b.style.height=(12+Math.random()*62)+"%";});
+  bars.at(-1).style.height=Math.min(100,48+(r-3800)/800*52)+"%";
+  bars.at(-1).classList.add("live");
+  traffic+=(r/1000000);
+  document.getElementById("traffic").textContent=traffic.toFixed(2)+" TB";
+}
+document.getElementById("engineBtn").onclick=()=>setEngine(!engine);
 
-</body>
-</html>
+document.getElementById("pingBtn").onclick=()=>{
+  const btn=document.getElementById("pingBtn");btn.disabled=true;btn.textContent="PINGING...";
+  setTimeout(()=>{btn.disabled=false;btn.textContent="PING INFRASTRUCTURE";showToast("Infrastructure response: 28 ms • HEALTHY")},800);
+};
+
+document.getElementById("sendBtn").onclick=()=>{
+  const url=document.getElementById("targetUrl").value.trim();
+  const method=document.getElementById("method").value;
+  const format=document.getElementById("format").value;
+  const out=document.getElementById("preview");
+  if(!url){showToast("Въведи Target URL");return}
+  try{new URL(url)}catch{showToast("Невалиден URL");return}
+  out.textContent="Connecting to safe demo gateway...";
+  document.getElementById("scraperStatus").textContent="RUNNING";
+  setTimeout(()=>{
+    out.textContent=JSON.stringify({
+      status:"DEMO_OK",method,target:url,format,
+      timestamp:new Date().toISOString(),
+      mode:"safe-local-demo",
+      note:"Real target fetching requires a backend with authorization and CORS handling."
+    },null,2);
+    document.getElementById("scraperStatus").textContent="READY";
+    showToast("Request Builder completed");
+  },700);
+};
+
+const initialNodes=[
+ ["Amazon","BLOCKED","US-EAST"],["Walmart","BLOCKED","US-CENTRAL"],["AliExpress","ACTIVE","EU-WEST"],
+ ["eBay","ACTIVE","EU-CENTRAL"],["Emag","ACTIVE","EU-EAST"],["Nike","ACTIVE","EU-WEST"],
+ ["Shopify","ACTIVE","US-EAST"],["Target","ACTIVE","US-CENTRAL"],["Adidas","ACTIVE","EU-CENTRAL"]
+];
+let nodes=initialNodes.map(x=>({domain:x[0],status:x[1],route:x[2]}));
+function renderNodes(){
+  const q=document.getElementById("nodeSearch").value.toLowerCase();
+  const list=nodes.filter(n=>n.domain.toLowerCase().includes(q)).sort((a,b)=>{
+    if(a.status!==b.status)return a.status==="BLOCKED"?-1:1;
+    return a.domain.localeCompare(b.domain);
+  });
+  document.getElementById("nodes").innerHTML=list.map(n=>`
+    <div class="node ${n.status.toLowerCase()}">
+      <div><div class="domain">${n.domain}</div><small>node-${n.domain.toLowerCase().replace(/[^a-z]/g,"")}-01</small></div>
+      <span class="badge ${n.status.toLowerCase()}">${n.status}</span>
+      <span style="font-size:11px;color:#aaa">${n.route}</span>
+      <div>${n.status==="BLOCKED"?`<button class="btn danger heal" data-domain="${n.domain}">HEAL NODE</button>`:`<span style="font-size:11px;color:#666">STABLE</span>`}</div>
+    </div>`).join("");
+  const blocked=nodes.filter(n=>n.status==="BLOCKED").length;
+  document.getElementById("nodeCount").textContent=list.length+" visible nodes";
+  document.getElementById("nodeHealthy").textContent=(nodes.length-blocked)+" healthy • "+blocked+" blocked";
+  document.getElementById("globalStatus").innerHTML=blocked?'<span class="status-dot" style="background:var(--red);box-shadow:0 0 9px var(--red)"></span>'+blocked+" NODE ALERT":'<span class="status-dot"></span>ALL SYSTEMS NOMINAL';
+  document.querySelectorAll(".heal").forEach(b=>b.onclick=()=>healNode(b.dataset.domain));
+}
+function healNode(domain){
+  const n=nodes.find(x=>x.domain===domain);if(!n)return;
+  n.status="ACTIVE";
+  n.route=["EU-WEST","EU-CENTRAL","US-EAST","US-CENTRAL"].sort(()=>Math.random()-.5)[0];
+  renderNodes();showToast(domain+" node restored in demo control plane");
+}
+document.getElementById("nodeSearch").oninput=renderNodes;
+document.getElementById("resetNodes").onclick=()=>{nodes=initialNodes.map(x=>({domain:x[0],status:x[1],route:x[2]}));renderNodes();showToast("Demo nodes reset")};
+renderNodes();
+
+const modal=document.getElementById("modal");
+document.querySelectorAll(".buy").forEach(btn=>btn.onclick=()=>{
+  document.getElementById("modalTitle").textContent=btn.dataset.plan;
+  document.getElementById("modalText").textContent="Demo checkout: този бутон е готов за свързване към Stripe Checkout през защитен backend. Не въвеждай реални данни в този локален demo.";
+  modal.classList.add("show");
+});
+document.getElementById("modalClose").onclick=()=>modal.classList.remove("show");
+document.getElementById("modalAction").onclick=()=>{modal.classList.remove("show");showToast("Demo checkout selected — Stripe backend required")};
+modal.onclick=e=>{if(e.target===modal)modal.classList.remove("show")};
+</script>
+
+
+</body></html>
