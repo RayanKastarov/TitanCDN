@@ -30,12 +30,26 @@ app.use(express.json({ limit: "64kb" }));
 app.use(express.urlencoded({ extended: false, limit: "64kb" }));
 app.use(express.static(__dirname, { dotfiles: "deny", etag: true, maxAge: NODE_ENV === "production" ? "1h" : 0 }));
 
-const authLimiter = rateLimit({
+const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 10,
+  limit: 20,
   standardHeaders: "draft-7",
   legacyHeaders: false,
-  message: { success: false, error: "Too many authentication attempts. Try again later." }
+  message: {
+    success: false,
+    error: "Too many login attempts. Try again later."
+  }
+});
+
+const registerLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: "Too many registration attempts. Try again later."
+  }
 });
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -50,8 +64,38 @@ const UserSchema = new mongoose.Schema({
   username: { type: String, required: true, trim: true, minlength: 2, maxlength: 60 },
   email: { type: String, required: true, unique: true, lowercase: true, trim: true, maxlength: 254 },
   passwordHash: { type: String, required: true, select: false },
-  tokenVersion: { type: Number, default: 0 },
-  createdAt: { type: Date, default: Date.now }
+ tokenVersion: { type: Number, default: 0 },
+
+plan: {
+  type: String,
+  enum: ["free", "pro", "business", "enterprise"],
+  default: "free"
+},
+
+monthlyRequestLimit: {
+  type: Number,
+  default: 100000
+},
+
+monthlyRequestsUsed: {
+  type: Number,
+  default: 0
+},
+
+usageResetAt: {
+  type: Date,
+  default: () => {
+    const now = new Date();
+
+    return new Date(Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth() + 1,
+      1
+    ));
+  }
+},
+
+createdAt: { type: Date, default: Date.now }
 });
 
 const ApiKeySchema = new mongoose.Schema({
@@ -103,8 +147,43 @@ async function requireApiKey(req, res, next) {
   if (!record.scopes.includes("scrape:read")) return res.status(403).json({ success: false, error: "API key lacks scrape:read scope." });
   record.lastUsedAt = new Date();
   await record.save();
-  req.apiKey = record;
-  next();
+  const user = await User.findById(record.userId);
+
+if (!user) {
+  return res.status(401).json({
+    success: false,
+    error: "API key owner not found."
+  });
+}
+
+// Monthly reset
+if (!user.usageResetAt || new Date() >= user.usageResetAt) {
+  const now = new Date();
+
+  user.monthlyRequestsUsed = 0;
+  user.usageResetAt = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth() + 1,
+    1
+  ));
+
+  await user.save();
+}
+
+if (user.monthlyRequestsUsed >= user.monthlyRequestLimit) {
+  return res.status(429).json({
+    success: false,
+    error: "Monthly request limit reached.",
+    plan: user.plan,
+    used: user.monthlyRequestsUsed,
+    limit: user.monthlyRequestLimit,
+    resetAt: user.usageResetAt
+  });
+}
+
+req.apiUser = user;
+
+next();
 }
 
 function isBlockedIp(ip) {
@@ -135,7 +214,7 @@ async function validatePublicTarget(rawUrl) {
 
 app.get("/api/health", (req, res) => res.json({ success: true, service: "TitanCDN", status: "ONLINE", database: mongoose.connection.readyState === 1 ? "CONNECTED" : "UNAVAILABLE" }));
 
-app.post("/api/auth/register", authLimiter, async (req, res, next) => {
+app.post("/api/auth/register", registerLimiter, async (req, res, next) => {
   try {
     const username = String(req.body.username || "").trim();
     const email = normalizeEmail(req.body.email);
@@ -149,7 +228,7 @@ app.post("/api/auth/register", authLimiter, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-app.post("/api/auth/login", authLimiter, async (req, res, next) => {
+app.post("/api/auth/login", loginLimiter, async (req, res, next) => {
   try {
     const email = normalizeEmail(req.body.email);
     const password = String(req.body.password || "");
@@ -168,8 +247,29 @@ app.post("/api/auth/logout-all", requireJwt, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-app.get("/api/profile", requireJwt, (req, res) => res.json({ success: true, user: { id: req.user._id, username: req.user.username, email: req.user.email, createdAt: req.user.createdAt } }));
+app.get("/api/profile", requireJwt, (req, res) => {
+  res.json({
+    success: true,
+    user: {
+      id: req.user._id,
+      username: req.user.username,
+      email: req.user.email,
+      createdAt: req.user.createdAt,
 
+      plan: req.user.plan || "free",
+      usage: {
+        used: req.user.monthlyRequestsUsed || 0,
+        limit: req.user.monthlyRequestLimit || 100000,
+        remaining: Math.max(
+          0,
+          (req.user.monthlyRequestLimit || 100000) -
+          (req.user.monthlyRequestsUsed || 0)
+        ),
+        resetAt: req.user.usageResetAt
+      }
+    }
+  });
+});
 app.post("/api/keys", requireJwt, async (req, res, next) => {
   try {
     const name = String(req.body.name || "Production Key").trim().slice(0, 80);
@@ -222,12 +322,14 @@ app.post("/api/v1/scrape", requireApiKey, async (req, res, next) => {
 });
 
 app.get("/api/status", (req, res) => res.json({ success: true, engine: "ONLINE", database: mongoose.connection.readyState === 1 ? "CONNECTED" : "UNAVAILABLE", uptimeSeconds: Math.floor(process.uptime()) }));
-// GOOGLE VERIFICATION HANDSHAKE ROUTE
+
+app.use("/api", (req, res) => res.status(404).json({ success: false, error: "API route not found." }));
+// GOOGLE VERIFICATION HANDSHAKE ROUTE (FIXED)
 app.get("/google1a515c3efc6e5a68.html", (req, res) => {
+  res.set("Content-Type", "text/html");
   res.send("google-site-verification: google1a515c3efc6e5a68.html");
 });
 
-app.use("/api", (req, res) => res.status(404).json({ success: false, error: "API route not found." }));
 app.get("/*splat", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 
 app.use((err, req, res, next) => {
