@@ -330,7 +330,24 @@ app.get("/google1a515c3efc6e5a68.html", (req, res) => {
   res.send("google-site-verification: google1a515c3efc6e5a68.html");
 });
 
-app.get("/*splat", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
+// HIGH-INTELLIGENCE GOOGLE BYPASS & ROUTING LAW
+const fs = require("fs");
+
+app.get("/*splat", (req, res) => {
+  const indexPath = path.join(__dirname, "index.html");
+  
+  fs.readFile(indexPath, "utf8", (err, html) => {
+    if (err) return res.status(500).json({ success: false, error: "Control plane missing root asset." });
+    
+    // 🔑 ЗАМЕНИ долния <meta> ред с ТВОЯ ИСТИНСКИ код, който копира току-що от Google!
+    const googleMetaTag = `<meta name="google-site-verification" content="КОПИРАЙ_ТВОЯ_КОД_ТУК" />`;
+    
+    // Автоматично вграждаме кода под заглавния таг в движение за Google ботовете
+    const injectedHtml = html.replace("<head>", `<head>\n    ${googleMetaTag}`);
+    
+    res.send(injectedHtml);
+  });
+});
 
 app.use((err, req, res, next) => {
   console.error(`[TitanCDN] ${err.name}: ${err.message}`);
