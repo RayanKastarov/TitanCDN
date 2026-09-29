@@ -21,9 +21,6 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-5.6-luna";
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
-const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || "";
-const STRIPE_PRICES = Object.freeze({ pro: process.env.STRIPE_PRICE_PRO || "", business: process.env.STRIPE_PRICE_BUSINESS || "", enterprise: process.env.STRIPE_PRICE_ENTERPRISE || "" });
 
 const PLAN_LIMITS = Object.freeze({ free: 100000, pro: 800000, business: 35000000, enterprise: 100000000 });
 
@@ -33,27 +30,6 @@ if (!JWT_SECRET || JWT_SECRET.length < 32) throw new Error("JWT_SECRET must be a
 app.disable("x-powered-by");
 if (NODE_ENV === "production") app.set("trust proxy", 1);
 app.use(helmet({ crossOriginResourcePolicy: { policy: "same-origin" } }));
-app.post("/api/billing/stripe-webhook", express.raw({ type: "application/json", limit: "256kb" }), async (req, res) => {
-  try {
-    if (!STRIPE_WEBHOOK_SECRET) return res.status(503).send("Stripe webhook is not configured");
-    const sig = String(req.get("stripe-signature") || "");
-    const parts = Object.fromEntries(sig.split(",").map(x=>x.split("=")).filter(x=>x.length===2));
-    const ts = parts.t, v1 = parts.v1;
-    if (!ts || !v1 || Math.abs(Date.now()/1000-Number(ts)) > 300) return res.status(400).send("Invalid Stripe signature");
-    const expected = crypto.createHmac("sha256", STRIPE_WEBHOOK_SECRET).update(`${ts}.${req.body.toString("utf8")}`).digest("hex");
-    if (!safeEqualHex(expected, v1)) return res.status(400).send("Invalid Stripe signature");
-    const event = JSON.parse(req.body.toString("utf8"));
-    const obj = event.data?.object || {};
-    if (event.type === "checkout.session.completed" && obj.metadata?.userId && obj.metadata?.plan) {
-      const plan = obj.metadata.plan;
-      if (PLAN_LIMITS[plan]) await User.updateOne({ _id:obj.metadata.userId }, { $set:{ plan, monthlyRequestLimit:PLAN_LIMITS[plan], stripeCustomerId:obj.customer || "", stripeSubscriptionId:obj.subscription || "" } });
-    }
-    if (event.type === "customer.subscription.deleted" && obj.id) {
-      await User.updateOne({ stripeSubscriptionId:obj.id }, { $set:{ plan:"free", monthlyRequestLimit:PLAN_LIMITS.free, stripeSubscriptionId:"" } });
-    }
-    res.json({ received:true });
-  } catch (e) { res.status(400).send("Webhook error"); }
-});
 app.use(express.json({ limit: "64kb" }));
 app.use(express.urlencoded({ extended: false, limit: "64kb" }));
 app.use(express.static(__dirname, { dotfiles: "deny", etag: true, maxAge: NODE_ENV === "production" ? "1h" : 0 }));
@@ -123,8 +99,6 @@ usageResetAt: {
   }
 },
 
-stripeCustomerId: { type: String, default: "" },
-stripeSubscriptionId: { type: String, default: "" },
 createdAt: { type: Date, default: Date.now }
 });
 
@@ -143,13 +117,7 @@ const ApiKeySchema = new mongoose.Schema({
 });
 
 const User = mongoose.model("User", UserSchema);
-const FreeGrantSchema = new mongoose.Schema({
-  clientHash: { type:String, required:true, unique:true, index:true },
-  emailHash: { type:String, required:true, index:true },
-  createdAt: { type:Date, default:Date.now }
-});
 const ApiKey = mongoose.model("ApiKey", ApiKeySchema);
-const FreeGrant = mongoose.model("FreeGrant", FreeGrantSchema);
 
 const sha256 = value => crypto.createHash("sha256").update(value).digest("hex");
 const normalizeEmail = value => String(value || "").trim().toLowerCase();
@@ -194,29 +162,37 @@ if (!user) {
   });
 }
 
-// Monthly reset
-if (!user.usageResetAt || new Date() >= user.usageResetAt) {
-  const now = new Date();
-
-  user.monthlyRequestsUsed = 0;
-  user.usageResetAt = new Date(Date.UTC(
-    now.getUTCFullYear(),
-    now.getUTCMonth() + 1,
-    1
-  ));
-
-  await user.save();
-}
-
-if (user.monthlyRequestsUsed >= user.monthlyRequestLimit) {
-  return res.status(429).json({
-    success: false,
-    error: "Monthly request limit reached.",
-    plan: user.plan,
-    used: user.monthlyRequestsUsed,
-    limit: user.monthlyRequestLimit,
-    resetAt: user.usageResetAt
-  });
+// Free plan is a one-time 100,000-credit trial. It never resets.
+// Paid plans keep their monthly reset behavior.
+if (user.plan === "free") {
+  user.monthlyRequestLimit = PLAN_LIMITS.free;
+  if (user.monthlyRequestsUsed >= PLAN_LIMITS.free) {
+    return res.status(429).json({
+      success: false,
+      error: "Free trial credit limit reached.",
+      plan: "free",
+      used: user.monthlyRequestsUsed,
+      limit: PLAN_LIMITS.free,
+      remaining: 0
+    });
+  }
+} else {
+  if (!user.usageResetAt || new Date() >= user.usageResetAt) {
+    const now = new Date();
+    user.monthlyRequestsUsed = 0;
+    user.usageResetAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+    await user.save();
+  }
+  if (user.monthlyRequestsUsed >= user.monthlyRequestLimit) {
+    return res.status(429).json({
+      success: false,
+      error: "Monthly request limit reached.",
+      plan: user.plan,
+      used: user.monthlyRequestsUsed,
+      limit: user.monthlyRequestLimit,
+      resetAt: user.usageResetAt
+    });
+  }
 }
 
 req.apiUser = user;
@@ -261,14 +237,9 @@ app.post("/api/auth/register", registerLimiter, async (req, res, next) => {
     if (username.length < 2 || username.length > 60 || !validEmail(email) || password.length < 12 || password.length > 128)
       return res.status(400).json({ success: false, error: "Use a valid username/email and a password of 12–128 characters." });
     if (await User.exists({ email })) return res.status(409).json({ success: false, error: "Email already registered." });
-    const clientId = String(req.body.clientId || "").trim();
-    if (!/^[a-f0-9-]{20,80}$/i.test(clientId)) return res.status(400).json({ success:false, error:"Free-plan eligibility token is missing. Enable browser storage and try again." });
-    const clientHash = sha256(`titan-free:${clientId}`), emailHash = sha256(email);
-    if (await FreeGrant.exists({ clientHash })) return res.status(409).json({ success:false, error:"The FREE entitlement has already been activated for this browser/device profile. Sign in to the existing account or choose a paid plan." });
     const passwordHash = await bcrypt.hash(password, 12);
-    const user = await User.create({ username, email, passwordHash });
-    try { await FreeGrant.create({ clientHash, emailHash }); } catch (e) { await User.deleteOne({_id:user._id}); throw e; }
-    return res.status(201).json({ success: true, message: "Account created. Your Free plan has started with 100,000 requests per month.", plan: "free", monthlyRequestLimit: PLAN_LIMITS.free });
+    await User.create({ username, email, passwordHash, plan: "free", monthlyRequestLimit: PLAN_LIMITS.free, monthlyRequestsUsed: 0, usageResetAt: null });
+    return res.status(201).json({ success: true, message: "Account created. Your one-time Free trial includes 100,000 API credits.", plan: "free", freeCredits: PLAN_LIMITS.free });
   } catch (err) { next(err); }
 });
 
@@ -306,23 +277,6 @@ app.get("/api/profile", requireJwt, async (req, res, next) => {
     res.json({ success: true, user: { id:user._id, username:user.username, email:user.email, createdAt:user.createdAt, plan:user.plan || "free", usage:{ used, limit, remaining:Math.max(0,limit-used), resetAt:user.usageResetAt, blocked:used >= limit } } });
   } catch (err) { next(err); }
 });
-app.post("/api/billing/checkout", requireJwt, async (req, res, next) => {
-  try {
-    const plan = String(req.body.plan || "").toLowerCase();
-    const price = STRIPE_PRICES[plan];
-    if (!PLAN_LIMITS[plan] || plan === "free") return res.status(400).json({ success:false, error:"Invalid paid plan." });
-    if (!STRIPE_SECRET_KEY || !price) return res.status(503).json({ success:false, error:"Stripe is not configured for this plan yet." });
-    const origin = `${req.protocol}://${req.get("host")}`;
-    const form = new URLSearchParams();
-    form.set("mode","subscription"); form.set("line_items[0][price]",price); form.set("line_items[0][quantity]","1");
-    form.set("success_url",`${origin}/?billing=success`); form.set("cancel_url",`${origin}/?billing=cancelled`);
-    form.set("customer_email",req.user.email); form.set("metadata[userId]",String(req.user._id)); form.set("metadata[plan]",plan);
-    form.set("subscription_data[metadata][userId]",String(req.user._id)); form.set("subscription_data[metadata][plan]",plan);
-    const r = await axios.post("https://api.stripe.com/v1/checkout/sessions", form.toString(), { headers:{ Authorization:`Bearer ${STRIPE_SECRET_KEY}`, "Content-Type":"application/x-www-form-urlencoded" }, timeout:20000 });
-    res.json({ success:true, checkoutUrl:r.data.url });
-  } catch (err) { next(err); }
-});
-
 app.post("/api/keys", requireJwt, async (req, res, next) => {
   try {
     const name = String(req.body.name || "Production Key").trim().slice(0, 80);
@@ -331,20 +285,6 @@ app.post("/api/keys", requireJwt, async (req, res, next) => {
     const rawKey = `titan_live_${crypto.randomBytes(32).toString("hex")}`;
     const record = await ApiKey.create({ keyId: `key_${crypto.randomBytes(12).toString("hex")}`, userId: req.user._id, name, prefix: rawKey.slice(0, 22), keyHash: sha256(rawKey), scopes: ["scrape:read"], extractionMode, extractionInstructions });
     res.status(201).json({ success: true, key: { id: record.keyId, name: record.name, value: rawKey, prefix: record.prefix, scopes: record.scopes, extractionMode: record.extractionMode, extractionInstructions: record.extractionInstructions, createdAt: record.createdAt }, warning: "Copy this key now. TitanCDN does not store the plaintext key." });
-  } catch (err) { next(err); }
-});
-
-app.patch("/api/keys/:keyId/profile", requireJwt, async (req, res, next) => {
-  try {
-    const extractionInstructions = String(req.body.extractionInstructions || "").trim().slice(0, 4000);
-    const extractionMode = extractionInstructions ? "custom" : "all";
-    const key = await ApiKey.findOneAndUpdate(
-      { keyId: req.params.keyId, userId: req.user._id, revokedAt: null },
-      { $set: { extractionMode, extractionInstructions } },
-      { new: true }
-    ).lean();
-    if (!key) return res.status(404).json({ success:false, error:"Active key not found." });
-    res.json({ success:true, key:{ id:key.keyId, prefix:key.prefix, extractionMode:key.extractionMode, extractionInstructions:key.extractionInstructions } });
   } catch (err) { next(err); }
 });
 
@@ -388,13 +328,18 @@ app.post("/api/v1/scrape", requireApiKey, async (req, res, next) => {
     const url = await validatePublicTarget(targetUrl);
     const now = new Date();
     const limit = PLAN_LIMITS[req.apiUser.plan] || PLAN_LIMITS.free;
-    if (!req.apiUser.usageResetAt || now >= req.apiUser.usageResetAt) {
+    if (req.apiUser.plan === "free") {
+      // IMPORTANT: free trial credits are lifetime credits and are never reset.
+      if (req.apiUser.monthlyRequestLimit !== PLAN_LIMITS.free) {
+        await User.updateOne({ _id:req.apiUser._id }, { $set:{ monthlyRequestLimit:PLAN_LIMITS.free } });
+      }
+    } else if (!req.apiUser.usageResetAt || now >= req.apiUser.usageResetAt) {
       await User.updateOne({ _id:req.apiUser._id }, { $set:{ monthlyRequestsUsed:0, monthlyRequestLimit:limit, usageResetAt:new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()+1,1)) } });
     } else if (req.apiUser.monthlyRequestLimit !== limit) {
       await User.updateOne({ _id:req.apiUser._id }, { $set:{ monthlyRequestLimit:limit } });
     }
     const reservedUser = await User.findOneAndUpdate({ _id:req.apiUser._id, monthlyRequestsUsed:{ $lt:limit } }, { $inc:{ monthlyRequestsUsed:1 } }, { new:true });
-    if (!reservedUser) return res.status(429).json({ success:false, error:"Monthly request limit reached. Upgrade your plan or wait for the monthly reset.", plan:req.apiUser.plan, limit });
+    if (!reservedUser) return res.status(429).json({ success:false, error:req.apiUser.plan === "free" ? "Free trial credit limit reached. This API key is blocked until the account is upgraded." : "Monthly request limit reached. Upgrade your plan or wait for the monthly reset.", plan:req.apiUser.plan, limit, remaining:0 });
     reserved = true;
     const response = await axios.get(url.toString(), { timeout:10000, maxRedirects:0, maxContentLength:2*1024*1024, maxBodyLength:2*1024*1024, responseType:"text", transformResponse:[data=>data], validateStatus:status=>status>=200&&status<400, headers:{ "User-Agent":"TitanCDN/1.0 (+data-fetch-service)", Accept:"text/html,application/json;q=0.9,*/*;q=0.5" } });
     const body = typeof response.data === "string" ? response.data : JSON.stringify(response.data);
@@ -440,67 +385,3 @@ async function shutdown(signal) {
 }
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
-const UserSchema = new mongoose.Schema({
-  username: { type: String, required: true, trim: true, minlength: 2, maxlength: 60 },
-  email: { type: String, required: true, unique: true, lowercase: true, trim: true, maxlength: 254 },
-  passwordHash: { type: String, required: true, select: false },
-  tokenVersion: { type: Number, default: 0 },
-  
-  // ФИНАЛНИ ЛИМИТИ: АВТОМАТИЧНИ 100k БЕЗПЛАТНИ КРЕДИТА ПРИ РЕГИСТРАЦИЯ
-  creditsRemaining: { type: Number, default: 100000 }, 
-  planTier: { type: String, default: "FREE_TRIAL" },
-  maxConcurrentStreams: { type: Number, default: 3 },
-  
-  createdAt: { type: Date, default: Date.now }
-});
-app.post("/api/v1/scrape", requireApiKey, async (req, res, next) => {
-  try {
-    const targetUrl = String(req.body.targetUrl || "").trim();
-    const outputFormat = String(req.body.outputFormat || "JSON").toUpperCase();
-    const aiPromptFilter = String(req.body.aiPromptFilter || "").trim(); // Твоят нов AI Промпт
-    
-    if (!targetUrl) return res.status(400).json({ success: false, error: "targetUrl is required." });
-    const url = await validatePublicTarget(targetUrl);
-    
-    // 1. ИСТИНСКО ИЗСМУКВАНЕ НА САЙТА ПРЕЗ AXIOS
-    const response = await axios.get(url.toString(), {
-      timeout: 10000,
-      maxRedirects: 0,
-      maxContentLength: 2 * 1024 * 1024,
-      maxBodyLength: 2 * 1024 * 1024,
-      responseType: "text",
-      transformResponse: [data => data],
-      validateStatus: status => status >= 200 && status < 400,
-      headers: { "User-Agent": "TitanCDN/1.0 (+data-fetch-service)", "Accept": "text/html,application/json;q=0.9,*/*;q=0.5" }
-    });
-    
-    // 2. ИЗВАЖДАМЕ 1 ТОКЕН ОТ ПРОФИЛА НА КЛИЕНТА В MONGODB ПРИ УСПЕХ
-    await mongoose.model("User").updateOne({ _id: req.apiKey.userId }, { \$inc: { creditsRemaining: -1 } });
-    
-    const body = typeof response.data === "string" ? response.data : JSON.stringify(response.data);
-    let payload = body.slice(0, 5000);
-    
-    // 3. АНАЛИТИЧНИЯТ AI ИЗЧИСТВАЩ ФИЛТЪР НА РАЯН (Дърпа само поръчаните неща)
-    let aiNote = "Titan AI: Native content stream optimization engaged.";
-    if (aiPromptFilter) {
-        aiNote = `Titan AI analytical filter executed successfully for directive: [${aiPromptFilter}]`;
-        payload = `{\n    "status": "AI Optimized Data Stream",\n    "message": "${aiNote}",\n    "extractedData": {\n        "target": "${url.hostname}",\n        "requestedScope": "Filtered based on prompt blueprint",\n        "payloadSample": "Clean structured variables extracted successfully. All HTML layout trash was discarded."\n    }\n}`;
-    }
-    
-    res.json({ 
-      success: true, 
-      source: url.toString(), 
-      format: outputFormat, 
-      responseCode: response.status, 
-      byteSize: Buffer.byteLength(body), 
-      aiHandshake: aiNote,
-      timestamp: new Date().toISOString(), 
-      data: outputFormat === "JSON" && !aiPromptFilter ? { rawPayload: payload } : payload 
-    });
-  } catch (err) {
-    if (err.message && /blocked|Invalid target|HTTPS|Credentials|Local targets|Private/.test(err.message)) return res.status(400).json({ success: false, error: err.message });
-    if (err.response) return res.status(502).json({ success: false, error: `Target returned HTTP ${err.response.status}.` });
-    if (err.code === "ECONNABORTED") return res.status(504).json({ success: false, error: "Target request timed out." });
-    next(err);
-  }
-});
