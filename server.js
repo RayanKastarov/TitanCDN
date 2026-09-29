@@ -109,6 +109,8 @@ const ApiKeySchema = new mongoose.Schema({
   prefix: { type: String, required: true },
   keyHash: { type: String, required: true, unique: true, select: false },
   scopes: { type: [String], default: ["scrape:read"] },
+  extractionMode: { type: String, enum: ["all", "custom"], default: "all" },
+  extractionInstructions: { type: String, default: "", maxlength: 4000 },
   revokedAt: { type: Date, default: null },
   lastUsedAt: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now }
@@ -186,6 +188,7 @@ if (user.monthlyRequestsUsed >= user.monthlyRequestLimit) {
 }
 
 req.apiUser = user;
+req.apiKeyRecord = record;
 
 next();
 }
@@ -269,16 +272,18 @@ app.get("/api/profile", requireJwt, async (req, res, next) => {
 app.post("/api/keys", requireJwt, async (req, res, next) => {
   try {
     const name = String(req.body.name || "Production Key").trim().slice(0, 80);
+    const extractionInstructions = String(req.body.extractionInstructions || "").trim().slice(0, 4000);
+    const extractionMode = extractionInstructions ? "custom" : "all";
     const rawKey = `titan_live_${crypto.randomBytes(32).toString("hex")}`;
-    const record = await ApiKey.create({ keyId: `key_${crypto.randomBytes(12).toString("hex")}`, userId: req.user._id, name, prefix: rawKey.slice(0, 22), keyHash: sha256(rawKey), scopes: ["scrape:read"] });
-    res.status(201).json({ success: true, key: { id: record.keyId, name: record.name, value: rawKey, prefix: record.prefix, scopes: record.scopes, createdAt: record.createdAt }, warning: "Copy this key now. TitanCDN does not store the plaintext key." });
+    const record = await ApiKey.create({ keyId: `key_${crypto.randomBytes(12).toString("hex")}`, userId: req.user._id, name, prefix: rawKey.slice(0, 22), keyHash: sha256(rawKey), scopes: ["scrape:read"], extractionMode, extractionInstructions });
+    res.status(201).json({ success: true, key: { id: record.keyId, name: record.name, value: rawKey, prefix: record.prefix, scopes: record.scopes, extractionMode: record.extractionMode, extractionInstructions: record.extractionInstructions, createdAt: record.createdAt }, warning: "Copy this key now. TitanCDN does not store the plaintext key." });
   } catch (err) { next(err); }
 });
 
 app.get("/api/keys", requireJwt, async (req, res, next) => {
   try {
     const keys = await ApiKey.find({ userId: req.user._id }).sort({ createdAt: -1 }).lean();
-    res.json({ success: true, keys: keys.map(k => ({ id: k.keyId, name: k.name, prefix: k.prefix, scopes: k.scopes, createdAt: k.createdAt, lastUsedAt: k.lastUsedAt, revokedAt: k.revokedAt })) });
+    res.json({ success: true, keys: keys.map(k => ({ id: k.keyId, name: k.name, prefix: k.prefix, scopes: k.scopes, extractionMode: k.extractionMode || "all", extractionInstructions: k.extractionInstructions || "", createdAt: k.createdAt, lastUsedAt: k.lastUsedAt, revokedAt: k.revokedAt })) });
   } catch (err) { next(err); }
 });
 
@@ -310,7 +315,7 @@ app.post("/api/v1/scrape", requireApiKey, async (req, res, next) => {
   try {
     const targetUrl = String(req.body.targetUrl || "").trim();
     const outputFormat = String(req.body.outputFormat || "JSON").toUpperCase();
-    const instructions = String(req.body.instructions || "").trim().slice(0, 4000);
+    const instructions = req.apiKeyRecord?.extractionMode === "custom" ? String(req.apiKeyRecord.extractionInstructions || "").trim().slice(0, 4000) : "";
     if (!targetUrl) return res.status(400).json({ success:false, error:"targetUrl is required." });
     const url = await validatePublicTarget(targetUrl);
     const now = new Date();
