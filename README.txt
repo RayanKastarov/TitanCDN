@@ -35,3 +35,13 @@ Deploy:
 3. git add .
 4. git commit -m "Add real Titan API usage and AI extraction"
 5. git push
+
+
+=== V2 PRODUCTION FLOW ===
+FREE: 100,000 requests/month. Usage is stored server-side and resets monthly. API requests stop with HTTP 429 at quota.
+API keys: real titan_live_<64 hex> secrets; only SHA-256 hashes are stored.
+Titan AI profile: saved per API key; blank = ALL AVAILABLE DATA, custom text = AI extraction.
+Targets: any public HTTP/HTTPS URL; private/reserved/local network addresses remain blocked for SSRF protection.
+Paid plans: configure STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_PRO, STRIPE_PRICE_BUSINESS, STRIPE_PRICE_ENTERPRISE in Render. Webhook endpoint: /api/billing/stripe-webhook.
+OpenAI extraction: configure OPENAI_API_KEY (and optionally OPENAI_MODEL).
+Anti-abuse: one FREE entitlement per persistent browser/device profile plus registration rate limiting. This raises abuse cost but is not identity proof. For production-grade anti-fraud, add verified email and a dedicated fraud/device-attestation provider; do not rely on IP-only blocking.
