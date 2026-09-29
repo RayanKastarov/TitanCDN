@@ -19,6 +19,10 @@ const PORT = Number(process.env.PORT || 3000);
 const MONGODB_URI = process.env.MONGODB_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
 const NODE_ENV = process.env.NODE_ENV || "development";
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
+const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-5.6-luna";
+
+const PLAN_LIMITS = Object.freeze({ free: 100000, pro: 800000, business: 35000000, enterprise: 100000000 });
 
 if (!MONGODB_URI) throw new Error("MONGODB_URI is required in .env");
 if (!JWT_SECRET || JWT_SECRET.length < 32) throw new Error("JWT_SECRET must be at least 32 characters");
@@ -224,7 +228,7 @@ app.post("/api/auth/register", registerLimiter, async (req, res, next) => {
     if (await User.exists({ email })) return res.status(409).json({ success: false, error: "Email already registered." });
     const passwordHash = await bcrypt.hash(password, 12);
     await User.create({ username, email, passwordHash });
-    return res.status(201).json({ success: true, message: "Account created." });
+    return res.status(201).json({ success: true, message: "Account created. Your Free plan has started with 100,000 requests per month.", plan: "free", monthlyRequestLimit: PLAN_LIMITS.free });
   } catch (err) { next(err); }
 });
 
@@ -236,7 +240,7 @@ app.post("/api/auth/login", loginLimiter, async (req, res, next) => {
     const valid = user ? await bcrypt.compare(password, user.passwordHash) : false;
     if (!valid) return res.status(401).json({ success: false, error: "Invalid email or password." });
     const token = jwt.sign({ tv: user.tokenVersion }, JWT_SECRET, { algorithm: "HS256", subject: String(user._id), issuer: "titancdn", expiresIn: "2h" });
-    return res.json({ success: true, token, user: { id: user._id, username: user.username, email: user.email } });
+    return res.json({ success: true, token, user: { id: user._id, username: user.username, email: user.email, plan: user.plan || "free" } });
   } catch (err) { next(err); }
 });
 
@@ -247,28 +251,20 @@ app.post("/api/auth/logout-all", requireJwt, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-app.get("/api/profile", requireJwt, (req, res) => {
-  res.json({
-    success: true,
-    user: {
-      id: req.user._id,
-      username: req.user.username,
-      email: req.user.email,
-      createdAt: req.user.createdAt,
-
-      plan: req.user.plan || "free",
-      usage: {
-        used: req.user.monthlyRequestsUsed || 0,
-        limit: req.user.monthlyRequestLimit || 100000,
-        remaining: Math.max(
-          0,
-          (req.user.monthlyRequestLimit || 100000) -
-          (req.user.monthlyRequestsUsed || 0)
-        ),
-        resetAt: req.user.usageResetAt
-      }
+app.get("/api/profile", requireJwt, async (req, res, next) => {
+  try {
+    const now = new Date();
+    let user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, error: "User not found." });
+    if (!user.usageResetAt || now >= user.usageResetAt) {
+      user.monthlyRequestsUsed = 0;
+      user.usageResetAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
     }
-  });
+    user.monthlyRequestLimit = PLAN_LIMITS[user.plan] || PLAN_LIMITS.free;
+    await user.save();
+    const used = user.monthlyRequestsUsed || 0, limit = user.monthlyRequestLimit;
+    res.json({ success: true, user: { id:user._id, username:user.username, email:user.email, createdAt:user.createdAt, plan:user.plan || "free", usage:{ used, limit, remaining:Math.max(0,limit-used), resetAt:user.usageResetAt, blocked:used >= limit } } });
+  } catch (err) { next(err); }
 });
 app.post("/api/keys", requireJwt, async (req, res, next) => {
   try {
@@ -294,29 +290,49 @@ app.delete("/api/keys/:keyId", requireJwt, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+async function extractWithAI(pageContent, instructions, sourceUrl) {
+  if (!instructions) return { mode: "raw", content: pageContent.slice(0, 50000) };
+  if (!OPENAI_API_KEY) throw Object.assign(new Error("AI extraction is not configured. Add OPENAI_API_KEY in Render."), { statusCode: 503 });
+  const prompt = `You are TitanCDN's extraction layer. Extract only information explicitly requested by the user from the supplied public page content. Do not invent missing values. Return valid JSON only.
+Source: ${sourceUrl}
+User instructions: ${instructions}
+
+PAGE CONTENT:
+${pageContent.slice(0, 50000)}`;
+  const ai = await axios.post("https://api.openai.com/v1/responses", { model: OPENAI_MODEL, input: prompt }, { timeout: 45000, headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" } });
+  const text = ai.data?.output_text || (ai.data?.output || []).flatMap(x=>x.content||[]).map(x=>x.text||"").join("") || "";
+  let parsed; try { parsed = JSON.parse(text); } catch { parsed = { result: text }; }
+  return { mode: "ai", model: OPENAI_MODEL, content: parsed };
+}
+
 app.post("/api/v1/scrape", requireApiKey, async (req, res, next) => {
+  let reserved = false;
   try {
     const targetUrl = String(req.body.targetUrl || "").trim();
     const outputFormat = String(req.body.outputFormat || "JSON").toUpperCase();
-    if (!targetUrl) return res.status(400).json({ success: false, error: "targetUrl is required." });
+    const instructions = String(req.body.instructions || "").trim().slice(0, 4000);
+    if (!targetUrl) return res.status(400).json({ success:false, error:"targetUrl is required." });
     const url = await validatePublicTarget(targetUrl);
-    const response = await axios.get(url.toString(), {
-      timeout: 10000,
-      maxRedirects: 0,
-      maxContentLength: 2 * 1024 * 1024,
-      maxBodyLength: 2 * 1024 * 1024,
-      responseType: "text",
-      transformResponse: [data => data],
-      validateStatus: status => status >= 200 && status < 400,
-      headers: { "User-Agent": "TitanCDN/1.0 (+data-fetch-service)", "Accept": "text/html,application/json;q=0.9,*/*;q=0.5" }
-    });
+    const now = new Date();
+    const limit = PLAN_LIMITS[req.apiUser.plan] || PLAN_LIMITS.free;
+    if (!req.apiUser.usageResetAt || now >= req.apiUser.usageResetAt) {
+      await User.updateOne({ _id:req.apiUser._id }, { $set:{ monthlyRequestsUsed:0, monthlyRequestLimit:limit, usageResetAt:new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()+1,1)) } });
+    } else if (req.apiUser.monthlyRequestLimit !== limit) {
+      await User.updateOne({ _id:req.apiUser._id }, { $set:{ monthlyRequestLimit:limit } });
+    }
+    const reservedUser = await User.findOneAndUpdate({ _id:req.apiUser._id, monthlyRequestsUsed:{ $lt:limit } }, { $inc:{ monthlyRequestsUsed:1 } }, { new:true });
+    if (!reservedUser) return res.status(429).json({ success:false, error:"Monthly request limit reached. Upgrade your plan or wait for the monthly reset.", plan:req.apiUser.plan, limit });
+    reserved = true;
+    const response = await axios.get(url.toString(), { timeout:10000, maxRedirects:0, maxContentLength:2*1024*1024, maxBodyLength:2*1024*1024, responseType:"text", transformResponse:[data=>data], validateStatus:status=>status>=200&&status<400, headers:{ "User-Agent":"TitanCDN/1.0 (+data-fetch-service)", Accept:"text/html,application/json;q=0.9,*/*;q=0.5" } });
     const body = typeof response.data === "string" ? response.data : JSON.stringify(response.data);
-    const payload = body.slice(0, 5000);
-    res.json({ success: true, source: url.toString(), format: outputFormat, responseCode: response.status, byteSize: Buffer.byteLength(body), timestamp: new Date().toISOString(), data: outputFormat === "JSON" ? { rawPayload: payload } : payload });
+    const extracted = await extractWithAI(body, instructions, url.toString());
+    res.json({ success:true, source:url.toString(), format:outputFormat, responseCode:response.status, byteSize:Buffer.byteLength(body), timestamp:new Date().toISOString(), extraction:extracted, usage:{ used:reservedUser.monthlyRequestsUsed, limit, remaining:Math.max(0,limit-reservedUser.monthlyRequestsUsed), resetAt:reservedUser.usageResetAt } });
   } catch (err) {
-    if (err.message && /blocked|Invalid target|HTTP\(S\)|Credentials|Local targets|Private/.test(err.message)) return res.status(400).json({ success: false, error: err.message });
-    if (err.response) return res.status(502).json({ success: false, error: `Target returned HTTP ${err.response.status}.` });
-    if (err.code === "ECONNABORTED") return res.status(504).json({ success: false, error: "Target request timed out." });
+    if (reserved && req.apiUser?._id) await User.updateOne({ _id:req.apiUser._id, monthlyRequestsUsed:{ $gt:0 } }, { $inc:{ monthlyRequestsUsed:-1 } }).catch(()=>{});
+    if (err.statusCode) return res.status(err.statusCode).json({ success:false, error:err.message });
+    if (err.message && /blocked|Invalid target|HTTP\(S\)|Credentials|Local targets|Private/.test(err.message)) return res.status(400).json({ success:false, error:err.message });
+    if (err.response) return res.status(502).json({ success:false, error:`Target or extraction service returned HTTP ${err.response.status}.` });
+    if (err.code === "ECONNABORTED") return res.status(504).json({ success:false, error:"Target request timed out." });
     next(err);
   }
 });
@@ -324,30 +340,9 @@ app.post("/api/v1/scrape", requireApiKey, async (req, res, next) => {
 app.get("/api/status", (req, res) => res.json({ success: true, engine: "ONLINE", database: mongoose.connection.readyState === 1 ? "CONNECTED" : "UNAVAILABLE", uptimeSeconds: Math.floor(process.uptime()) }));
 
 app.use("/api", (req, res) => res.status(404).json({ success: false, error: "API route not found." }));
-// GOOGLE VERIFICATION HANDSHAKE ROUTE (FIXED)
-app.get("/google1a515c3efc6e5a68.html", (req, res) => {
-  res.set("Content-Type", "text/html");
-  res.send("google-site-verification: google1a515c3efc6e5a68.html");
-});
-
-// HIGH-INTELLIGENCE GOOGLE BYPASS & ROUTING LAW
-const fs = require("fs");
-
-app.get("/*splat", (req, res) => {
-  const indexPath = path.join(__dirname, "index.html");
-  
-  fs.readFile(indexPath, "utf8", (err, html) => {
-    if (err) return res.status(500).json({ success: false, error: "Control plane missing root asset." });
-    
-    // 🔑 ЗАМЕНИ долния <meta> ред с ТВОЯ ИСТИНСКИ код, който копира току-що от Google!
-    const googleMetaTag = `<meta name="google-site-verification" content="КОПИРАЙ_ТВОЯ_КОД_ТУК" />`;
-    
-    // Автоматично вграждаме кода под заглавния таг в движение за Google ботовете
-    const injectedHtml = html.replace("<head>", `<head>\n    ${googleMetaTag}`);
-    
-    res.send(injectedHtml);
-  });
-});
+// Google verification and SPA fallback.
+app.get("/google1a515c3efc6e5a68.html", (req, res) => res.type("text/plain").send("google-site-verification: google1a515c3efc6e5a68.html"));
+app.get("/*splat", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 
 app.use((err, req, res, next) => {
   console.error(`[TitanCDN] ${err.name}: ${err.message}`);
