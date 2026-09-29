@@ -701,7 +701,8 @@ app.get("/api/admin/overview", requireJwt, requireAdmin, async (req, res) => {
 /* ------------------------------------------------------------------ */
 app.use("/api", (req, res) => res.status(404).json({ success: false, error: "API route not found." }));
 app.get("/google1a515c3efc6e5a68.html", (req, res) => res.type("text/plain").send("google-site-verification: google1a515c3efc6e5a68.html"));
-app.get("/*splat", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
+app.get("/*splat", (req, res) => res.sendFile(path.join(__dirname, "../index.html")));
+
 
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
