@@ -139,6 +139,15 @@ input:focus,select:focus{border-color:var(--gold)}
 </header>
 
 <section class="page active" id="overview">
+  <div class="card gold" id="freePlanBanner" style="display:none;margin-bottom:16px;border-color:#d4af37">
+    <div class="section-title"><h3>✓ БЕЗПЛАТНИЯТ ПЛАН Е АКТИВЕН</h3><span>FREE • 100,000 / MONTH</span></div>
+    <div class="grid stats" style="grid-template-columns:repeat(3,1fr)">
+      <div><div class="card-label">ИЗПОЛЗВАНИ</div><div class="big" id="freeUsed">0</div></div>
+      <div><div class="card-label">ОСТАВАТ</div><div class="big green" id="freeRemaining">100,000</div></div>
+      <div><div class="card-label">МЕСЕЧЕН ЛИМИТ</div><div class="big">100,000</div></div>
+    </div>
+    <div class="sub">При достигане на лимита API ключовете се паузират до следващия месечен reset или до активиране на платен план.</div>
+  </div>
   <div class="grid stats kpi5">
     <div class="card gold"><div class="card-label">Request Throughput</div><div class="big" id="rps">0</div><div class="sub">requests / second</div></div>
     <div class="card"><div class="card-label">Edge Nodes</div><div class="big">12</div><div class="sub green" id="nodeHealthy">7 healthy • 2 blocked</div></div>
@@ -209,6 +218,20 @@ input:focus,select:focus{border-color:var(--gold)}
 <div class="toast" id="toast">Engine stopped</div>
 <div class="modal-backdrop" id="authModal"><div class="modal"><div class="tabs"><button class="btn primary" id="signupTab">SIGN UP</button><button class="btn" id="signinTab">SIGN IN</button></div><h3 id="authTitle">Create TitanCDN account</h3><div class="auth-grid"><input id="authName" placeholder="Full name"><input id="authCompany" placeholder="Company"><input id="authEmail" class="full" type="email" placeholder="Email"><input id="authPassword" class="full" type="password" placeholder="Password • 12+ characters"><label class="full auth-note"><input type="checkbox" id="terms"> I agree to the Terms and Privacy Policy.</label></div><div class="auth-note" id="authHint">Already have an account? Use SIGN IN above. Demo UI only — connect this form to a real auth backend before production.</div><button class="btn primary" id="authSubmit" style="width:100%;margin-top:16px">CREATE ACCOUNT</button></div></div>
 <div class="modal-backdrop" id="profileModal"><div class="modal"><h3>My Profile</h3><div class="auth-grid"><input id="pName" placeholder="Name" readonly=""><input id="pEmail" class="full" type="email" placeholder="Email" readonly=""></div><div class="card gold" style="margin-top:16px"><div class="card-label">CURRENT PLAN</div><div class="big" id="profilePlan">FREE</div><div class="sub" id="profileUsageText">0 / 100,000 requests</div><div class="progress"><i id="profileUsageBar" style="--w:0%"></i></div><div class="metric-row"><span>Remaining</span><b id="profileRemaining">100,000</b></div><div class="metric-row"><span>Monthly reset</span><b id="profileReset">—</b></div><div class="metric-row"><span>API status</span><b id="profileApiStatus" class="green">ACTIVE</b></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button class="btn" id="logoutBtn">SIGN OUT</button></div></div></div>
+<div class="modal-backdrop" id="keySetupModal"><div class="modal">
+  <div class="eyebrow">TITAN AI • API KEY SETUP</div>
+  <h3>Какво искаш този API ключ да извлича?</h3>
+  <p>Напиши например: „само име, цена, валута и наличност“. Докосването/фокусирането на полето спира таймера. Ако не взаимодействаш с него до <b id="keySetupCountdown">10</b> секунди, Titan автоматично избира <b>ALL AVAILABLE DATA</b> и тогава създава ключа.</p>
+  <textarea id="keySetupInput" style="width:100%;min-height:130px;background:#080808;color:#eee;border:1px solid #2c2c2c;border-radius:7px;padding:12px" placeholder="Опиши какви данни искаш да получаваш..."></textarea>
+  <div class="auth-note" id="keySetupStatus">Изчакай 10 секунди без да пипаш полето за автоматичен ALL AVAILABLE DATA режим.</div>
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button class="btn" id="keySetupCancel">CANCEL</button><button class="btn primary" id="keySetupCreate">CONFIRM &amp; CREATE KEY</button></div>
+</div></div>
+<div class="modal-backdrop" id="freeWelcomeModal"><div class="modal">
+  <div class="eyebrow">TITANCDN FREE</div><h3>Безплатният план е активиран ✓</h3>
+  <p>Разполагаш с <b>100,000 API заявки на месец</b>. Usage панелът показва използваните и оставащите заявки. API ключ се създава чак след като избереш Titan AI extraction profile.</p>
+  <div class="card gold"><div class="metric-row"><span>Използвани</span><b>0</b></div><div class="metric-row"><span>Остават</span><b class="green">100,000</b></div><div class="metric-row"><span>План</span><b>FREE</b></div></div>
+  <button class="btn primary" id="freeWelcomeClose" style="width:100%;margin-top:16px">CONTINUE</button>
+</div></div>
 <div class="modal-backdrop" id="modal"><div class="modal"><h3 id="modalTitle">TitanCDN</h3><p id="modalText"></p><div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn" id="modalClose">CLOSE</button><button class="btn primary" id="modalAction">CONTINUE DEMO</button></div></div></div>
 
 <script src="/app.js" defer=""></script>

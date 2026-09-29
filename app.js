@@ -1,54 +1,374 @@
-const pages={overview:"Overview",edge:"Edge Network",analytics:"Analytics",jobs:"Scrape Jobs",logs:"Request Logs",api:"API & Webhooks",ai:"Titan AI",billing:"Billing & Usage"};
-const $=id=>document.getElementById(id), toast=$("toast");
-let currentUser=null, currentProfile=null, secretVisible=false;
-const getToken=()=>sessionStorage.getItem("titanJwt");
-function showToast(msg){toast.textContent=msg;toast.classList.add("show");clearTimeout(showToast.t);showToast.t=setTimeout(()=>toast.classList.remove("show"),3200)}
-async function api(path,options={}){const headers={"Content-Type":"application/json",...(getToken()?{Authorization:`Bearer ${getToken()}`}:{}) ,...(options.headers||{})};const r=await fetch(path,{...options,headers});let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);return d}
+"use strict";
 
-document.querySelectorAll(".nav button").forEach(btn=>btn.addEventListener("click",()=>{document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));btn.classList.add("active");document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));$(btn.dataset.page)?.classList.add("active");$("pageTitle").textContent=pages[btn.dataset.page]||btn.dataset.page;$("sidebar").classList.remove("open")}));
-$("menuBtn").onclick=()=>$("sidebar").classList.toggle("open");
+require("dotenv").config();
 
-// Cosmetic telemetry remains visual; account usage below is real backend data.
-const chart=$("chart"); if(chart){for(let i=0;i<20;i++){const b=document.createElement("div");b.className="bar";b.style.height=(18+Math.random()*50)+"%";chart.appendChild(b)}}
-let engine=false,timer=null;
-function setEngine(on){engine=on;$("engineBtn").classList.toggle("on",on);$("engineText").textContent=on?"ENGINE ONLINE":"ENGINE OFFLINE";$("telemetryState").textContent=on?"Live telemetry running":"Engine stopped";$("scraperStatus").textContent=on?"READY":"STANDBY";if(timer)clearInterval(timer);if(on)timer=setInterval(()=>{if($("rps"))$("rps").textContent=Math.floor(3000+Math.random()*1500).toLocaleString();if($("latency"))$("latency").textContent=Math.floor(35+Math.random()*25)+" ms"},700)}
-$("engineBtn").onclick=()=>setEngine(!engine);
-$("pingBtn").onclick=async()=>{try{const d=await api("/api/health");showToast(`API ${d.status} • DB ${d.database}`)}catch(e){showToast(e.message)}};
+const express = require("express");
+const mongoose = require("mongoose");
+const crypto = require("crypto");
+const path = require("path");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const axios = require("axios");
+const dns = require("dns").promises;
+const net = require("net");
 
-const authModal=$("authModal"),profileModal=$("profileModal"); let authMode="signup";
-function syncAuthTabs(){const up=authMode==="signup";$("signupTab").classList.toggle("primary",up);$("signinTab").classList.toggle("primary",!up);$("authTitle").textContent=up?"Create TitanCDN account":"Sign in to TitanCDN";$("authSubmit").textContent=up?"CREATE ACCOUNT":"SIGN IN";$("authName").style.display=up?"block":"none";$("authCompany").style.display="none"}
-function openAuth(mode="signup"){authMode=mode;syncAuthTabs();authModal.classList.add("show")}
-$("authBtn").onclick=()=>openAuth("signup");$("signupTab").onclick=()=>{authMode="signup";syncAuthTabs()};$("signinTab").onclick=()=>{authMode="signin";syncAuthTabs()};
-authModal.onclick=e=>{if(e.target===authModal)authModal.classList.remove("show")};profileModal.onclick=e=>{if(e.target===profileModal)profileModal.classList.remove("show")};
-function renderSignedOut(){currentUser=currentProfile=null;$("profileBtn").hidden=true;$("authBtn").hidden=false;if($("apiSignedOut"))$("apiSignedOut").hidden=false;if($("apiSignedIn"))$("apiSignedIn").hidden=true;if($("freePlanBanner"))$("freePlanBanner").style.display="none";renderUsage(null)}
-function renderUser(u){currentUser=u;$("authBtn").hidden=true;$("profileBtn").hidden=false;$("profileName").textContent=u.username||"Titan User";$("avatar").textContent=(u.username||"T")[0].toUpperCase();if($("apiSignedOut"))$("apiSignedOut").hidden=true;if($("apiSignedIn"))$("apiSignedIn").hidden=false;if($("freePlanBanner"))$("freePlanBanner").style.display=u.plan==="free"?"block":"none"}
-function fmt(n){return Number(n||0).toLocaleString("en-US")}
-function planName(p){return ({free:"FREE",pro:"PRO DEVELOPER",business:"BUSINESS CORE",enterprise:"ENTERPRISE TITAN"}[p]||String(p||"free").toUpperCase())}
-function renderUsage(profile){const u=profile?.usage;if(!u){$("usageUsed").textContent="—";$("usageSummary").textContent="Sign in to see your monthly usage";$("usagePlan").textContent="—";$("usageRemaining").textContent="—";$("usageReset").textContent="—";$("usageBar").style.setProperty("--w","0%");return}const pct=Math.min(100,(u.used/u.limit)*100||0);$("usageUsed").textContent=fmt(u.used);$("usageSummary").textContent=`requests used of ${fmt(u.limit)}`;$("usagePlan").textContent=planName(profile.plan);$("usageRemaining").textContent=fmt(u.remaining);$("usageReset").textContent=new Date(u.resetAt).toLocaleDateString();$("usageBar").style.setProperty("--w",pct+"%")}
-async function loadProfile(){const d=await api("/api/profile");currentProfile=d.user;renderUser(d.user);renderUsage(d.user);return d.user}
-$("authSubmit").onclick=async()=>{const username=$("authName").value.trim(),email=$("authEmail").value.trim(),password=$("authPassword").value;try{if(!email||!password)throw new Error("Email and password are required");if(authMode==="signup"){if(!$("terms").checked)throw new Error("Accept Terms and Privacy Policy");const created=await api("/api/auth/register",{method:"POST",body:JSON.stringify({username:username||email.split("@")[0],email,password})});const d=await api("/api/auth/login",{method:"POST",body:JSON.stringify({email,password})});sessionStorage.setItem("titanJwt",d.token);authModal.classList.remove("show");await loadProfile();await loadKeys();showToast(created.message||"Free plan started with 100,000 requests");return}const d=await api("/api/auth/login",{method:"POST",body:JSON.stringify({email,password})});sessionStorage.setItem("titanJwt",d.token);authModal.classList.remove("show");await loadProfile();await loadKeys();showToast("Signed in • your plan is active")}catch(e){showToast(e.message)}};
-$("profileBtn").onclick=async()=>{try{const p=await loadProfile();$("pName").value=p.username;$("pEmail").value=p.email;$("profilePlan").textContent=planName(p.plan);$("profileUsageText").textContent=`${fmt(p.usage.used)} / ${fmt(p.usage.limit)} requests`;$("profileRemaining").textContent=fmt(p.usage.remaining);$("profileReset").textContent=new Date(p.usage.resetAt).toLocaleDateString();$("profileApiStatus").textContent=p.usage.blocked?"QUOTA REACHED":"ACTIVE";$("profileApiStatus").className=p.usage.blocked?"red":"green";$("profileUsageBar").style.setProperty("--w",Math.min(100,p.usage.used/p.usage.limit*100)+"%");profileModal.classList.add("show")}catch(e){showToast(e.message)}};
-$("logoutBtn").onclick=()=>{sessionStorage.removeItem("titanJwt");sessionStorage.removeItem("titanApiKey");profileModal.classList.remove("show");$("apiKey").value="No API key loaded";renderSignedOut();showToast("Signed out")};
-async function restoreSession(){if(!getToken()){renderSignedOut();return}try{await loadProfile();await loadKeys()}catch{sessionStorage.removeItem("titanJwt");renderSignedOut()}}
+const app = express();
+const PORT = Number(process.env.PORT || 3000);
+const MONGODB_URI = process.env.MONGODB_URI;
+const JWT_SECRET = process.env.JWT_SECRET;
+const NODE_ENV = process.env.NODE_ENV || "development";
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
+const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-5.6-luna";
 
-async function loadKeys(){if(!getToken())return;const d=await api("/api/keys");const active=(d.keys||[]).find(k=>!k.revokedAt);const raw=sessionStorage.getItem("titanApiKey");if(raw)$("apiKey").value=raw.slice(0,22)+"••••••••••••";else if(active)$("apiKey").value=active.prefix+"••••••••••••";else $("apiKey").value="No API key — click CREATE KEY"}
-let keySetupTimer=null,keySetupSeconds=10,keySetupTouched=false,keySetupCreating=false;
-function closeKeySetup(){clearInterval(keySetupTimer);$("keySetupModal").classList.remove("show")}
-async function createConfiguredKey(){if(keySetupCreating)return;keySetupCreating=true;clearInterval(keySetupTimer);try{const instructions=$("keySetupInput").value.trim();$("keySetupCreate").disabled=true;$("keySetupCreate").textContent="CREATING...";const d=await api("/api/keys",{method:"POST",body:JSON.stringify({name:"Dashboard Key",extractionInstructions:instructions})});sessionStorage.setItem("titanApiKey",d.key.value);secretVisible=true;$("apiKey").value=d.key.value;$("revealKey").textContent="HIDE";$("rotateKey").textContent="CREATE NEW";$("apiKeyProfile").textContent=instructions?`CUSTOM • ${instructions}`:"ALL AVAILABLE DATA";closeKeySetup();showToast(instructions?"API key created with custom AI extraction":"API key created • ALL AVAILABLE DATA mode")}catch(e){showToast(e.message)}finally{keySetupCreating=false;$("keySetupCreate").disabled=false;$("keySetupCreate").textContent="CONFIRM & CREATE KEY"}}
-function openKeySetup(){if(!getToken()){showToast("Sign in first");return}keySetupTouched=false;keySetupSeconds=10;$("keySetupInput").value="";$("keySetupCountdown").textContent="10";$("keySetupModal").classList.add("show");clearInterval(keySetupTimer);keySetupTimer=setInterval(()=>{if(keySetupTouched)return;keySetupSeconds--;$("keySetupCountdown").textContent=String(Math.max(0,keySetupSeconds));if(keySetupSeconds<=0)createConfiguredKey()},1000)}
-$("keySetupInput").addEventListener("focus",()=>{keySetupTouched=true;clearInterval(keySetupTimer);$("keySetupStatus").textContent="Timer paused — finish your instruction, then confirm."});
-$("keySetupInput").addEventListener("input",()=>{keySetupTouched=true;clearInterval(keySetupTimer);$("keySetupStatus").textContent="Custom extraction instruction will be saved to this API key."});
-$("keySetupCreate").onclick=createConfiguredKey;$("keySetupCancel").onclick=closeKeySetup;$("keySetupModal").onclick=e=>{if(e.target===$("keySetupModal"))closeKeySetup()};
-$("rotateKey").onclick=openKeySetup;
-$("revealKey").onclick=()=>{const raw=sessionStorage.getItem("titanApiKey");if(!raw){showToast("Full key is available only in the browser session where it was created");return}secretVisible=!secretVisible;$("apiKey").value=secretVisible?raw:raw.slice(0,22)+"••••••••••••";$("revealKey").textContent=secretVisible?"HIDE":"REVEAL"};
+const PLAN_LIMITS = Object.freeze({ free: 100000, pro: 800000, business: 35000000, enterprise: 100000000 });
 
-function addLog(url,status){const root=$("logTable");const row=document.createElement("div");row.className="logrow";row.innerHTML=`<b>${new Date().toLocaleTimeString()}</b><span class="${status<300?'green':'red'}">${status}</span><span>${new URL(url).hostname}</span><span>API</span><span>GET</span>`;root.prepend(row)}
-$("sendBtn").onclick=async()=>{const url=$("targetUrl").value.trim(),format=$("format").value,out=$("preview"),key=sessionStorage.getItem("titanApiKey");try{if(!getToken())throw new Error("Sign in first");if(!key)throw new Error("Create a new API key first. Full keys cannot be recovered later.");new URL(url);out.textContent="Fetching public target and processing extraction...";$("scraperStatus").textContent="RUNNING";const r=await fetch("/api/v1/scrape",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":key},body:JSON.stringify({targetUrl:url,outputFormat:format})});const d=await r.json();if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);out.textContent=JSON.stringify(d,null,2);addLog(url,d.responseCode||200);$("scraperStatus").textContent="READY";await loadProfile();showToast("Extraction completed using this API key profile")}catch(e){out.textContent=JSON.stringify({success:false,error:e.message},null,2);$("scraperStatus").textContent="ERROR";showToast(e.message)}};
-$("askAi").onclick=()=>{const q=$("aiInput").value.trim();if(!q)return;$("extractInstructions").value=q;$("aiOut").textContent="Instruction loaded into Developer Workbench: "+q;document.querySelector('[data-page="overview"]').click();showToast("AI instruction loaded")};
-$("createJob").onclick=()=>document.querySelector('[data-page="overview"]').click();
-if($("apiSignupBtn"))$("apiSignupBtn").onclick=()=>openAuth("signup");
-if($("apiAiUse"))$("apiAiUse").onclick=()=>{const q=$("apiAiInput").value.trim();$("extractInstructions").value=q;document.querySelector('[data-page="overview"]').click();showToast(q?"Titan AI instruction loaded":"Raw extraction mode selected")};
+if (!MONGODB_URI) throw new Error("MONGODB_URI is required in .env");
+if (!JWT_SECRET || JWT_SECRET.length < 32) throw new Error("JWT_SECRET must be at least 32 characters");
 
-document.querySelectorAll(".buy").forEach(btn=>btn.onclick=()=>{const modal=$("modal");$("modalTitle").textContent=btn.dataset.plan;$("modalText").textContent="The backend quota exists for this plan, but paid activation needs your Stripe Price ID and webhook secret. Stripe is not faked in this build.";$("modalAction").textContent="CLOSE";modal.classList.add("show")});
-$("modalClose").onclick=()=>$("modal").classList.remove("show");$("modalAction").onclick=()=>$("modal").classList.remove("show");
-restoreSession();
+app.disable("x-powered-by");
+if (NODE_ENV === "production") app.set("trust proxy", 1);
+app.use(helmet({ crossOriginResourcePolicy: { policy: "same-origin" } }));
+app.use(express.json({ limit: "64kb" }));
+app.use(express.urlencoded({ extended: false, limit: "64kb" }));
+app.use(express.static(__dirname, { dotfiles: "deny", etag: true, maxAge: NODE_ENV === "production" ? "1h" : 0 }));
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: "Too many login attempts. Try again later."
+  }
+});
+
+const registerLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: "Too many registration attempts. Try again later."
+  }
+});
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 120,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { success: false, error: "API rate limit exceeded." }
+});
+app.use("/api", apiLimiter);
+
+const UserSchema = new mongoose.Schema({
+  username: { type: String, required: true, trim: true, minlength: 2, maxlength: 60 },
+  email: { type: String, required: true, unique: true, lowercase: true, trim: true, maxlength: 254 },
+  passwordHash: { type: String, required: true, select: false },
+ tokenVersion: { type: Number, default: 0 },
+
+plan: {
+  type: String,
+  enum: ["free", "pro", "business", "enterprise"],
+  default: "free"
+},
+
+monthlyRequestLimit: {
+  type: Number,
+  default: 100000
+},
+
+monthlyRequestsUsed: {
+  type: Number,
+  default: 0
+},
+
+usageResetAt: {
+  type: Date,
+  default: () => {
+    const now = new Date();
+
+    return new Date(Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth() + 1,
+      1
+    ));
+  }
+},
+
+createdAt: { type: Date, default: Date.now }
+});
+
+const ApiKeySchema = new mongoose.Schema({
+  keyId: { type: String, required: true, unique: true, index: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+  name: { type: String, required: true, trim: true, maxlength: 80 },
+  prefix: { type: String, required: true },
+  keyHash: { type: String, required: true, unique: true, select: false },
+  scopes: { type: [String], default: ["scrape:read"] },
+  extractionMode: { type: String, enum: ["all", "custom"], default: "all" },
+  extractionInstructions: { type: String, default: "", maxlength: 4000 },
+  revokedAt: { type: Date, default: null },
+  lastUsedAt: { type: Date, default: null },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const User = mongoose.model("User", UserSchema);
+const ApiKey = mongoose.model("ApiKey", ApiKeySchema);
+
+const sha256 = value => crypto.createHash("sha256").update(value).digest("hex");
+const normalizeEmail = value => String(value || "").trim().toLowerCase();
+const validEmail = value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+const safeEqualHex = (a, b) => {
+  try {
+    const x = Buffer.from(a, "hex"), y = Buffer.from(b, "hex");
+    return x.length === y.length && crypto.timingSafeEqual(x, y);
+  } catch { return false; }
+};
+
+async function requireJwt(req, res, next) {
+  const header = req.get("authorization") || "";
+  if (!header.startsWith("Bearer ")) return res.status(401).json({ success: false, error: "Authentication required." });
+  try {
+    const payload = jwt.verify(header.slice(7), JWT_SECRET, { algorithms: ["HS256"], issuer: "titancdn" });
+    const user = await User.findById(payload.sub).lean();
+    if (!user || user.tokenVersion !== payload.tv) return res.status(401).json({ success: false, error: "Session is no longer valid." });
+    req.user = user;
+    next();
+  } catch {
+    return res.status(401).json({ success: false, error: "Invalid or expired session." });
+  }
+}
+
+async function requireApiKey(req, res, next) {
+  const raw = String(req.get("x-api-key") || "");
+  if (!/^titan_live_[a-f0-9]{64}$/.test(raw)) return res.status(401).json({ success: false, error: "Valid TitanCDN API key required." });
+  const hash = sha256(raw);
+  const candidates = await ApiKey.find({ prefix: raw.slice(0, 22), revokedAt: null }).select("+keyHash");
+  const record = candidates.find(k => safeEqualHex(k.keyHash, hash));
+  if (!record) return res.status(401).json({ success: false, error: "Invalid or revoked API key." });
+  if (!record.scopes.includes("scrape:read")) return res.status(403).json({ success: false, error: "API key lacks scrape:read scope." });
+  record.lastUsedAt = new Date();
+  await record.save();
+  const user = await User.findById(record.userId);
+
+if (!user) {
+  return res.status(401).json({
+    success: false,
+    error: "API key owner not found."
+  });
+}
+
+// Monthly reset
+if (!user.usageResetAt || new Date() >= user.usageResetAt) {
+  const now = new Date();
+
+  user.monthlyRequestsUsed = 0;
+  user.usageResetAt = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth() + 1,
+    1
+  ));
+
+  await user.save();
+}
+
+if (user.monthlyRequestsUsed >= user.monthlyRequestLimit) {
+  return res.status(429).json({
+    success: false,
+    error: "Monthly request limit reached.",
+    plan: user.plan,
+    used: user.monthlyRequestsUsed,
+    limit: user.monthlyRequestLimit,
+    resetAt: user.usageResetAt
+  });
+}
+
+req.apiUser = user;
+req.apiKeyRecord = record;
+
+next();
+}
+
+function isBlockedIp(ip) {
+  if (net.isIPv4(ip)) {
+    const p = ip.split(".").map(Number);
+    return p[0] === 10 || p[0] === 127 || p[0] === 0 ||
+      (p[0] === 169 && p[1] === 254) || (p[0] === 172 && p[1] >= 16 && p[1] <= 31) ||
+      (p[0] === 192 && p[1] === 168) || (p[0] === 100 && p[1] >= 64 && p[1] <= 127) ||
+      p[0] >= 224;
+  }
+  if (net.isIPv6(ip)) {
+    const v = ip.toLowerCase();
+    return v === "::1" || v === "::" || v.startsWith("fc") || v.startsWith("fd") || v.startsWith("fe8") || v.startsWith("fe9") || v.startsWith("fea") || v.startsWith("feb");
+  }
+  return true;
+}
+
+async function validatePublicTarget(rawUrl) {
+  let url;
+  try { url = new URL(rawUrl); } catch { throw new Error("Invalid target URL."); }
+  if (!["http:", "https:"].includes(url.protocol)) throw new Error("Only HTTP(S) targets are allowed.");
+  if (url.username || url.password) throw new Error("Credentials in target URLs are not allowed.");
+  if (["localhost", "localhost.localdomain"].includes(url.hostname.toLowerCase())) throw new Error("Local targets are blocked.");
+  const records = await dns.lookup(url.hostname, { all: true, verbatim: true });
+  if (!records.length || records.some(r => isBlockedIp(r.address))) throw new Error("Private or reserved network targets are blocked.");
+  return url;
+}
+
+app.get("/api/health", (req, res) => res.json({ success: true, service: "TitanCDN", status: "ONLINE", database: mongoose.connection.readyState === 1 ? "CONNECTED" : "UNAVAILABLE" }));
+
+app.post("/api/auth/register", registerLimiter, async (req, res, next) => {
+  try {
+    const username = String(req.body.username || "").trim();
+    const email = normalizeEmail(req.body.email);
+    const password = String(req.body.password || "");
+    if (username.length < 2 || username.length > 60 || !validEmail(email) || password.length < 12 || password.length > 128)
+      return res.status(400).json({ success: false, error: "Use a valid username/email and a password of 12–128 characters." });
+    if (await User.exists({ email })) return res.status(409).json({ success: false, error: "Email already registered." });
+    const passwordHash = await bcrypt.hash(password, 12);
+    await User.create({ username, email, passwordHash });
+    return res.status(201).json({ success: true, message: "Account created. Your Free plan has started with 100,000 requests per month.", plan: "free", monthlyRequestLimit: PLAN_LIMITS.free });
+  } catch (err) { next(err); }
+});
+
+app.post("/api/auth/login", loginLimiter, async (req, res, next) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const password = String(req.body.password || "");
+    const user = await User.findOne({ email }).select("+passwordHash");
+    const valid = user ? await bcrypt.compare(password, user.passwordHash) : false;
+    if (!valid) return res.status(401).json({ success: false, error: "Invalid email or password." });
+    const token = jwt.sign({ tv: user.tokenVersion }, JWT_SECRET, { algorithm: "HS256", subject: String(user._id), issuer: "titancdn", expiresIn: "2h" });
+    return res.json({ success: true, token, user: { id: user._id, username: user.username, email: user.email, plan: user.plan || "free" } });
+  } catch (err) { next(err); }
+});
+
+app.post("/api/auth/logout-all", requireJwt, async (req, res, next) => {
+  try {
+    await User.updateOne({ _id: req.user._id }, { $inc: { tokenVersion: 1 } });
+    res.json({ success: true });
+  } catch (err) { next(err); }
+});
+
+app.get("/api/profile", requireJwt, async (req, res, next) => {
+  try {
+    const now = new Date();
+    let user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, error: "User not found." });
+    if (!user.usageResetAt || now >= user.usageResetAt) {
+      user.monthlyRequestsUsed = 0;
+      user.usageResetAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+    }
+    user.monthlyRequestLimit = PLAN_LIMITS[user.plan] || PLAN_LIMITS.free;
+    await user.save();
+    const used = user.monthlyRequestsUsed || 0, limit = user.monthlyRequestLimit;
+    res.json({ success: true, user: { id:user._id, username:user.username, email:user.email, createdAt:user.createdAt, plan:user.plan || "free", usage:{ used, limit, remaining:Math.max(0,limit-used), resetAt:user.usageResetAt, blocked:used >= limit } } });
+  } catch (err) { next(err); }
+});
+app.post("/api/keys", requireJwt, async (req, res, next) => {
+  try {
+    const name = String(req.body.name || "Production Key").trim().slice(0, 80);
+    const extractionInstructions = String(req.body.extractionInstructions || "").trim().slice(0, 4000);
+    const extractionMode = extractionInstructions ? "custom" : "all";
+    const rawKey = `titan_live_${crypto.randomBytes(32).toString("hex")}`;
+    const record = await ApiKey.create({ keyId: `key_${crypto.randomBytes(12).toString("hex")}`, userId: req.user._id, name, prefix: rawKey.slice(0, 22), keyHash: sha256(rawKey), scopes: ["scrape:read"], extractionMode, extractionInstructions });
+    res.status(201).json({ success: true, key: { id: record.keyId, name: record.name, value: rawKey, prefix: record.prefix, scopes: record.scopes, extractionMode: record.extractionMode, extractionInstructions: record.extractionInstructions, createdAt: record.createdAt }, warning: "Copy this key now. TitanCDN does not store the plaintext key." });
+  } catch (err) { next(err); }
+});
+
+app.get("/api/keys", requireJwt, async (req, res, next) => {
+  try {
+    const keys = await ApiKey.find({ userId: req.user._id }).sort({ createdAt: -1 }).lean();
+    res.json({ success: true, keys: keys.map(k => ({ id: k.keyId, name: k.name, prefix: k.prefix, scopes: k.scopes, extractionMode: k.extractionMode || "all", extractionInstructions: k.extractionInstructions || "", createdAt: k.createdAt, lastUsedAt: k.lastUsedAt, revokedAt: k.revokedAt })) });
+  } catch (err) { next(err); }
+});
+
+app.delete("/api/keys/:keyId", requireJwt, async (req, res, next) => {
+  try {
+    const result = await ApiKey.updateOne({ keyId: req.params.keyId, userId: req.user._id, revokedAt: null }, { $set: { revokedAt: new Date() } });
+    if (!result.modifiedCount) return res.status(404).json({ success: false, error: "Active key not found." });
+    res.json({ success: true });
+  } catch (err) { next(err); }
+});
+
+async function extractWithAI(pageContent, instructions, sourceUrl) {
+  if (!instructions) return { mode: "raw", content: pageContent.slice(0, 50000) };
+  if (!OPENAI_API_KEY) throw Object.assign(new Error("AI extraction is not configured. Add OPENAI_API_KEY in Render."), { statusCode: 503 });
+  const prompt = `You are TitanCDN's extraction layer. Extract only information explicitly requested by the user from the supplied public page content. Do not invent missing values. Return valid JSON only.
+Source: ${sourceUrl}
+User instructions: ${instructions}
+
+PAGE CONTENT:
+${pageContent.slice(0, 50000)}`;
+  const ai = await axios.post("https://api.openai.com/v1/responses", { model: OPENAI_MODEL, input: prompt }, { timeout: 45000, headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" } });
+  const text = ai.data?.output_text || (ai.data?.output || []).flatMap(x=>x.content||[]).map(x=>x.text||"").join("") || "";
+  let parsed; try { parsed = JSON.parse(text); } catch { parsed = { result: text }; }
+  return { mode: "ai", model: OPENAI_MODEL, content: parsed };
+}
+
+app.post("/api/v1/scrape", requireApiKey, async (req, res, next) => {
+  let reserved = false;
+  try {
+    const targetUrl = String(req.body.targetUrl || "").trim();
+    const outputFormat = String(req.body.outputFormat || "JSON").toUpperCase();
+    const instructions = req.apiKeyRecord?.extractionMode === "custom" ? String(req.apiKeyRecord.extractionInstructions || "").trim().slice(0, 4000) : "";
+    if (!targetUrl) return res.status(400).json({ success:false, error:"targetUrl is required." });
+    const url = await validatePublicTarget(targetUrl);
+    const now = new Date();
+    const limit = PLAN_LIMITS[req.apiUser.plan] || PLAN_LIMITS.free;
+    if (!req.apiUser.usageResetAt || now >= req.apiUser.usageResetAt) {
+      await User.updateOne({ _id:req.apiUser._id }, { $set:{ monthlyRequestsUsed:0, monthlyRequestLimit:limit, usageResetAt:new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()+1,1)) } });
+    } else if (req.apiUser.monthlyRequestLimit !== limit) {
+      await User.updateOne({ _id:req.apiUser._id }, { $set:{ monthlyRequestLimit:limit } });
+    }
+    const reservedUser = await User.findOneAndUpdate({ _id:req.apiUser._id, monthlyRequestsUsed:{ $lt:limit } }, { $inc:{ monthlyRequestsUsed:1 } }, { new:true });
+    if (!reservedUser) return res.status(429).json({ success:false, error:"Monthly request limit reached. Upgrade your plan or wait for the monthly reset.", plan:req.apiUser.plan, limit });
+    reserved = true;
+    const response = await axios.get(url.toString(), { timeout:10000, maxRedirects:0, maxContentLength:2*1024*1024, maxBodyLength:2*1024*1024, responseType:"text", transformResponse:[data=>data], validateStatus:status=>status>=200&&status<400, headers:{ "User-Agent":"TitanCDN/1.0 (+data-fetch-service)", Accept:"text/html,application/json;q=0.9,*/*;q=0.5" } });
+    const body = typeof response.data === "string" ? response.data : JSON.stringify(response.data);
+    const extracted = await extractWithAI(body, instructions, url.toString());
+    res.json({ success:true, source:url.toString(), format:outputFormat, responseCode:response.status, byteSize:Buffer.byteLength(body), timestamp:new Date().toISOString(), extraction:extracted, usage:{ used:reservedUser.monthlyRequestsUsed, limit, remaining:Math.max(0,limit-reservedUser.monthlyRequestsUsed), resetAt:reservedUser.usageResetAt } });
+  } catch (err) {
+    if (reserved && req.apiUser?._id) await User.updateOne({ _id:req.apiUser._id, monthlyRequestsUsed:{ $gt:0 } }, { $inc:{ monthlyRequestsUsed:-1 } }).catch(()=>{});
+    if (err.statusCode) return res.status(err.statusCode).json({ success:false, error:err.message });
+    if (err.message && /blocked|Invalid target|HTTP\(S\)|Credentials|Local targets|Private/.test(err.message)) return res.status(400).json({ success:false, error:err.message });
+    if (err.response) return res.status(502).json({ success:false, error:`Target or extraction service returned HTTP ${err.response.status}.` });
+    if (err.code === "ECONNABORTED") return res.status(504).json({ success:false, error:"Target request timed out." });
+    next(err);
+  }
+});
+
+app.get("/api/status", (req, res) => res.json({ success: true, engine: "ONLINE", database: mongoose.connection.readyState === 1 ? "CONNECTED" : "UNAVAILABLE", uptimeSeconds: Math.floor(process.uptime()) }));
+
+app.use("/api", (req, res) => res.status(404).json({ success: false, error: "API route not found." }));
+// Google verification and SPA fallback.
+app.get("/google1a515c3efc6e5a68.html", (req, res) => res.type("text/plain").send("google-site-verification: google1a515c3efc6e5a68.html"));
+app.get("/*splat", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
+
+app.use((err, req, res, next) => {
+  console.error(`[TitanCDN] ${err.name}: ${err.message}`);
+  if (res.headersSent) return next(err);
+  res.status(500).json({ success: false, error: "Internal server error." });
+});
+
+async function start() {
+  await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
+  app.listen(PORT, () => console.log(`TitanCDN API listening on port ${PORT} (${NODE_ENV})`));
+}
+
+start().catch(err => {
+  console.error("TitanCDN failed to start:", err.message);
+  process.exit(1);
+});
+
+async function shutdown(signal) {
+  console.log(`${signal}: shutting down TitanCDN...`);
+  await mongoose.disconnect();
+  process.exit(0);
+}
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
