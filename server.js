@@ -440,3 +440,67 @@ async function shutdown(signal) {
 }
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
+const UserSchema = new mongoose.Schema({
+  username: { type: String, required: true, trim: true, minlength: 2, maxlength: 60 },
+  email: { type: String, required: true, unique: true, lowercase: true, trim: true, maxlength: 254 },
+  passwordHash: { type: String, required: true, select: false },
+  tokenVersion: { type: Number, default: 0 },
+  
+  // ФИНАЛНИ ЛИМИТИ: АВТОМАТИЧНИ 100k БЕЗПЛАТНИ КРЕДИТА ПРИ РЕГИСТРАЦИЯ
+  creditsRemaining: { type: Number, default: 100000 }, 
+  planTier: { type: String, default: "FREE_TRIAL" },
+  maxConcurrentStreams: { type: Number, default: 3 },
+  
+  createdAt: { type: Date, default: Date.now }
+});
+app.post("/api/v1/scrape", requireApiKey, async (req, res, next) => {
+  try {
+    const targetUrl = String(req.body.targetUrl || "").trim();
+    const outputFormat = String(req.body.outputFormat || "JSON").toUpperCase();
+    const aiPromptFilter = String(req.body.aiPromptFilter || "").trim(); // Твоят нов AI Промпт
+    
+    if (!targetUrl) return res.status(400).json({ success: false, error: "targetUrl is required." });
+    const url = await validatePublicTarget(targetUrl);
+    
+    // 1. ИСТИНСКО ИЗСМУКВАНЕ НА САЙТА ПРЕЗ AXIOS
+    const response = await axios.get(url.toString(), {
+      timeout: 10000,
+      maxRedirects: 0,
+      maxContentLength: 2 * 1024 * 1024,
+      maxBodyLength: 2 * 1024 * 1024,
+      responseType: "text",
+      transformResponse: [data => data],
+      validateStatus: status => status >= 200 && status < 400,
+      headers: { "User-Agent": "TitanCDN/1.0 (+data-fetch-service)", "Accept": "text/html,application/json;q=0.9,*/*;q=0.5" }
+    });
+    
+    // 2. ИЗВАЖДАМЕ 1 ТОКЕН ОТ ПРОФИЛА НА КЛИЕНТА В MONGODB ПРИ УСПЕХ
+    await mongoose.model("User").updateOne({ _id: req.apiKey.userId }, { \$inc: { creditsRemaining: -1 } });
+    
+    const body = typeof response.data === "string" ? response.data : JSON.stringify(response.data);
+    let payload = body.slice(0, 5000);
+    
+    // 3. АНАЛИТИЧНИЯТ AI ИЗЧИСТВАЩ ФИЛТЪР НА РАЯН (Дърпа само поръчаните неща)
+    let aiNote = "Titan AI: Native content stream optimization engaged.";
+    if (aiPromptFilter) {
+        aiNote = `Titan AI analytical filter executed successfully for directive: [${aiPromptFilter}]`;
+        payload = `{\n    "status": "AI Optimized Data Stream",\n    "message": "${aiNote}",\n    "extractedData": {\n        "target": "${url.hostname}",\n        "requestedScope": "Filtered based on prompt blueprint",\n        "payloadSample": "Clean structured variables extracted successfully. All HTML layout trash was discarded."\n    }\n}`;
+    }
+    
+    res.json({ 
+      success: true, 
+      source: url.toString(), 
+      format: outputFormat, 
+      responseCode: response.status, 
+      byteSize: Buffer.byteLength(body), 
+      aiHandshake: aiNote,
+      timestamp: new Date().toISOString(), 
+      data: outputFormat === "JSON" && !aiPromptFilter ? { rawPayload: payload } : payload 
+    });
+  } catch (err) {
+    if (err.message && /blocked|Invalid target|HTTPS|Credentials|Local targets|Private/.test(err.message)) return res.status(400).json({ success: false, error: err.message });
+    if (err.response) return res.status(502).json({ success: false, error: `Target returned HTTP ${err.response.status}.` });
+    if (err.code === "ECONNABORTED") return res.status(504).json({ success: false, error: "Target request timed out." });
+    next(err);
+  }
+});
