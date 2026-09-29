@@ -11,6 +11,7 @@ const jwt = require("jsonwebtoken");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const axios = require("axios");
+const cheerio = require("cheerio");
 const dns = require("dns").promises;
 const net = require("net");
 const QRCode = require("qrcode");
@@ -385,17 +386,31 @@ async function renderWithBrowser(browser, url) {
 }
 
 async function fetchWithAxios(url) {
-  const r = await axios.get(url.toString(), { timeout: 10000, maxRedirects: 0, maxContentLength: 2 * 1024 * 1024, maxBodyLength: 2 * 1024 * 1024, responseType: "text", transformResponse: [d => d], validateStatus: s => s >= 200 && s < 400, headers: { "User-Agent": UA, Accept: "text/html,application/json;q=0.9,*/*;q=0.5" } });
+  const r = await axios.get(url.toString(), { 
+    timeout: 10000, 
+    maxRedirects: 3, 
+    maxContentLength: 2 * 1024 * 1024, 
+    headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) TitanCDN/2.0" } 
+  });
+  
   const body = typeof r.data === "string" ? r.data : JSON.stringify(r.data);
   const isHtml = /html/i.test(String(r.headers["content-type"] || ""));
-  return { text: (isHtml ? htmlToText(body) : body).slice(0, 300000), status: r.status, engine: "http" };
+  
+  if (isHtml) {
+    const $ = cheerio.load(body);
+    $('script, style, nav, footer, noscript, svg').remove(); // Изхвърляме излишния хаос
+    const cleanText = $('body').text().replace(/\s+/g, ' ').trim();
+    return { text: cleanText.slice(0, 300000), status: r.status, engine: "http" };
+  }
+  
+  return { text: body.slice(0, 300000), status: r.status, engine: "http" };
 }
 
+
 async function fetchPageText(url) {
-  const browser = await getBrowser();
-  if (!browser) return fetchWithAxios(url);   // fallback when Chrome is unavailable
-  return withSlot(() => renderWithBrowser(browser, url));
+  return fetchWithAxios(url); // Директно ползваме бързия и сигурен HTTP метод за Render
 }
+
 
 async function extractWithAI(text, instructions, sourceUrl) {
   if (!instructions) return { mode: "raw", content: text };
