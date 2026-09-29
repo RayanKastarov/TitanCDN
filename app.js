@@ -2,6 +2,15 @@ const pages={overview:"Overview",edge:"Edge Network",analytics:"Analytics",jobs:
 const $=id=>document.getElementById(id), toast=$("toast");
 let currentUser=null, currentProfile=null, secretVisible=false;
 const getToken=()=>sessionStorage.getItem("titanJwt");
+let currentKeyMeta=null;
+function freeClientId(){
+  let id=localStorage.getItem("titanFreeClientId");
+  if(!id){
+    id=(globalThis.crypto?.randomUUID?.()||("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{const r=Math.random()*16|0,v=c==="x"?r:(r&3|8);return v.toString(16)})))+"-"+(Date.now().toString(16));
+    localStorage.setItem("titanFreeClientId",id);
+  }
+  return id;
+}
 function showToast(msg){toast.textContent=msg;toast.classList.add("show");clearTimeout(showToast.t);showToast.t=setTimeout(()=>toast.classList.remove("show"),3200)}
 async function api(path,options={}){const headers={"Content-Type":"application/json",...(getToken()?{Authorization:`Bearer ${getToken()}`}:{}) ,...(options.headers||{})};const r=await fetch(path,{...options,headers});let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);return d}
 
