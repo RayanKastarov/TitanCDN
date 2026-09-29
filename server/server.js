@@ -99,9 +99,9 @@ app.use(express.urlencoded({ extended: false, limit: "64kb" }));
 app.use("/api", apiLimiter);
 
 // Only the front-end assets are public. (The previous version served the whole project folder, including server.js.)
-const staticHandler = express.static(__dirname, { dotfiles: "deny", index: false, etag: true, maxAge: NODE_ENV === "production" ? "1h" : 0 });
-const PUBLIC_ASSET = /^\/(?:app\.js|index\.html|[\w.-]+\.(?:png|jpe?g|svg|webp|ico))$/i;
-app.use((req, res, next) => (PUBLIC_ASSET.test(req.path) ? staticHandler(req, res, next) : next()));
+// Променяме статичния handler да сочи правилната папка и да отваря index.html
+app.use(express.static(path.join(__dirname, "../")));
+;
 
 /* ------------------------------------------------------------------ */
 /* Models                                                              */
@@ -702,6 +702,10 @@ app.get("/api/admin/overview", requireJwt, requireAdmin, async (req, res) => {
 app.use("/api", (req, res) => res.status(404).json({ success: false, error: "API route not found." }));
 app.get("/google1a515c3efc6e5a68.html", (req, res) => res.type("text/plain").send("google-site-verification: google1a515c3efc6e5a68.html"));
 app.get("/*splat", (req, res) => res.sendFile(path.join(__dirname, "../index.html")));
+// Директно изпращане на началния HTML файл при отваряне на главния уеб адрес
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../index.html"));
+});
 
 
 app.use((err, req, res, next) => {
@@ -733,3 +737,6 @@ async function shutdown(signal) {
 }
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../index.html"));
+});
