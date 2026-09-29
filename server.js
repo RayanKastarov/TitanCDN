@@ -99,7 +99,7 @@ app.use(express.urlencoded({ extended: false, limit: "64kb" }));
 app.use("/api", apiLimiter);
 
 // Only the front-end assets are public. (The previous version served the whole project folder, including server.js.)
-const staticHandler = express.static(__dirname, { dotfiles: "deny", index: false, etag: true, maxAge: NODE_ENV === "production" ? "1h" : 0 });
+const staticHandler = express.static(path.join(__dirname, "../"), { dotfiles: "deny", index: "index.html", etag: true, maxAge: NODE_ENV === "production" ? "1h" : 0 });
 const PUBLIC_ASSET = /^\/(?:app\.js|index\.html|[\w.-]+\.(?:png|jpe?g|svg|webp|ico))$/i;
 app.use((req, res, next) => (PUBLIC_ASSET.test(req.path) ? staticHandler(req, res, next) : next()));
 
@@ -733,3 +733,6 @@ async function shutdown(signal) {
 }
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../index.html"));
+});
