@@ -1,11 +1,14 @@
+<!DOCTYPE html>
 <html lang="bg"><head>
+  <meta name="google-site-verification" content="-pO-bUU70XOm7qiTRx15E6HRplpXubJsu96A2rjNW-o">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TitanCDN — Data Infrastructure Control Plane</title>
-<meta name="theme-color" content="#060606">
+<meta name="theme-color" content="#000000">
+<link rel="icon" type="image/png" href="/12.png">
 <style>
 :root{
-  --bg:#060606;--panel:#0d0d0d;--panel2:#111;--panel3:#151515;
+  --bg:#000000;--panel:#0d0d0d;--panel2:#111;--panel3:#151515;
   --gold:#d4af37;--gold2:#f1d46a;--muted:#8d8d8d;--text:#f4f4f4;
   --line:rgba(212,175,55,.18);--green:#22d47b;--red:#ff4040;--blue:#5fa8ff;
 }
@@ -74,12 +77,58 @@ input:focus,select:focus{border-color:var(--gold)}
 }
 
 .hero{display:flex;justify-content:space-between;align-items:center;gap:24px;padding:28px;margin-bottom:18px;border:1px solid rgba(212,175,55,.2);border-radius:16px;background:radial-gradient(circle at 85% 20%,rgba(212,175,55,.12),transparent 28%),linear-gradient(135deg,#121212,#080808)}.hero h2{font-size:34px;margin:6px 0}.hero p{color:#8c8c8c;max-width:720px;line-height:1.7;font-size:13px}.hero-badge{min-width:125px;aspect-ratio:1;border:1px solid rgba(212,175,55,.28);border-radius:50%;display:grid;place-content:center;text-align:center;box-shadow:inset 0 0 35px rgba(212,175,55,.06),0 0 50px rgba(212,175,55,.05)}.hero-badge b{font-size:29px;color:var(--gold2)}.hero-badge span{font-size:8px;letter-spacing:2px;color:#777}.registry-item{display:grid;grid-template-columns:1.5fr .9fr .7fr .7fr auto;align-items:center;gap:12px;padding:14px 8px;border-bottom:1px solid #202020}.registry-item:last-child{border:0}.channel-id{font:10px ui-monospace,monospace;color:#666}.logline{display:grid;grid-template-columns:180px 1fr 90px;gap:14px;padding:14px 0;border-bottom:1px solid #1e1e1e;font-size:12px}.logline span,.logline time{color:#777}.logline time{text-align:right}@media(max-width:720px){.hero{align-items:flex-start}.hero-badge{display:none}.registry-item{grid-template-columns:1fr auto}.registry-item>*:nth-child(3),.registry-item>*:nth-child(4){display:none}.logline{grid-template-columns:1fr}.logline time{text-align:left}}
+
+.gold-bar{height:36px;border:1px solid #d4af37;border-radius:3px;background:#000;overflow:hidden;margin:12px 0 18px;box-shadow:inset 0 0 14px rgba(0,0,0,.9)}
+.gold-fill{height:100%;width:0;background:linear-gradient(90deg,#b38728 0%,#fbf5b7 50%,#d4af37 100%);box-shadow:0 0 18px rgba(212,175,55,.45);transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.gold-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;font-size:15px;color:#f4f4f4;line-height:1.5}.gold-meta b{color:#fbf5b7;font-weight:800}
+.gold-pct{font-size:22px;font-weight:800;color:#fbf5b7}
+.stripe-box{padding:13px;background:#080808;border:1px solid #2c2c2c;border-radius:7px;margin-top:12px}.err{color:#ff6b6b;font-size:12px;min-height:18px;margin-top:8px}
+.qr{background:#fff;padding:8px;border-radius:8px;display:block;margin:10px auto}
+@media(max-width:720px){.gold-meta{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.gold-fill{transition:none}}
 </style>
 </head>
 <body>
 <div class="app">
 <aside class="sidebar" id="sidebar">
-  <div class="brand"><div class="logo"><span>T</span></div><div><h1>TITANCDN</h1><small>DATA INFRASTRUCTURE</small></div></div>
+<!-- TITANCDN PREMIUM DIAMOND LOGO SYSTEM -->
+<div class="brand" style="display: flex !important; align-items: center !important; gap: 15px !important; padding: 15px 25px !important; background: transparent !important; width: auto !important; height: auto !important; visibility: visible !important; opacity: 1 !important;">
+    <!-- ТВОЯТ ОРИГИНАЛЕН ЛОГО ТАГ, ПРЕВЪРНАТ В ЗЛАТЕН РОМБ -->
+    <div class="logo" style="
+        width: 38px !important; 
+        height: 38px !important; 
+        border: 2px solid #d4af37 !important; 
+        transform: rotate(45deg) !important; 
+        display: flex !important; 
+        justify-content: center !important; 
+        align-items: center !important; 
+        background: #090909 !important;
+        box-shadow: 0 0 12px rgba(212, 175, 55, 0.5) !important;
+        box-sizing: border-box !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    ">
+        <!-- БУКВАТА Т - ИЗПРАВЕНА И СВЕТЕЩА В ЗЛАТНО -->
+        <span style="
+            transform: rotate(-45deg) !important; 
+            color: #d4af37 !important; 
+            font-family: 'Segoe UI', Arial, sans-serif !important;
+            font-weight: 900 !important; 
+            font-size: 1.2rem !important;
+            display: inline-block !important;
+            line-height: 1 !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        ">T</span>
+    </div>
+    
+    <!-- ТВОИТЕ ОРИГИНАЛНИ ЗАГЛАВИЯ -->
+    <div style="display: block !important; visibility: visible !important; opacity: 1 !important;">
+        <h1 style="margin: 0 !important; font-size: 1.25rem !important; font-weight: 800 !important; letter-spacing: 1.5px !important; color: #ffffff !important; text-transform: uppercase !important; font-family: 'Segoe UI', sans-serif !important;">TITAN<span style="color: #d4af37 !important;">CDN</span></h1>
+        <small style="margin: 0 !important; font-size: 0.65rem !important; font-weight: 700 !important; letter-spacing: 1px !important; color: #666666 !important; text-transform: uppercase !important; display: block !important; font-family: 'Segoe UI', sans-serif !important;">DATA INFRASTRUCTURE</small>
+    </div>
+</div>
+
   <nav class="nav">
     <button class="active" data-page="overview">◈ <span>Overview</span></button>
     <button data-page="edge" class="">◎ <span>Edge Network</span></button>
@@ -90,7 +139,7 @@ input:focus,select:focus{border-color:var(--gold)}
     <button data-page="ai">✦ <span>Titan AI</span></button>
     <button data-page="billing">◇ <span>Billing &amp; Usage</span></button>
   </nav>
-  <div class="sidebar-bottom"><span class="status-dot"></span>CONTROL PLANE ONLINE<br><span style="margin-left:14px">v1.0.0 • LOCAL DEMO</span></div>
+  <div class="sidebar-bottom"><span class="status-dot"></span>CONTROL PLANE ONLINE<br><span style="margin-left:14px">v2.0.0 • BETA</span></div>
 </aside>
 
 <main class="main">
@@ -100,6 +149,20 @@ input:focus,select:focus{border-color:var(--gold)}
 </header>
 
 <section class="page active" id="overview">
+  <div class="card gold" id="goldUsage" style="margin-bottom:16px">
+    <div class="section-title"><h3>ИЗПОЛЗВАНИ СИМВОЛИ</h3><span class="gold-pct" id="goldPct">0%</span></div>
+    <div class="gold-bar" id="goldBarWrap" role="progressbar" aria-label="Използвани символи" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="gold-fill" id="goldFill"></div></div>
+    <div class="gold-meta">
+      <div>Текущ план: <b id="gPlan">—</b></div>
+      <div>Изразходени: <b id="gUsed">0</b> / <b id="gLimit">0</b> символа</div>
+      <div>Оставащ лимит: <b id="gRemain">0</b> символа</div>
+    </div>
+  </div>
+  <div class="card gold" id="trialBanner" style="display:none;margin-bottom:16px">
+    <div class="section-title"><h3>АКТИВИРАЙ БЕЗПЛАТНИЯ ПЕРИОД</h3><span>100,000 СИМВОЛА • ЕДНОКРАТНО</span></div>
+    <p class="sub" id="trialText" style="font-size:13px"></p>
+    <div style="display:flex;gap:8px;margin-top:12px"><button class="btn primary" id="trialActivate">АКТИВИРАЙ С КАРТА</button><button class="btn" id="trialResend">ИЗПРАТИ ОТНОВО ПИСМОТО</button></div>
+  </div>
   <div class="grid stats kpi5">
     <div class="card gold"><div class="card-label">Request Throughput</div><div class="big" id="rps">0</div><div class="sub">requests / second</div></div>
     <div class="card"><div class="card-label">Edge Nodes</div><div class="big">12</div><div class="sub green" id="nodeHealthy">7 healthy • 2 blocked</div></div>
@@ -116,86 +179,20 @@ input:focus,select:focus{border-color:var(--gold)}
       <div style="margin-top:20px"><button class="btn primary" id="pingBtn">PING INFRASTRUCTURE</button></div>
     </div>
   </div>
-  <div class="grid split" style="margin-top:16px"><div class="card"><div class="section-title"><h3>LIVE REQUEST STREAM</h3><span>CONTROL-PLANE EVENTS</span></div><div class="live-stream" id="liveStream"></div></div><div class="card gold"><div class="section-title"><h3>USAGE &amp; COST</h3><span>THIS CYCLE</span></div><div class="big">12.84M</div><div class="sub">requests of 35M included</div><div class="progress"><i style="--w:37%"></i></div><div class="metric-row"><span>Credits remaining</span><b>22.16M</b></div><div class="metric-row"><span>Estimated bill</span><b class="gold-text">€339.99</b></div><div class="metric-row"><span>Overage</span><b>€0.00</b></div></div></div>
+  <div class="grid split" style="margin-top:16px"><div class="card"><div class="section-title"><h3>LIVE REQUEST STREAM</h3><span>CONTROL-PLANE EVENTS</span></div><div class="live-stream" id="liveStream"></div></div><div class="card gold"><div class="section-title"><h3>USAGE &amp; COST</h3><span>СИМВОЛИ</span></div><div class="big" id="usageUsed">—</div><div class="sub" id="usageSummary">Sign in to see your usage</div><div class="progress"><i id="usageBar" style="--w:0%"></i></div><div class="metric-row"><span>Plan</span><b id="usagePlan">—</b></div><div class="metric-row"><span>Remaining</span><b id="usageRemaining">—</b></div><div class="metric-row"><span>Resets</span><b id="usageReset">—</b></div></div></div>
   <div class="section-title"><h3>DEVELOPER WORKBENCH</h3><span>REQUEST BUILDER + CURL</span></div>
   <div class="card">
     <div class="builder">
-      <input class="wide" id="targetUrl" placeholder="https://example.com" value="https://example.com">
+      <input class="wide" id="targetUrl" placeholder="https://your-public-url.com/page">
       <select id="method"><option>GET</option><option>POST</option></select>
       <select id="format"><option>JSON</option><option>HTML</option></select>
       <button class="btn primary" id="sendBtn">SEND TEST</button>
     </div>
-    <div class="preview" id="preview">{
-  "status": "READY",
-  "message": "Enter a target URL and press SEND TEST.",
-  "mode": "safe-local-demo"
-}</div>
+    <textarea id="extractInstructions" style="width:100%;margin-top:10px;min-height:90px;background:#080808;color:#eee;border:1px solid #2c2c2c;border-radius:7px;padding:12px" placeholder="AI extraction instructions (optional): e.g. Return only product name, price and availability. Leave empty to return the available page content."></textarea><div class="preview" id="preview">Ready. Sign in, create an API key, enter a public URL and optionally describe what data you want.</div>
   </div>
 </section>
 
-<section class="page" id="edge">
-  <div class="card gold">
-    <div class="section-title"><h3>DOMAIN NODE OPERATIONS</h3><span id="globalStatus"><span class="status-dot" style="background:var(--red);box-shadow:0 0 9px var(--red)"></span>2 NODE ALERT</span></div>
-    <div class="search-row"><input id="nodeSearch" placeholder="Search domain..."><button class="btn" id="resetNodes">RESET DEMO NODES</button></div>
-  </div>
-  <div class="section-title"><h3>EDGE PARTICLES</h3><span id="nodeCount">9 visible nodes</span></div>
-  <div class="nodes-head"><span>DOMAIN</span><span>STATUS</span><span>ROUTE</span><span>ACTION</span></div>
-  <div id="nodes">
-    <div class="node blocked">
-      <div><div class="domain">Amazon</div><small>node-amazon-01</small></div>
-      <span class="badge blocked">BLOCKED</span>
-      <span style="font-size:11px;color:#aaa">US-EAST</span>
-      <div><button class="btn danger heal" data-domain="Amazon">HEAL NODE</button></div>
-    </div>
-    <div class="node blocked">
-      <div><div class="domain">Walmart</div><small>node-walmart-01</small></div>
-      <span class="badge blocked">BLOCKED</span>
-      <span style="font-size:11px;color:#aaa">US-CENTRAL</span>
-      <div><button class="btn danger heal" data-domain="Walmart">HEAL NODE</button></div>
-    </div>
-    <div class="node active">
-      <div><div class="domain">Adidas</div><small>node-adidas-01</small></div>
-      <span class="badge active">ACTIVE</span>
-      <span style="font-size:11px;color:#aaa">EU-CENTRAL</span>
-      <div><span style="font-size:11px;color:#666">STABLE</span></div>
-    </div>
-    <div class="node active">
-      <div><div class="domain">AliExpress</div><small>node-aliexpress-01</small></div>
-      <span class="badge active">ACTIVE</span>
-      <span style="font-size:11px;color:#aaa">EU-WEST</span>
-      <div><span style="font-size:11px;color:#666">STABLE</span></div>
-    </div>
-    <div class="node active">
-      <div><div class="domain">eBay</div><small>node-ebay-01</small></div>
-      <span class="badge active">ACTIVE</span>
-      <span style="font-size:11px;color:#aaa">EU-CENTRAL</span>
-      <div><span style="font-size:11px;color:#666">STABLE</span></div>
-    </div>
-    <div class="node active">
-      <div><div class="domain">Emag</div><small>node-emag-01</small></div>
-      <span class="badge active">ACTIVE</span>
-      <span style="font-size:11px;color:#aaa">EU-EAST</span>
-      <div><span style="font-size:11px;color:#666">STABLE</span></div>
-    </div>
-    <div class="node active">
-      <div><div class="domain">Nike</div><small>node-nike-01</small></div>
-      <span class="badge active">ACTIVE</span>
-      <span style="font-size:11px;color:#aaa">EU-WEST</span>
-      <div><span style="font-size:11px;color:#666">STABLE</span></div>
-    </div>
-    <div class="node active">
-      <div><div class="domain">Shopify</div><small>node-shopify-01</small></div>
-      <span class="badge active">ACTIVE</span>
-      <span style="font-size:11px;color:#aaa">US-EAST</span>
-      <div><span style="font-size:11px;color:#666">STABLE</span></div>
-    </div>
-    <div class="node active">
-      <div><div class="domain">Target</div><small>node-target-01</small></div>
-      <span class="badge active">ACTIVE</span>
-      <span style="font-size:11px;color:#aaa">US-CENTRAL</span>
-      <div><span style="font-size:11px;color:#666">STABLE</span></div>
-    </div></div>
-</section>
+<section class="page" id="edge"><div class="card gold"><div class="section-title"><h3>PUBLIC TARGET ACCESS</h3><span>NO HARDCODED SITES</span></div><p class="sub">TitanCDN is not restricted to a preset site list. A valid API key can request public HTTP(S) targets subject to network safety checks and the target site's access controls.</p><div class="metric-row"><span>Private / local networks</span><b class="red">BLOCKED</b></div><div class="metric-row"><span>CAPTCHA / login / anti-bot bypass</span><b class="red">NOT BYPASSED</b></div><div class="metric-row"><span>Public pages and authorized APIs</span><b class="green">SUPPORTED</b></div></div></section>
 
 <section class="page" id="analytics">
   <div class="grid analytics-grid">
@@ -206,18 +203,19 @@ input:focus,select:focus{border-color:var(--gold)}
   </div>
 </section>
 
-<section class="page" id="jobs"><div class="card gold"><div class="section-title"><h3>SCRAPE JOB ORCHESTRATION</h3><span>QUEUE / SCHEDULE / STOP</span></div><div class="builder"><input id="jobUrl" class="wide" placeholder="https://example.com/products"><select><option>Every 15 min</option><option>Hourly</option><option>Daily</option></select><select><option>JSON</option><option>HTML</option></select><button class="btn primary" id="createJob">CREATE JOB</button></div></div><div class="card" style="margin-top:16px"><div class="job"><b>catalog-sync-eu</b><span class="green">RUNNING</span><span>12.4K pages</span><span>99.6%</span><button class="btn danger">STOP</button></div><div class="job"><b>price-monitor</b><span>QUEUED</span><span>3.1K pages</span><span>—</span><button class="btn">PAUSE</button></div><div class="job"><b>inventory-daily</b><span class="gold-text">SCHEDULED</span><span>48 domains</span><span>02:00 UTC</span><button class="btn">EDIT</button></div></div></section>
-<section class="page" id="logs"><div class="card gold"><div class="section-title"><h3>REQUEST LOGS</h3><span>SEARCH / FILTER / EXPORT</span></div><div class="search-row"><input id="logSearch" placeholder="Search request id, domain, status..."><button class="btn">EXPORT JSON</button></div></div><div class="card" style="margin-top:16px" id="logTable"><div class="logrow"><b>req_91af3</b><span class="green">200</span><span>example.com</span><span>142 ms</span><span>GET</span></div><div class="logrow"><b>req_91af2</b><span class="red">429</span><span>store.example</span><span>804 ms</span><span>GET</span></div><div class="logrow"><b>req_91af1</b><span class="green">200</span><span>docs.example</span><span>96 ms</span><span>GET</span></div></div></section>
-<section class="page" id="api"><div class="grid split"><div class="card gold"><div class="section-title"><h3>MASTER API CREDENTIAL</h3><span>SERVER-SIDE SECRET</span></div><p class="sub">One credential authenticates to TitanCDN. Domain channels isolate routing, quotas and health state per configured target.</p><div class="keyrow"><input class="code" id="apiKey" readonly="" value="titan_live_••••••••••••••••••••••••"><button class="btn" id="revealKey">REVEAL</button><button class="btn" id="rotateKey">ROTATE</button></div><div class="auth-note">Production rule: show the full secret only once after server-side creation. Store only a cryptographic hash; never put a real secret in static HTML/localStorage.</div></div><div class="card"><div class="section-title"><h3>WEBHOOKS</h3><span>SIGNED EVENTS</span></div><input value="https://your-app.example/webhooks/titan" style="width:100%"><div class="hero-line"><span class="pill">request.completed</span><span class="pill">node.degraded</span><span class="pill">job.failed</span><span class="pill">usage.threshold</span></div><button class="btn primary" style="margin-top:16px">SAVE WEBHOOK</button></div></div><div class="card" style="margin-top:16px"><div class="section-title"><h3>DOMAIN CHANNELS</h3><span>PER-TARGET ISOLATION</span></div><div class="node active"><div><div class="domain">example.com</div><small>channel ch_01H7E9 • policy: standard</small></div><span class="badge active">ACTIVE</span><span>EU-WEST</span><span class="code">quota 4.2M</span></div><div class="node blocked"><div><div class="domain">store.example</div><small>channel ch_01H7EA • route degraded</small></div><span class="badge blocked">DEGRADED</span><span>US-EAST</span><button class="btn danger">HEAL ROUTE</button></div></div></section>
-<section class="page" id="ai"><div class="grid split"><div class="card gold"><div class="section-title"><h3>TITAN AI CONSOLE</h3><span>OPS COPILOT</span></div><div class="preview" id="aiOut">Titan AI ready. Ask about latency, failed jobs, usage anomalies, or request logs.</div><div class="search-row" style="margin-top:10px"><input id="aiInput" placeholder="Why did success rate drop?"><button class="btn primary" id="askAi">ASK TITAN</button></div></div><div class="card"><h3>Suggested investigations</h3><div class="setting"><span>Analyze 429 spikes<p>Compare domains, routes and time windows</p></span><button class="btn">RUN</button></div><div class="setting"><span>Cost optimization<p>Find high-cost jobs and retry waste</p></span><button class="btn">RUN</button></div><div class="setting"><span>Route health<p>Summarize degraded domain channels</p></span><button class="btn">RUN</button></div></div></div></section>
+<section class="page" id="jobs"><div class="card gold"><div class="section-title"><h3>EXTRACTION JOB</h3><span>URL + AI INSTRUCTIONS</span></div><p class="sub">Use the Developer Workbench for live extraction. Persistent scheduled jobs are the next backend module.</p><button class="btn primary" id="createJob">OPEN WORKBENCH</button></div></section>
+<section class="page" id="logs"><div class="card gold"><div class="section-title"><h3>REQUEST LOGS</h3><span>LIVE SESSION</span></div><div id="logTable"><div class="sub">Successful workbench requests will appear here during this browser session.</div></div></div></section>
+<section class="page" id="api"><div class="card gold"><div class="section-title"><h3>MASTER API CREDENTIAL</h3><span>REAL SERVER-SIDE KEY</span></div><div id="apiSignedOut"><p class="sub">API keys are available only after registration and sign-in.</p><button class="btn primary" id="apiSignupBtn">SIGN UP / SIGN IN</button></div><div id="apiSignedIn" hidden=""><p class="sub">Create a real TitanCDN credential. The plaintext secret is shown only when it is created; the database stores only its hash.</p><div class="keyrow"><input class="code" id="apiKey" readonly="" value="No API key loaded"><button class="btn" id="revealKey">REVEAL</button><button class="btn primary" id="rotateKey">CREATE KEY</button></div><div class="auth-note">Format: titan_live_… • quota is enforced on your account plan. The key is created only after its extraction profile is chosen.</div><div class="metric-row"><span>Key extraction profile</span><b id="apiKeyProfile">Not configured yet</b></div><div class="card" style="margin-top:16px"><div class="section-title"><h3>TITAN AI EXTRACTION INSTRUCTION</h3><span>WHAT SHOULD THIS KEY EXTRACT?</span></div><p class="sub">Tell Titan AI what this API key should extract from public target pages. Leave it empty for ALL AVAILABLE DATA. This profile is saved on the key and used on every request.</p><textarea id="apiAiInput" style="width:100%;min-height:100px;background:#080808;color:#eee;border:1px solid #2c2c2c;border-radius:7px;padding:12px" placeholder="Tell Titan AI what information you want..."></textarea><button class="btn primary" id="apiAiUse" style="margin-top:10px">SAVE TO THIS API KEY</button></div></div></div></section>
+<section class="page" id="ai"><div class="card gold"><div class="section-title"><h3>TITAN AI EXTRACTION</h3><span>URL CONTENT → REQUESTED DATA</span></div><div class="preview" id="aiOut">Titan AI is used by the Developer Workbench. Enter a URL and describe exactly what information you want extracted.</div><div class="search-row" style="margin-top:10px"><input id="aiInput" placeholder="Describe the information you want extracted"><button class="btn primary" id="askAi">USE IN WORKBENCH</button></div></div></section>
 <section class="page" id="billing">
-  <div class="section-title"><h3>CAPACITY PLANS</h3><span>DEMO CHECKOUT</span></div>
+  <div class="section-title"><h3>ПЛАНОВЕ</h3><span>МЕСЕЧНИ ЛИМИТИ В СИМВОЛИ</span></div>
+  <div class="card gold" style="margin-bottom:16px"><div class="card-label">FREE TRIAL</div><div class="price">€0 <small>/ еднократно</small></div><ul class="features"><li>100,000 символа (не се подновяват)</li><li>Валидация на карта, без таксуване</li><li>Една карта и едно устройство — един безплатен период</li><li>Спира автоматично при изчерпване</li></ul></div>
   <div class="grid plans">
-    <div class="card plan"><div class="card-label">PRO DEVELOPER</div><div class="price">€69.99 <small>/ month</small></div><ul class="features"><li>800K requests</li><li>Developer workbench</li><li>Core telemetry</li><li>Standard support</li></ul><button class="btn primary buy" data-plan="Pro Developer">SELECT PLAN</button></div>
-    <div class="card plan featured"><div class="ribbon">POPULAR</div><div class="card-label">BUSINESS CORE</div><div class="price">€339.99 <small>/ month</small></div><ul class="features"><li>35M requests</li><li>Edge Network console</li><li>Advanced analytics</li><li>Priority support</li></ul><button class="btn primary buy" data-plan="Business Core">SELECT PLAN</button></div>
-    <div class="card plan"><div class="card-label">ENTERPRISE TITAN</div><div class="price">€1,099.99 <small>/ month</small></div><ul class="features"><li>100M requests</li><li>Enterprise telemetry</li><li>Custom integrations</li><li>Dedicated support</li></ul><button class="btn primary buy" data-plan="Enterprise Titan">SELECT PLAN</button></div>
+    <div class="card plan"><div class="card-label">STARTER</div><div class="price">€69.99 <small>/ месец</small></div><ul class="features"><li>1,000,000 символа</li><li>Developer workbench</li><li>Титан AI извличане</li><li>Стандартна поддръжка</li></ul><button class="btn primary buy" data-plan="pro">SELECT PLAN</button></div>
+    <div class="card plan featured"><div class="ribbon">POPULAR</div><div class="card-label">СРЕДНА ФАБРИКА</div><div class="price">€339.99 <small>/ месец</small></div><ul class="features"><li>35,000,000 символа</li><li>Advanced analytics</li><li>Приоритетна поддръжка</li><li>2FA за екипа</li></ul><button class="btn primary buy" data-plan="business">SELECT PLAN</button></div>
+    <div class="card plan"><div class="card-label">ОГРОМНА ФАБРИКА</div><div class="price">€1,099.99 <small>/ месец</small></div><ul class="features"><li>100,000,000 символа</li><li>Enterprise telemetry</li><li>Персонални интеграции</li><li>Dedicated support</li></ul><button class="btn primary buy" data-plan="enterprise">SELECT PLAN</button></div>
   </div>
-  <div class="card" style="margin-top:16px"><b>Payment integration status</b><p style="color:#777;font-size:12px">This HTML version uses a demo checkout modal. Connect Stripe Checkout on the backend before accepting real payments.</p></div>
+  <div class="card" style="margin-top:16px"><b>Активиране на платен план</b><p style="color:#777;font-size:12px">Плащането става през защитен Stripe Checkout. След потвърждение от Stripe (webhook) лимитът на акаунта се сменя автоматично, а символите се нулират при всяко подновяване.</p></div>
 </section>
 
 <section class="page" id="registry">
@@ -234,10 +232,40 @@ input:focus,select:focus{border-color:var(--gold)}
 </div>
 
 <div class="toast" id="toast">Engine stopped</div>
-<div class="modal-backdrop" id="authModal"><div class="modal"><div class="tabs"><button class="btn primary" id="signupTab">SIGN UP</button><button class="btn" id="signinTab">SIGN IN</button></div><h3 id="authTitle">Create TitanCDN account</h3><div class="auth-grid"><input id="authName" placeholder="Full name"><input id="authCompany" placeholder="Company"><input id="authEmail" class="full" type="email" placeholder="Email"><input id="authPassword" class="full" type="password" placeholder="Password • 12+ characters"><label class="full auth-note"><input type="checkbox" id="terms"> I agree to the Terms and Privacy Policy.</label></div><div class="auth-note" id="authHint">Already have an account? Use SIGN IN above. Demo UI only — connect this form to a real auth backend before production.</div><button class="btn primary" id="authSubmit" style="width:100%;margin-top:16px">CREATE ACCOUNT</button></div></div>
-<div class="modal-backdrop" id="profileModal"><div class="modal"><h3>My Profile</h3><div class="auth-grid"><input id="pName" placeholder="Name"><input id="pCompany" placeholder="Company"><input id="pEmail" class="full" type="email" placeholder="Email"><input class="full" type="password" value="not-a-real-password" readonly="" aria-label="Masked password"><input class="full" value="Business Core • Active" readonly=""></div><div class="setting"><span>Two-factor authentication<p>Recommended for API administrators</p></span><button class="mini-switch on"><i></i></button></div><div class="setting"><span>Login alerts<p>Email on new device sign-in</p></span><button class="mini-switch on"><i></i></button></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button class="btn" id="logoutBtn">SIGN OUT</button><button class="btn primary" id="saveProfile">SAVE PROFILE</button></div></div></div>
+<div class="modal-backdrop" id="authModal"><div class="modal"><div class="tabs"><button class="btn primary" id="signupTab">SIGN UP</button><button class="btn" id="signinTab">SIGN IN</button></div><h3 id="authTitle">Create TitanCDN account</h3><div class="auth-grid"><input id="authName" placeholder="Full name"><input id="authCompany" placeholder="Company"><input id="authEmail" class="full" type="email" placeholder="Email"><input id="authPassword" class="full" type="password" placeholder="Password • 12+ characters"><input id="authTotp" class="full" style="display:none" inputmode="numeric" autocomplete="one-time-code" placeholder="2FA код (6 цифри) или recovery код"><label class="full auth-note"><input type="checkbox" id="terms"> I agree to the Terms and Privacy Policy.</label></div><div class="auth-note" id="authHint">Already have an account? Use SIGN IN above. След регистрация получаваш писмо за потвърждение. Безплатните 100,000 символа се активират след потвърден имейл и валидиране на карта (без таксуване).</div><button class="btn primary" id="authSubmit" style="width:100%;margin-top:16px">CREATE ACCOUNT</button><button class="btn" id="resendBtn" style="display:none;width:100%;margin-top:10px">ИЗПРАТИ ОТНОВО ПИСМОТО ЗА ПОТВЪРЖДЕНИЕ</button></div></div>
+<div class="modal-backdrop" id="profileModal"><div class="modal"><h3>My Profile</h3><div class="auth-grid"><input id="pName" placeholder="Name" readonly=""><input id="pEmail" class="full" type="email" placeholder="Email" readonly=""></div><div class="card gold" style="margin-top:16px"><div class="card-label">CURRENT PLAN</div><div class="big" id="profilePlan">FREE</div><div class="sub" id="profileUsageText">0 / 100,000 символа</div><div class="progress"><i id="profileUsageBar" style="--w:0%"></i></div><div class="metric-row"><span>Remaining</span><b id="profileRemaining">100,000</b></div><div class="metric-row"><span>Monthly reset</span><b id="profileReset">—</b></div><div class="metric-row"><span>API status</span><b id="profileApiStatus" class="green">ACTIVE</b></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button class="btn" id="twofaBtn">ENABLE 2FA</button><button class="btn" id="logoutBtn">SIGN OUT</button></div></div></div>
+<div class="modal-backdrop" id="keySetupModal"><div class="modal">
+  <div class="eyebrow">TITAN AI • API KEY SETUP</div>
+  <h3>Какво искаш този API ключ да извлича?</h3>
+  <p>Опиши свободно какви данни искаш. Докосването/фокусирането на полето спира таймера. Ако не взаимодействаш с него до <b id="keySetupCountdown">10</b> секунди, Titan автоматично избира <b>ALL AVAILABLE DATA</b> и тогава създава ключа.</p>
+  <textarea id="keySetupInput" style="width:100%;min-height:130px;background:#080808;color:#eee;border:1px solid #2c2c2c;border-radius:7px;padding:12px" placeholder="Опиши какви данни искаш да получаваш..."></textarea>
+  <div class="auth-note" id="keySetupStatus">Изчакай 10 секунди без да пипаш полето за автоматичен ALL AVAILABLE DATA режим.</div>
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button class="btn" id="keySetupCancel">CANCEL</button><button class="btn primary" id="keySetupCreate">CONFIRM &amp; CREATE KEY</button></div>
+</div></div>
+<div class="modal-backdrop" id="trialModal"><div class="modal">
+  <div class="eyebrow">БЕЗПЛАТЕН ПЕРИОД • STRIPE</div>
+  <h3>Валидирай картата си</h3>
+  <p>Картата се проверява, но <b>не се таксува</b>. Една карта и едно устройство могат да активират безплатен период само веднъж. Устройството се разпознава по технически отпечатък на браузъра, който пазим само като необратим хеш.</p>
+  <div class="stripe-box"><div id="cardElement"></div></div>
+  <div class="err" id="cardError" role="alert"></div>
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn" id="trialCancel">CANCEL</button><button class="btn primary" id="trialConfirm">ВАЛИДИРАЙ И АКТИВИРАЙ</button></div>
+</div></div>
+<div class="modal-backdrop" id="twofaModal"><div class="modal">
+  <h3 id="twofaTitle">2FA</h3>
+  <div id="twofaSetup"><p>Сканирай QR кода с Google Authenticator, Authy или 1Password, после въведи 6-цифрения код.</p><img class="qr" id="twofaQr" alt="QR код за 2FA" width="220" height="220"><p>Ръчен ключ: <b class="code" id="twofaSecret"></b></p><input id="twofaCode" inputmode="numeric" placeholder="6-цифрен код" style="width:100%"><button class="btn primary" id="twofaEnable" style="width:100%;margin-top:10px">ВКЛЮЧИ 2FA</button></div>
+  <div id="twofaDisable" style="display:none"><input id="twofaPassword" type="password" placeholder="Парола" style="width:100%;margin-bottom:8px"><input id="twofaOffCode" placeholder="2FA код или recovery код" style="width:100%"><button class="btn danger" id="twofaOff" style="width:100%;margin-top:10px">ИЗКЛЮЧИ 2FA</button></div>
+  <pre class="preview" id="twofaRecovery" style="display:none"></pre>
+  <div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn" id="twofaClose">CLOSE</button></div>
+</div></div>
+<div class="modal-backdrop" id="freeWelcomeModal"><div class="modal">
+  <div class="eyebrow">TITANCDN FREE</div><h3>Безплатният план е активиран ✓</h3>
+  <p>Разполагаш с <b>100,000 символа</b> (еднократен пакет). Панелът показва изразходените и оставащите символи. API ключ се създава чак след като избереш Titan AI extraction profile.</p>
+  <div class="card gold"><div class="metric-row"><span>Използвани</span><b>0</b></div><div class="metric-row"><span>Остават</span><b class="green">100,000</b></div><div class="metric-row"><span>План</span><b>FREE</b></div></div>
+  <button class="btn primary" id="freeWelcomeClose" style="width:100%;margin-top:16px">CONTINUE</button>
+</div></div>
 <div class="modal-backdrop" id="modal"><div class="modal"><h3 id="modalTitle">TitanCDN</h3><p id="modalText"></p><div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn" id="modalClose">CLOSE</button><button class="btn primary" id="modalAction">CONTINUE DEMO</button></div></div></div>
 
+<script src="https://js.stripe.com/v3/" defer></script>
 <script src="/app.js" defer></script>
 
 
