@@ -67,9 +67,10 @@ const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
 const PLANS = Object.freeze({
   free:       { name: "Free Trial",      limit: 100000,    priceEur: 0 },
   pro:        { name: "Starter",         limit: 1000000,   priceEur: 69.99 },
-  business:   { name: "Medium Factory",  limit: 35000000,  priceEur: 339.99 },
-  enterprise: { name: "Huge Factory", limit: 100000000, priceEur: 1099.99 }
+  business:   { name: "Medium Factory",  limit: 50000000,  priceEur: 339.99 },  // Сменено на 50 Милиона
+  enterprise: { name: "Mega Factory",    limit: 1000000000, priceEur: 1099.99 } // Сменено на 1 Милиард (9 нули)
 });
+
 
 class HttpError extends Error {
   constructor(status, message, extra = {}) { super(message); this.statusCode = status; this.extra = extra; }
@@ -645,8 +646,7 @@ app.post("/api/billing/activate-trial", sensitiveLimiter, requireJwt, requireVer
     throw new HttpError(409, "Free trial was already claimed for this account.");
   }
   await User.updateOne({ _id: user._id }, { $set: { trialActivated: true } });
-  res.json({ success: true, message: "Free trial activated: 100,000 characters." });
-});
+res.json({ success: true, message: "Success! Free Trial activated with 100,000 complimentary characters." });});
 
 app.post("/api/billing/checkout", sensitiveLimiter, requireJwt, requireVerified, async (req, res) => {
   requireStripe();
