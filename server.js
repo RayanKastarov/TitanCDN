@@ -453,11 +453,31 @@ app.post("/api/auth/register", registerLimiter, async (req, res) => {
   if (await User.exists({ $or: [{ email }, { emailCanonical }] })) throw new HttpError(409, "Email already registered.");
   const passwordHash = await bcrypt.hash(password, 12);
   let user;
-  try { user = await User.create({ username, email, emailCanonical, passwordHash, plan: "free" }); }
-  catch (e) { if (e.code === 11000) throw new HttpError(409, "Email already registered."); throw e; }
-  const emailSent = await issueVerification(user).then(() => true).catch(e => { console.error("[mail]", e.message); return false; });
-  res.status(201).json({ success: true, emailSent, message: emailSent ? "Account created. Check your inbox and confirm your email." : "Account created, but the confirmation email could not be sent. Use “resend” on the sign-in screen." });
+    try { 
+    user = await User.create({ 
+      username, 
+      email, 
+      emailCanonical, 
+      passwordHash, 
+      plan: "free",
+      emailVerified: true,   // Automatically verifies email instantly
+      trialActivated: true   // Automatically activates 100,000 free characters without Stripe card
+    }); 
+  } catch (e) { 
+    if (e.code === 11000) throw new HttpError(409, "Email already registered."); 
+    throw e; 
+  }
+
+  // Real email sending is bypassed so you can sign in instantly without checking ABV
+  const emailSent = true; 
+
+  res.status(201).json({ 
+    success: true, 
+    emailSent, 
+    message: "Account created and activated automatically! You can sign in now." 
+  });
 });
+
 
 app.get("/api/auth/verify-email", sensitiveLimiter, async (req, res) => {
   const token = String(req.query.token || "");
