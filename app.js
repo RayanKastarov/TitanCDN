@@ -95,14 +95,10 @@ function renderUsage(profile) {
   $("usageBar").style.setProperty("--w", pct + "%");
 }
 function renderTrialBanner(p) {
-  const box = $("trialBanner"); if (!p || p.plan !== "free" || p.trialActivated) { box.style.display = "none"; return; }
-  box.style.display = "block";
-  const verified = !!p.emailVerified;
-  $("trialText").textContent = verified
-    ? "Имейлът ти е потвърден. Остава само валидация на карта през Stripe (без таксуване), за да активираш 100,000 безплатни символа."
-    : "Потвърди имейла си от писмото, което ти изпратихме, за да продължиш към безплатния период.";
-  $("trialActivate").style.display = verified ? "inline-block" : "none";
-  $("trialResend").style.display = verified ? "none" : "inline-block";
+  // Completely disable the verification banner since we use auto-activation now
+  const box = $("trialBanner"); 
+  if (box) box.style.display = "none"; 
+  return;
 }
 function renderSignedOut() {
   currentProfile = null; $("profileBtn").hidden = true; $("authBtn").hidden = false;
