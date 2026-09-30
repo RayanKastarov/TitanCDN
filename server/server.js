@@ -54,8 +54,8 @@ const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
 const PLANS = Object.freeze({
   free:       { name: "Free Trial",      limit: 100000,    priceEur: 0 },
   pro:        { name: "Starter",         limit: 1000000,   priceEur: 69.99 },
-  business:   { name: "Средна Фабрика",  limit: 35000000,  priceEur: 339.99 },
-  enterprise: { name: "Огромна Фабрика", limit: 100000000, priceEur: 1099.99 }
+  business:   { name: "Medium Factory",  limit: 35000000,  priceEur: 339.99 },
+  enterprise: { name: "Huge Factory", limit: 100000000, priceEur: 1099.99 }
 });
 
 class HttpError extends Error {
@@ -253,7 +253,7 @@ async function issueVerification(user) {
   const token = crypto.randomBytes(32).toString("hex");
   await User.updateOne({ _id: user._id }, { $set: { emailVerifyHash: sha256(token), emailVerifyExpires: new Date(Date.now() + 24 * 3600 * 1000), verifySentAt: new Date() } });
   const link = `${APP_URL}/api/auth/verify-email?token=${token}`;
-  await sendMail(user.email, "Потвърди имейла си — TitanCDN", `<p>Здравей, ${esc(user.username)}!</p><p>Потвърди имейла си, за да активираш акаунта:</p><p><a href="${link}">${link}</a></p><p>Линкът е валиден 24 часа. Ако не си се регистрирал ти, игнорирай това писмо.</p>`);
+  await sendMail(user.email, "Confirm your email — TitanCDN", `<p>Hi ${esc(user.username)},</p><p>Confirm your email to activate your account:</p><p><a href="${link}">${link}</a></p><p>This link is valid for 24 hours. If you did not sign up, you can ignore this email.</p>`);
 }
 
 const isVerified = u => !REQUIRE_EMAIL_VERIFICATION || !!u.emailVerified;
@@ -412,7 +412,7 @@ async function fetchWithAxios(startUrl) {
   
   if (isHtml) {
     const $ = cheerio.load(body);
-    $('script, style, nav, footer, noscript, svg').remove(); // Изхвърляме излишния хаос
+    $('script, style, nav, footer, noscript, svg').remove(); // drop page clutter
     const cleanText = $('body').text().replace(/\s+/g, ' ').trim();
     return { text: cleanText.slice(0, 300000), status: r.status, engine: "http" };
   }
@@ -422,7 +422,7 @@ async function fetchWithAxios(startUrl) {
 
 
 async function fetchPageText(url) {
-  return fetchWithAxios(url); // Директно ползваме бързия и сигурен HTTP метод за Render
+  return fetchWithAxios(url); // plain HTTP fetch: fast and reliable on Render
 }
 
 
@@ -437,7 +437,19 @@ User instructions: ${instructions}
 <PAGE_TEXT>
 ${text}
 </PAGE_TEXT>`;
-  const ai = await axios.post("https://api.openai.com/v1/responses", { model: OPENAI_MODEL, input: prompt }, { timeout: 45000, headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" } });
+const ai = await axios.post("https://openrouter.ai", { 
+  model: OPENAI_MODEL, 
+  messages: [
+    { role: "system", content: "You are an expert web data extractor. Extract ONLY the information requested by the user from the provided text. Return clean data." },
+    { role: "user", content: `Instructions: ${prompt}\n\nText to extract from:\n${text || ""}` }
+  ] 
+}, { 
+  timeout: 45000, 
+  headers: { 
+    Authorization: `Bearer ${OPENAI_API_KEY}`, 
+    "Content-Type": "application/json" 
+  } 
+});
   const out = ai.data?.output_text || (ai.data?.output || []).flatMap(x => x.content || []).map(x => x.text || "").join("") || "";
   let parsed; try { parsed = JSON.parse(out); } catch { parsed = { result: out }; }
   return { mode: "ai", model: OPENAI_MODEL, content: parsed };
@@ -718,7 +730,7 @@ app.get("/api/admin/overview", requireJwt, requireAdmin, async (req, res) => {
 app.use("/api", (req, res) => res.status(404).json({ success: false, error: "API route not found." }));
 app.get("/google1a515c3efc6e5a68.html", (req, res) => res.type("text/plain").send("google-site-verification: google1a515c3efc6e5a68.html"));
 app.get("/*splat", (req, res) => res.sendFile(path.join(__dirname, "../index.html")));
-// Директно изпращане на началния HTML файл при отваряне на главния уеб адрес
+// serve the home page at the root URL
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../index.html"));
 });
