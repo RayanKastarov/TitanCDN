@@ -37,6 +37,11 @@ const TOTP_ENC_KEY = env.TOTP_ENC_KEY || "";
 const FINGERPRINT_SALT = env.FINGERPRINT_SALT || JWT_SECRET;
 const SCRAPE_CONCURRENCY = Math.max(1, Number(env.SCRAPE_CONCURRENCY || 2));
 const MAX_CHARS_PER_REQUEST = 50000;
+// Testing switches (set to "false" in Render > Environment while testing; remove them before going live).
+const REQUIRE_EMAIL_VERIFICATION = env.REQUIRE_EMAIL_VERIFICATION !== "false";
+const TRIAL_REQUIRES_CARD = env.TRIAL_REQUIRES_CARD !== "false";
+if (!REQUIRE_EMAIL_VERIFICATION) console.warn("[TitanCDN] WARNING: email verification is OFF (REQUIRE_EMAIL_VERIFICATION=false).");
+if (!TRIAL_REQUIRES_CARD) console.warn("[TitanCDN] WARNING: free trial needs NO card (TRIAL_REQUIRES_CARD=false). Anyone can farm free accounts.");
 
 if (!MONGODB_URI) throw new Error("MONGODB_URI is required");
 if (!JWT_SECRET || JWT_SECRET.length < 32) throw new Error("JWT_SECRET must be at least 32 characters");
@@ -98,10 +103,12 @@ app.use(express.json({ limit: "64kb" }));
 app.use(express.urlencoded({ extended: false, limit: "64kb" }));
 app.use("/api", apiLimiter);
 
-// Only the front-end assets are public. (The previous version served the whole project folder, including server.js.)
-// Променяме статичния handler да сочи правилната папка и да отваря index.html
-app.use(express.static(path.join(__dirname, "../")));
-;
+// Front-end lives one folder above server.js. Only these assets are public
+// (serving the whole parent folder would expose server/server.js and package.json).
+const WEB_ROOT = path.join(__dirname, "..");
+const staticHandler = express.static(WEB_ROOT, { dotfiles: "deny", index: false, etag: true, maxAge: NODE_ENV === "production" ? "1h" : 0 });
+const PUBLIC_ASSET = /^\/(?:app\.js|index\.html|(?:images\/)?[\w.-]+\.(?:png|jpe?g|svg|webp|ico))$/i;
+app.use((req, res, next) => (PUBLIC_ASSET.test(req.path) ? staticHandler(req, res, next) : next()));
 
 /* ------------------------------------------------------------------ */
 /* Models                                                              */
@@ -249,12 +256,15 @@ async function issueVerification(user) {
   await sendMail(user.email, "Потвърди имейла си — TitanCDN", `<p>Здравей, ${esc(user.username)}!</p><p>Потвърди имейла си, за да активираш акаунта:</p><p><a href="${link}">${link}</a></p><p>Линкът е валиден 24 часа. Ако не си се регистрирал ти, игнорирай това писмо.</p>`);
 }
 
+const isVerified = u => !REQUIRE_EMAIL_VERIFICATION || !!u.emailVerified;
+const trialOk = u => !TRIAL_REQUIRES_CARD || !!u.trialActivated;
+
 function usageOf(user) {
   const plan = PLANS[user.plan] ? user.plan : "free";
   const limit = PLANS[plan].limit;
   const used = plan === "free" ? (user.trialCharsUsed || 0) : (user.charsUsed || 0);
   const remaining = Math.max(0, limit - used);
-  return { used, limit, remaining, resetAt: plan === "free" ? null : user.usageResetAt, blocked: remaining <= 0 || (plan === "free" && !user.trialActivated) };
+  return { used, limit, remaining, resetAt: plan === "free" ? null : user.usageResetAt, blocked: remaining <= 0 || (plan === "free" && !trialOk(user)) };
 }
 const counterField = user => (user.plan === "free" ? "trialCharsUsed" : "charsUsed");
 
@@ -272,7 +282,7 @@ async function requireJwt(req, res, next) {
     next();
   } catch { return res.status(401).json({ success: false, error: "Invalid or expired session." }); }
 }
-const requireVerified = (req, res, next) => (req.user.emailVerified ? next() : res.status(403).json({ success: false, error: "Confirm your email first.", code: "EMAIL_NOT_VERIFIED" }));
+const requireVerified = (req, res, next) => (isVerified(req.user) ? next() : res.status(403).json({ success: false, error: "Confirm your email first.", code: "EMAIL_NOT_VERIFIED" }));
 const requireAdmin = (req, res, next) => (req.user.role === "admin" && req.user.totpEnabled ? next() : res.status(403).json({ success: false, error: "Admin access requires an admin role and enabled 2FA." }));
 
 async function requireApiKey(req, res, next) {
@@ -284,8 +294,8 @@ async function requireApiKey(req, res, next) {
     if (!record.scopes.includes("scrape:read")) return res.status(403).json({ success: false, error: "API key lacks scrape:read scope." });
     const user = await User.findById(record.userId);
     if (!user) return res.status(401).json({ success: false, error: "API key owner not found." });
-    if (!user.emailVerified) return res.status(403).json({ success: false, error: "Account email is not verified.", code: "EMAIL_NOT_VERIFIED" });
-    if (user.plan === "free" && !user.trialActivated) return res.status(402).json({ success: false, error: "Activate your free trial (card verification) in the dashboard first.", code: "TRIAL_NOT_ACTIVATED" });
+    if (!isVerified(user)) return res.status(403).json({ success: false, error: "Account email is not verified.", code: "EMAIL_NOT_VERIFIED" });
+    if (user.plan === "free" && !trialOk(user)) return res.status(402).json({ success: false, error: "Activate your free trial (card verification) in the dashboard first.", code: "TRIAL_NOT_ACTIVATED" });
     const usage = usageOf(user);
     if (usage.remaining <= 0) return res.status(429).json({ success: false, error: user.plan === "free" ? "Free trial character limit reached. Upgrade to continue." : "Monthly character limit reached.", plan: user.plan, used: usage.used, limit: usage.limit, remaining: 0 });
     ApiKey.updateOne({ _id: record._id }, { $set: { lastUsedAt: new Date() } }).catch(() => {});
@@ -385,14 +395,18 @@ async function renderWithBrowser(browser, url) {
   } finally { await page.close().catch(() => {}); await ctx.close().catch(() => {}); }
 }
 
-async function fetchWithAxios(url) {
-  const r = await axios.get(url.toString(), { 
-    timeout: 10000, 
-    maxRedirects: 3, 
-    maxContentLength: 2 * 1024 * 1024, 
-    headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) TitanCDN/2.0" } 
-  });
-  
+async function fetchWithAxios(startUrl) {
+  let current = startUrl, r;
+  for (let hop = 0; hop <= 3; hop++) {
+    r = await axios.get(current.toString(), {
+      timeout: 10000, maxRedirects: 0, maxContentLength: 2 * 1024 * 1024, maxBodyLength: 2 * 1024 * 1024,
+      responseType: "text", transformResponse: [d => d], validateStatus: st => st >= 200 && st < 400,
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) TitanCDN/2.0" }
+    });
+    if (r.status >= 300 && r.headers.location) { current = await validatePublicTarget(new URL(r.headers.location, current).toString()); continue; } // every hop is re-checked (SSRF)
+    break;
+  }
+  if (r.status >= 300) throw new HttpError(502, "Too many redirects.");
   const body = typeof r.data === "string" ? r.data : JSON.stringify(r.data);
   const isHtml = /html/i.test(String(r.headers["content-type"] || ""));
   
@@ -453,29 +467,11 @@ app.post("/api/auth/register", registerLimiter, async (req, res) => {
   if (await User.exists({ $or: [{ email }, { emailCanonical }] })) throw new HttpError(409, "Email already registered.");
   const passwordHash = await bcrypt.hash(password, 12);
   let user;
-    try { 
-    user = await User.create({ 
-      username, 
-      email, 
-      emailCanonical, 
-      passwordHash, 
-      plan: "free",
-      emailVerified: true,   // Automatically verifies email instantly
-      trialActivated: true   // Automatically activates 100,000 free characters without Stripe card
-    }); 
-  } catch (e) { 
-    if (e.code === 11000) throw new HttpError(409, "Email already registered."); 
-    throw e; 
-  }
-
-  // Real email sending is bypassed so you can sign in instantly without checking ABV
-  const emailSent = true; 
-
-  res.status(201).json({ 
-    success: true, 
-    emailSent, 
-    message: "Account created and activated automatically! You can sign in now." 
-  });
+  try { user = await User.create({ username, email, emailCanonical, passwordHash, plan: "free", emailVerified: !REQUIRE_EMAIL_VERIFICATION, trialActivated: !TRIAL_REQUIRES_CARD }); }
+  catch (e) { if (e.code === 11000) throw new HttpError(409, "Email already registered."); throw e; }
+  if (!REQUIRE_EMAIL_VERIFICATION) return res.status(201).json({ success: true, emailSent: false, message: "Account created. You can sign in now." });
+  const emailSent = await issueVerification(user).then(() => true).catch(e => { console.error("[mail]", e.message); return false; });
+  res.status(201).json({ success: true, emailSent, message: emailSent ? "Account created. Check your inbox and confirm your email." : "Account created, but the confirmation email could not be sent. Use resend on the sign-in screen." });
 });
 
 
@@ -499,7 +495,7 @@ app.post("/api/auth/login", loginLimiter, async (req, res) => {
   const user = await User.findOne({ email }).select("+passwordHash +totpSecretEnc");
   const valid = (await bcrypt.compare(password, user ? user.passwordHash : DUMMY_HASH)) && !!user;
   if (!valid) throw new HttpError(401, "Invalid email or password.");
-  if (!user.emailVerified) throw new HttpError(403, "Confirm your email first. Check your inbox.", { code: "EMAIL_NOT_VERIFIED" });
+  if (!isVerified(user)) throw new HttpError(403, "Confirm your email first. Check your inbox.", { code: "EMAIL_NOT_VERIFIED" });
   if (user.totpEnabled && !(await checkSecondFactor(user, req.body))) {
     const supplied = req.body.totp || req.body.recoveryCode;
     throw new HttpError(401, supplied ? "Invalid 2FA code." : "Enter your 2FA code.", { twoFactorRequired: true });
@@ -515,7 +511,7 @@ app.post("/api/auth/logout-all", requireJwt, async (req, res) => {
 
 app.get("/api/profile", requireJwt, async (req, res) => {
   const u = req.user;
-  res.json({ success: true, user: { id: u._id, username: u.username, email: u.email, createdAt: u.createdAt, plan: u.plan, planName: PLANS[u.plan].name, role: u.role, emailVerified: !!u.emailVerified, totpEnabled: !!u.totpEnabled, trialActivated: !!u.trialActivated, usage: usageOf(u) } });
+  res.json({ success: true, user: { id: u._id, username: u.username, email: u.email, createdAt: u.createdAt, plan: u.plan, planName: PLANS[u.plan].name, role: u.role, emailVerified: isVerified(u), totpEnabled: !!u.totpEnabled, trialActivated: trialOk(u), usage: usageOf(u) } });
 });
 
 /* ------------------------------------------------------------------ */
@@ -757,6 +753,3 @@ async function shutdown(signal) {
 }
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../index.html"));
-});
