@@ -232,41 +232,134 @@ input:focus,select:focus{border-color:var(--gold)}
 </div>
 
 <div class="toast" id="toast">Engine stopped</div>
-<div class="modal-backdrop" id="authModal"><div class="modal"><div class="tabs"><button class="btn primary" id="signupTab">SIGN UP</button><button class="btn" id="signinTab">SIGN IN</button></div><h3 id="authTitle">Create TitanCDN account</h3><div class="auth-grid"><input id="authName" placeholder="Full name"><input id="authCompany" placeholder="Company"><input id="authEmail" class="full" type="email" placeholder="Email"><input id="authPassword" class="full" type="password" placeholder="Password • 12+ characters"><input id="authTotp" class="full" style="display:none" inputmode="numeric" autocomplete="one-time-code" placeholder="2FA код (6 цифри) или recovery код"><label class="full auth-note"><input type="checkbox" id="terms"> I agree to the Terms and Privacy Policy.</label></div><div class="auth-note" id="authHint">Already have an account? Use SIGN IN above. След регистрация получаваш писмо за потвърждение. Безплатните 100,000 символа се активират след потвърден имейл и валидиране на карта (без таксуване).</div><button class="btn primary" id="authSubmit" style="width:100%;margin-top:16px">CREATE ACCOUNT</button><button class="btn" id="resendBtn" style="display:none;width:100%;margin-top:10px">ИЗПРАТИ ОТНОВО ПИСМОТО ЗА ПОТВЪРЖДЕНИЕ</button></div></div>
-<div class="modal-backdrop" id="profileModal"><div class="modal"><h3>My Profile</h3><div class="auth-grid"><input id="pName" placeholder="Name" readonly=""><input id="pEmail" class="full" type="email" placeholder="Email" readonly=""></div><div class="card gold" style="margin-top:16px"><div class="card-label">CURRENT PLAN</div><div class="big" id="profilePlan">FREE</div><div class="sub" id="profileUsageText">0 / 100,000 символа</div><div class="progress"><i id="profileUsageBar" style="--w:0%"></i></div><div class="metric-row"><span>Remaining</span><b id="profileRemaining">100,000</b></div><div class="metric-row"><span>Monthly reset</span><b id="profileReset">—</b></div><div class="metric-row"><span>API status</span><b id="profileApiStatus" class="green">ACTIVE</b></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button class="btn" id="twofaBtn">ENABLE 2FA</button><button class="btn" id="logoutBtn">SIGN OUT</button></div></div></div>
-<div class="modal-backdrop" id="keySetupModal"><div class="modal">
-  <div class="eyebrow">TITAN AI • API KEY SETUP</div>
-  <h3>Какво искаш този API ключ да извлича?</h3>
-  <p>Опиши свободно какви данни искаш. Докосването/фокусирането на полето спира таймера. Ако не взаимодействаш с него до <b id="keySetupCountdown">10</b> секунди, Titan автоматично избира <b>ALL AVAILABLE DATA</b> и тогава създава ключа.</p>
-  <textarea id="keySetupInput" style="width:100%;min-height:130px;background:#080808;color:#eee;border:1px solid #2c2c2c;border-radius:7px;padding:12px" placeholder="Опиши какви данни искаш да получаваш..."></textarea>
-  <div class="auth-note" id="keySetupStatus">Изчакай 10 секунди без да пипаш полето за автоматичен ALL AVAILABLE DATA режим.</div>
-  <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button class="btn" id="keySetupCancel">CANCEL</button><button class="btn primary" id="keySetupCreate">CONFIRM &amp; CREATE KEY</button></div>
-</div></div>
-<div class="modal-backdrop" id="trialModal"><div class="modal">
-  <div class="eyebrow">БЕЗПЛАТЕН ПЕРИОД • STRIPE</div>
-  <h3>Валидирай картата си</h3>
-  <p>Картата се проверява, но <b>не се таксува</b>. Една карта и едно устройство могат да активират безплатен период само веднъж. Устройството се разпознава по технически отпечатък на браузъра, който пазим само като необратим хеш.</p>
-  <div class="stripe-box"><div id="cardElement"></div></div>
-  <div class="err" id="cardError" role="alert"></div>
-  <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn" id="trialCancel">CANCEL</button><button class="btn primary" id="trialConfirm">ВАЛИДИРАЙ И АКТИВИРАЙ</button></div>
-</div></div>
-<div class="modal-backdrop" id="twofaModal"><div class="modal">
-  <h3 id="twofaTitle">2FA</h3>
-  <div id="twofaSetup"><p>Сканирай QR кода с Google Authenticator, Authy или 1Password, после въведи 6-цифрения код.</p><img class="qr" id="twofaQr" alt="QR код за 2FA" width="220" height="220"><p>Ръчен ключ: <b class="code" id="twofaSecret"></b></p><input id="twofaCode" inputmode="numeric" placeholder="6-цифрен код" style="width:100%"><button class="btn primary" id="twofaEnable" style="width:100%;margin-top:10px">ВКЛЮЧИ 2FA</button></div>
-  <div id="twofaDisable" style="display:none"><input id="twofaPassword" type="password" placeholder="Парола" style="width:100%;margin-bottom:8px"><input id="twofaOffCode" placeholder="2FA код или recovery код" style="width:100%"><button class="btn danger" id="twofaOff" style="width:100%;margin-top:10px">ИЗКЛЮЧИ 2FA</button></div>
-  <pre class="preview" id="twofaRecovery" style="display:none"></pre>
-  <div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn" id="twofaClose">CLOSE</button></div>
-</div></div>
-<div class="modal-backdrop" id="freeWelcomeModal"><div class="modal">
-  <div class="eyebrow">TITANCDN FREE</div><h3>Безплатният план е активиран ✓</h3>
-  <p>Разполагаш с <b>100,000 символа</b> (еднократен пакет). Панелът показва изразходените и оставащите символи. API ключ се създава чак след като избереш Titan AI extraction profile.</p>
-  <div class="card gold"><div class="metric-row"><span>Използвани</span><b>0</b></div><div class="metric-row"><span>Остават</span><b class="green">100,000</b></div><div class="metric-row"><span>План</span><b>FREE</b></div></div>
-  <button class="btn primary" id="freeWelcomeClose" style="width:100%;margin-top:16px">CONTINUE</button>
-</div></div>
-<div class="modal-backdrop" id="modal"><div class="modal"><h3 id="modalTitle">TitanCDN</h3><p id="modalText"></p><div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn" id="modalClose">CLOSE</button><button class="btn primary" id="modalAction">CONTINUE DEMO</button></div></div></div>
+
+<!-- Auth Modal -->
+<div class="modal-backdrop" id="authModal">
+  <div class="modal">
+    <div class="tabs">
+      <button class="btn primary" id="signupTab">SIGN UP</button>
+      <button class="btn" id="signinTab">SIGN IN</button>
+    </div>
+    <h3 id="authTitle">Create TitanCDN account</h3>
+    <div class="auth-grid">
+      <input id="authName" placeholder="Full name">
+      <input id="authCompany" placeholder="Company">
+      <input id="authEmail" class="full" type="email" placeholder="Email">
+      <input id="authPassword" class="full" type="password" placeholder="Password • 12+ characters">
+      <input id="authTotp" class="full" style="display:none" inputmode="numeric" autocomplete="one-time-code" placeholder="2FA Code (6 digits) or Recovery Code">
+      <label class="full auth-note"><input type="checkbox" id="terms"> I agree to the Terms and Privacy Policy.</label>
+    </div>
+    <div class="auth-note" id="authHint">Already have an account? Use SIGN IN above. Your free account will be instantly created and activated.</div>
+    <button class="btn primary" id="authSubmit" style="width:100%;margin-top:16px">CREATE ACCOUNT</button>
+    <button class="btn" id="resendBtn" style="display:none;width:100%;margin-top:10px">RESEND VERIFICATION EMAIL</button>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div class="modal-backdrop" id="profileModal">
+  <div class="modal">
+    <h3>My Profile</h3>
+    <div class="auth-grid">
+      <input id="pName" placeholder="Name" readonly="">
+      <input id="pEmail" class="full" type="email" placeholder="Email" readonly="">
+    </div>
+    <div class="card gold" style="margin-top:16px">
+      <div class="card-label">CURRENT PLAN</div>
+      <div class="big" id="profilePlan">FREE</div>
+      <div class="sub" id="profileUsageText">0 / 100,000 characters</div>
+      <div class="progress"><i id="profileUsageBar" style="--w:0%"></i></div>
+      <div class="metric-row"><span>Remaining</span><b id="profileRemaining">100,000</b></div>
+      <div class="metric-row"><span>Monthly reset</span><b id="profileReset">—</b></div>
+      <div class="metric-row"><span>API status</span><b id="profileApiStatus" class="green">ACTIVE</b></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+      <button class="btn" id="twofaBtn">ENABLE 2FA</button>
+      <button class="btn" id="logoutBtn">SIGN OUT</button>
+    </div>
+  </div>
+</div>
+
+<!-- Key Setup Modal -->
+<div class="modal-backdrop" id="keySetupModal">
+  <div class="modal">
+    <div class="eyebrow">TITAN AI • API KEY SETUP</div>
+    <h3>What do you want this API key to extract?</h3>
+    <p>Describe freely what data you need. Touching or focusing the input field pauses the timer. If you do not interact within <b id="keySetupCountdown">10</b> seconds, Titan automatically selects <b>ALL AVAILABLE DATA</b> and generates the key.</p>
+    <textarea id="keySetupInput" style="width:100%;min-height:130px;background:#080808;color:#eee;border:1px solid #2c2c2c;border-radius:7px;padding:12px" placeholder="Describe the data you want to extract..."></textarea>
+    <div class="auth-note" id="keySetupStatus">Wait 10 seconds without touching the field for automatic ALL AVAILABLE DATA mode.</div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+      <button class="btn" id="keySetupCancel">CANCEL</button>
+      <button class="btn primary" id="keySetupCreate">CONFIRM &amp; CREATE KEY</button>
+    </div>
+  </div>
+</div>
+
+<!-- Stripe Modal -->
+<div class="modal-backdrop" id="trialModal">
+  <div class="modal">
+    <div class="eyebrow">FREE TRIAL • STRIPE</div>
+    <h3>Validate Your Card</h3>
+    <p>Your card will be verified but <b>will not be charged</b>. One card and one device can only activate a free trial once. Devices are recognized via a secure browser fingerprint stored only as a one-way hash.</p>
+    <div class="stripe-box"><div id="cardElement"></div></div>
+    <div class="err" id="cardError" role="alert"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+      <button class="btn" id="trialCancel">CANCEL</button>
+      <button class="btn primary" id="trialConfirm">VALIDATE &amp; ACTIVATE</button>
+    </div>
+  </div>
+</div>
+
+<!-- 2FA Modal -->
+<div class="modal-backdrop" id="twofaModal">
+  <div class="modal">
+    <h3 id="twofaTitle">2FA</h3>
+    <div id="twofaSetup">
+      <p>Scan the QR code with Google Authenticator, Authy, or 1Password, then enter the 6-digit code.</p>
+      <img class="qr" id="twofaQr" alt="2FA QR Code" width="220" height="220">
+      <p>Setup Key: <b class="code" id="twofaSecret"></b></p>
+      <input id="twofaCode" inputmode="numeric" placeholder="6-digit code" style="width:100%">
+      <button class="btn primary" id="twofaEnable" style="width:100%;margin-top:10px">ENABLE 2FA</button>
+    </div>
+    <div id="twofaDisable" style="display:none">
+      <input id="twofaPassword" type="password" placeholder="Password" style="width:100%;margin-bottom:8px">
+      <input id="twofaOffCode" placeholder="2FA code or recovery code" style="width:100%">
+      <button class="btn danger" id="twofaOff" style="width:100%;margin-top:10px">DISABLE 2FA</button>
+    </div>
+    <pre class="preview" id="twofaRecovery" style="display:none"></pre>
+    <div style="display:flex;justify-content:flex-end;margin-top:12px">
+      <button class="btn" id="twofaClose">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Free Welcome Modal -->
+<div class="modal-backdrop" id="freeWelcomeModal">
+  <div class="modal">
+    <div class="eyebrow">TITANCDN FREE</div>
+    <h3>Free Plan Activated ✓</h3>
+    <p>You have <b>100,000 characters</b> loaded (one-time package). The dashboard tracks your used and remaining limits. Your API key will be fully created once you select a Titan AI extraction profile.</p>
+    <div class="card gold">
+      <div class="metric-row"><span>Used</span><b>0</b></div>
+      <div class="metric-row"><span>Remaining</span><b class="green">100,000</b></div>
+      <div class="metric-row"><span>Plan</span><b>FREE</b></div>
+    </div>
+    <button class="btn primary" id="freeWelcomeClose" style="width:100%;margin-top:16px">CONTINUE</button>
+  </div>
+</div>
+
+<!-- Fallback Modal -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <h3 id="modalTitle">TitanCDN</h3>
+    <p id="modalText"></p>
+    <div style="display:flex;justify-content:flex-end;gap:8px">
+      <button class="btn" id="modalClose">CLOSE</button>
+      <button class="btn primary" id="modalAction">CONTINUE DEMO</button>
+    </div>
+  </div>
+</div>
 
 <script src="https://js.stripe.com/v3/" defer></script>
 <script src="/app.js" defer></script>
-
-
-</body></html>
+</body>
+</html>
