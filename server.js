@@ -27,7 +27,20 @@ const MONGODB_URI = env.MONGODB_URI;
 const JWT_SECRET = env.JWT_SECRET;
 const APP_URL = (env.APP_URL || "").replace(/\/+$/, "");
 const OPENAI_API_KEY = env.OPENAI_API_KEY || "";
-const OPENAI_MODEL = env.OPENAI_MODEL || "google/gemini-2.5-flash:free";
+const ai = await axios.post("https://openrouter.ai", { 
+  model: OPENAI_MODEL, 
+  messages: [
+    { role: "system", content: "You are an expert web data extractor. Extract ONLY the information requested by the user from the provided text. Return clean data." },
+    // Заменяме prompt с userPrompt или instructions, за да прочете полето от сайта ти!
+    { role: "user", content: `Instructions: ${userPrompt || instructions || "Extract all main data"}\n\nText to extract from:\n${text || ""}` }
+  ] 
+}, { 
+  timeout: 45000, 
+  headers: { 
+    Authorization: `Bearer ${OPENAI_API_KEY}`, 
+    "Content-Type": "application/json" 
+  } 
+});
 const STRIPE_SECRET_KEY = env.STRIPE_SECRET_KEY || "";
 const STRIPE_PUBLISHABLE_KEY = env.STRIPE_PUBLISHABLE_KEY || "";
 const STRIPE_WEBHOOK_SECRET = env.STRIPE_WEBHOOK_SECRET || "";
