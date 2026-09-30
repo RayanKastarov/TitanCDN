@@ -1,5 +1,5 @@
 "use strict";
-
+const API_BASE = "https://titancdn.onrender.com";
 const pages = { overview: "Overview", edge: "Edge Network", analytics: "Analytics", jobs: "Scrape Jobs", logs: "Request Logs", api: "API & Webhooks", ai: "Titan AI", billing: "Billing & Usage" };
 const $ = id => document.getElementById(id);
 const toast = $("toast");
@@ -7,15 +7,14 @@ let currentProfile = null, currentKeyMeta = null, secretVisible = false;
 let publicConfig = { stripeEnabled: false, stripePublishableKey: "" };
 const getToken = () => sessionStorage.getItem("titanJwt");
 const fmt = n => Number(n || 0).toLocaleString("en-US");
-const PLAN_LABELS = { free: "Free Trial", pro: "Starter", business: "Средна Фабрика", enterprise: "Огромна Фабрика" };
+const PLAN_LABELS = { free: "Free Trial", pro: "Starter", business: "Medium Factory", enterprise: "Huge Factory" };
 const planLabel = p => PLAN_LABELS[p] || String(p || "free");
 
 function showToast(msg) { toast.textContent = msg; toast.classList.add("show"); clearTimeout(showToast.t); showToast.t = setTimeout(() => toast.classList.remove("show"), 3600); }
 
 async function api(path, options = {}) {
   const headers = { "Content-Type": "application/json", ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}), ...(options.headers || {}) };
-  const r = await fetch(path, { ...options, headers });
-  let d = {}; try { d = await r.json(); } catch { /* non-JSON */ }
+const r = await fetch(API_BASE + path, { ...options, headers });  let d = {}; try { d = await r.json(); } catch { /* non-JSON */ }
   if (!r.ok) { const e = new Error(d.error || `HTTP ${r.status}`); e.data = d; e.status = r.status; throw e; }
   return d;
 }
@@ -67,7 +66,7 @@ function syncAuthTabs() {
   $("authTitle").textContent = up ? "Create TitanCDN account" : "Sign in to TitanCDN";
   $("authSubmit").textContent = up ? "CREATE ACCOUNT" : "SIGN IN";
   $("authName").style.display = up ? "block" : "none"; $("authCompany").style.display = "none";
-  $("authTotp").style.display = "none"; $("resendBtn").style.display = "none";
+  $("authTotp").style.display = "none";
 }
 function openAuth(mode = "signup") { authMode = mode; syncAuthTabs(); authModal.classList.add("show"); }
 $("authBtn").onclick = () => openAuth("signup");
@@ -90,15 +89,16 @@ function renderUsage(profile) {
   const name = profile.planName || planLabel(profile.plan);
   $("goldFill").style.width = pct + "%"; $("goldBarWrap").setAttribute("aria-valuenow", String(Math.round(pct)));
   set("goldPct", pct.toFixed(pct < 10 ? 2 : 1) + "%"); set("gPlan", name); set("gUsed", fmt(u.used)); set("gLimit", fmt(u.limit)); set("gRemain", fmt(u.remaining));
-  set("usageUsed", fmt(u.used)); set("usageSummary", `символа от ${fmt(u.limit)}`); set("usagePlan", name.toUpperCase()); set("usageRemaining", fmt(u.remaining));
-  set("usageReset", u.resetAt ? new Date(u.resetAt).toLocaleDateString() : "еднократен пакет");
+  set("usageUsed", fmt(u.used)); set("usageSummary", `characters of ${fmt(u.limit)}`); set("usagePlan", name.toUpperCase()); set("usageRemaining", fmt(u.remaining));
+  set("usageReset", u.resetAt ? new Date(u.resetAt).toLocaleDateString() : "one-time package");
   $("usageBar").style.setProperty("--w", pct + "%");
 }
 function renderTrialBanner(p) {
-  // Completely disable the verification banner since we use auto-activation now
-  const box = $("trialBanner"); 
-  if (box) box.style.display = "none"; 
-  return;
+  const box = $("trialBanner"); if (!box) return;
+  // Shown only when a card is still required to unlock the free trial (never shown when the server auto-activates it).
+  if (!p || p.plan !== "free" || p.trialActivated) { box.style.display = "none"; return; }
+  box.style.display = "block";
+  $("trialText").textContent = "Add a card to unlock your 100,000 free characters. The card is only verified through Stripe and is never charged.";
 }
 function renderSignedOut() {
   currentProfile = null; $("profileBtn").hidden = true; $("authBtn").hidden = false;
@@ -121,7 +121,7 @@ $("authSubmit").onclick = async () => {
     if (authMode === "signup") {
       if (!$("terms").checked) throw new Error("Accept Terms and Privacy Policy");
       const d = await api("/api/auth/register", { method: "POST", body: JSON.stringify({ username: username || email.split("@")[0].replace(/[<>&"'`]/g, ""), email, password }) });
-      showToast(d.message); authMode = "signin"; syncAuthTabs(); $("authHint").textContent = "Потвърди имейла си от писмото, после влез с имейл и парола.";
+      showToast(d.message); authMode = "signin"; syncAuthTabs(); $("authHint").textContent = "Account created. Sign in with your email and password.";
       return;
     }
     const totp = $("authTotp").value.trim().replace(/\s/g, "");
@@ -132,23 +132,17 @@ $("authSubmit").onclick = async () => {
     await loadProfile(); await loadKeys(); showToast("Signed in");
   } catch (e) {
     if (e.data?.twoFactorRequired) { $("authTotp").style.display = "block"; $("authTotp").focus(); }
-    if (e.data?.code === "EMAIL_NOT_VERIFIED") $("resendBtn").style.display = "block";
     showToast(e.message);
   } finally { btn.disabled = false; }
 };
-async function resendVerification(email) {
-  try { const d = await api("/api/auth/resend-verification", { method: "POST", body: JSON.stringify({ email }) }); showToast(d.message); } catch (e) { showToast(e.message); }
-}
-$("resendBtn").onclick = () => resendVerification($("authEmail").value.trim());
-$("trialResend").onclick = () => resendVerification(currentProfile?.email || "");
 
 /* ---------- Profile ---------- */
 $("profileBtn").onclick = async () => {
   try {
     const p = await loadProfile(), u = p.usage;
     $("pName").value = p.username; $("pEmail").value = p.email; $("profilePlan").textContent = (p.planName || planLabel(p.plan)).toUpperCase();
-    $("profileUsageText").textContent = `${fmt(u.used)} / ${fmt(u.limit)} символа`; $("profileRemaining").textContent = fmt(u.remaining);
-    $("profileReset").textContent = u.resetAt ? new Date(u.resetAt).toLocaleDateString() : "еднократен пакет";
+    $("profileUsageText").textContent = `${fmt(u.used)} / ${fmt(u.limit)} characters`; $("profileRemaining").textContent = fmt(u.remaining);
+    $("profileReset").textContent = u.resetAt ? new Date(u.resetAt).toLocaleDateString() : "one-time package";
     const off = p.plan === "free" && !p.trialActivated;
     $("profileApiStatus").textContent = off ? "TRIAL NOT ACTIVATED" : u.blocked ? "QUOTA REACHED" : "ACTIVE"; $("profileApiStatus").className = off || u.blocked ? "red" : "green";
     $("profileUsageBar").style.setProperty("--w", Math.min(100, u.limit ? (u.used / u.limit) * 100 : 0) + "%");
@@ -165,8 +159,8 @@ let stripeJs = null, cardEl = null, setupSecret = null;
 const trialModal = $("trialModal");
 function closeTrial() { trialModal.classList.remove("show"); $("cardError").textContent = ""; }
 async function openTrial() {
-  if (!publicConfig.stripeEnabled) return showToast("Плащанията не са конфигурирани на сървъра.");
-  if (!window.Stripe) return showToast("Stripe.js не се зареди. Изключи блокиращи добавки и опитай отново.");
+  if (!publicConfig.stripeEnabled) return showToast("Payments are not configured on the server.");
+  if (!window.Stripe) return showToast("Stripe.js failed to load. Disable any blocking extensions and try again.");
   $("trialActivate").disabled = true;
   try {
     const d = await api("/api/billing/setup-intent", { method: "POST", body: JSON.stringify({ fingerprint: await getFingerprint() }) });
@@ -193,10 +187,10 @@ $("twofaClose").onclick = () => twofaModal.classList.remove("show");
 $("twofaBtn").onclick = async () => {
   try {
     $("twofaRecovery").style.display = "none"; $("twofaCode").value = ""; $("twofaPassword").value = "";
-    if (currentProfile?.totpEnabled) { $("twofaSetup").style.display = "none"; $("twofaDisable").style.display = "block"; $("twofaTitle").textContent = "Изключване на 2FA"; }
+    if (currentProfile?.totpEnabled) { $("twofaSetup").style.display = "none"; $("twofaDisable").style.display = "block"; $("twofaTitle").textContent = "Disable 2FA"; }
     else {
       const d = await api("/api/2fa/setup", { method: "POST", body: "{}" });
-      $("twofaQr").src = d.qr; $("twofaSecret").textContent = d.secret; $("twofaSetup").style.display = "block"; $("twofaDisable").style.display = "none"; $("twofaTitle").textContent = "Включване на 2FA";
+      $("twofaQr").src = d.qr; $("twofaSecret").textContent = d.secret; $("twofaSetup").style.display = "block"; $("twofaDisable").style.display = "none"; $("twofaTitle").textContent = "Enable 2FA";
     }
     twofaModal.classList.add("show");
   } catch (e) { showToast(e.message); }
@@ -204,15 +198,15 @@ $("twofaBtn").onclick = async () => {
 $("twofaEnable").onclick = async () => {
   try {
     const d = await api("/api/2fa/enable", { method: "POST", body: JSON.stringify({ code: $("twofaCode").value }) });
-    $("twofaRecovery").textContent = "Recovery кодове (показват се само сега — запази ги):\n\n" + d.recoveryCodes.join("\n"); $("twofaRecovery").style.display = "block"; $("twofaSetup").style.display = "none";
-    await loadProfile(); showToast("2FA е включена");
+    $("twofaRecovery").textContent = "Recovery codes (shown only once — save them now):\n\n" + d.recoveryCodes.join("\n"); $("twofaRecovery").style.display = "block"; $("twofaSetup").style.display = "none";
+    await loadProfile(); showToast("2FA enabled");
   } catch (e) { showToast(e.message); }
 };
 $("twofaOff").onclick = async () => {
   try {
     const code = $("twofaOffCode").value.trim(), body = { password: $("twofaPassword").value }; if (/^\d{6}$/.test(code)) body.totp = code; else body.recoveryCode = code;
     await api("/api/2fa/disable", { method: "POST", body: JSON.stringify(body) });
-    twofaModal.classList.remove("show"); showToast("2FA е изключена. Влез отново."); $("logoutBtn").click();
+    twofaModal.classList.remove("show"); showToast("2FA disabled. Please sign in again."); $("logoutBtn").click();
   } catch (e) { showToast(e.message); }
 };
 
@@ -272,7 +266,7 @@ $("sendBtn").onclick = async () => {
     const r = await fetch("/api/v1/scrape", { method: "POST", headers: { "Content-Type": "application/json", "x-api-key": key }, body: JSON.stringify({ targetUrl: url, outputFormat: format }) });
     const d = await r.json(); if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
     out.textContent = JSON.stringify(d, null, 2); addLog(url, d.responseCode || 200); $("scraperStatus").textContent = "READY";
-    await loadProfile(); showToast(`Готово • изразходени ${fmt(d.charactersProcessed)} символа`);
+    await loadProfile(); showToast(`Done • ${fmt(d.charactersProcessed)} characters used`);
   } catch (e) { out.textContent = JSON.stringify({ success: false, error: e.message }, null, 2); $("scraperStatus").textContent = "ERROR"; showToast(e.message); }
 };
 $("askAi").onclick = () => {
@@ -313,8 +307,8 @@ async function restoreSession() {
   try { publicConfig = await api("/api/config"); } catch { /* keep defaults */ }
   const q = new URLSearchParams(location.search);
   await restoreSession();
-  if (q.get("verified") === "1") { showToast("Имейлът е потвърден. Влез в акаунта си."); if (!getToken()) openAuth("signin"); }
-  else if (q.get("verified") === "0") showToast("Линкът за потвърждение е невалиден или изтекъл. Поискай нов от екрана за вход.");
-  if (q.get("checkout") === "success") showToast("Плащането е прието. Планът се активира след потвърждение от Stripe (обикновено секунди).");
+  if (q.get("verified") === "1") { showToast("Email confirmed. Sign in to your account."); if (!getToken()) openAuth("signin"); }
+  else if (q.get("verified") === "0") showToast("The confirmation link is invalid or expired.");
+  if (q.get("checkout") === "success") showToast("Payment received. Your plan activates once Stripe confirms it (usually a few seconds).");
   if (q.toString()) history.replaceState(null, "", location.pathname);
 })();
