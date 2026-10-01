@@ -259,9 +259,27 @@ async function checkSecondFactor(user, body) {
 }
 
 async function sendMail(to, subject, html) {
-  if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY is not configured");
-  await axios.post("https://api.resend.com/emails", { from: MAIL_FROM, to: [to], subject, html }, { headers: { Authorization: `Bearer ${RESEND_API_KEY}` }, timeout: 10000 });
+  const nodemailer = require("nodemailer");
+
+  // Create secure connection with Gmail SMTP servers
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.GMAIL_USER,       // Your Gmail address from Render Env
+      pass: process.env.GMAIL_APP_PASSWORD // Your 16-character Google App Password
+    }
+  });
+
+  const mailOptions = {
+    from: `"TitanCDN Support" <${process.env.GMAIL_USER}>`,
+    to,
+    subject,
+    html
+  };
+
+  await transporter.sendMail(mailOptions);
 }
+
 async function issueVerification(user) {
   if (!APP_URL) throw new Error("APP_URL is not configured");
   const token = crypto.randomBytes(32).toString("hex");
@@ -481,24 +499,44 @@ app.get("/api/config", (req, res) => res.json({ success: true, stripeEnabled: !!
 /* Routes: auth                                                        */
 /* ------------------------------------------------------------------ */
 app.post("/api/auth/register", registerLimiter, async (req, res) => {
-  const username = String(req.body.username || "").trim();
-  const email = normalizeEmail(req.body.email);
-  const password = String(req.body.password || "");
-  if (username.length < 2 || username.length > 60 || /[<>&"'`\u0000-\u001f]/.test(username)) throw new HttpError(400, "Username must be 2–60 characters and must not contain < > & \" ' `.");
-  if (!validEmail(email) || email.startsWith("+") || password.length < 12 || password.length > 128) throw new HttpError(400, "Use a valid email and a password of 12–128 characters.");
-  const domain = email.split("@")[1];
-  if (isDisposable(domain)) throw new HttpError(400, "Temporary / disposable email addresses are not allowed.", { code: "DISPOSABLE_EMAIL" });
-  if (!(await hasMailServer(domain))) throw new HttpError(400, "This email domain cannot receive mail.");
-  const emailCanonical = canonicalEmail(email);
-  if (await User.exists({ $or: [{ email }, { emailCanonical }] })) throw new HttpError(409, "Email already registered.");
-  const passwordHash = await bcrypt.hash(password, 12);
-  let user;
-  try { user = await User.create({ username, email, emailCanonical, passwordHash, plan: "free", emailVerified: !REQUIRE_EMAIL_VERIFICATION, trialActivated: !TRIAL_REQUIRES_CARD }); }
-  catch (e) { if (e.code === 11000) throw new HttpError(409, "Email already registered."); throw e; }
-  if (!REQUIRE_EMAIL_VERIFICATION) return res.status(201).json({ success: true, emailSent: false, message: "Account created. You can sign in now." });
-  const emailSent = await issueVerification(user).then(() => true).catch(e => { console.error("[mail]", e.message); return false; });
-  res.status(201).json({ success: true, emailSent, message: emailSent ? "Account created. Check your inbox and confirm your email." : "Account created, but the confirmation email could not be sent. Use resend on the sign-in screen." });
+  try {
+    const username = String(req.body.username || "").trim();
+    const email = normalizeEmail(req.body.email);
+    const password = String(req.body.password || "");
+
+    if (username.length < 2 || isDisposable(email.split("@"))) {
+      throw new HttpError(400, "Invalid email domain or username too short.");
+    }
+
+    const emailCanonical = canonicalEmail(email);
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    // Създаваме потребителя със статус FALSE на верификациите, за да задействаме пазачите!
+    const user = await User.create({ 
+      username, 
+      email, 
+      emailCanonical, 
+      passwordHash, 
+      plan: "free",
+      emailVerified: false,   // Трябва да си провери Gmail пощата!
+      trialActivated: false   // Трябва да въведе Stripe карта, за да получи 100М символа!
+    });
+
+    // Извикваме нашата нова безплатна функция за изпращане на линк през твоя Gmail
+    await issueVerification(user);
+
+    res.status(201).json({ 
+      success: true, 
+      emailSent: true, 
+      message: "Account created successfully! Please check your Gmail inbox to confirm your email and unlock your dashboard." 
+    });
+
+  } catch (e) { 
+    if (e.code === 11000) throw new HttpError(409, "This email is already registered."); 
+    throw e; 
+  }
 });
+
 
 
 app.get("/api/auth/verify-email", sensitiveLimiter, async (req, res) => {
