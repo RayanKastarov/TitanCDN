@@ -259,14 +259,14 @@ async function checkSecondFactor(user, body) {
 }
 
 async function sendMail(to, subject, html) {
+  // Извикваме библиотеката директно тук, за да няма конфликт с CommonJS/ESM
   const nodemailer = require("nodemailer");
 
-  // Create secure connection with Gmail SMTP servers
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: process.env.GMAIL_USER,       // Your Gmail address from Render Env
-      pass: process.env.GMAIL_APP_PASSWORD // Your 16-character Google App Password
+      user: process.env.GMAIL_USER,       
+      pass: process.env.GMAIL_APP_PASSWORD 
     }
   });
 
@@ -279,6 +279,7 @@ async function sendMail(to, subject, html) {
 
   await transporter.sendMail(mailOptions);
 }
+
 
 async function issueVerification(user) {
   if (!APP_URL) throw new Error("APP_URL is not configured");
