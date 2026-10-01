@@ -1,7 +1,7 @@
 "use strict";
 
-import dotenv from "dotenv";
-dotenv.config();
+require("dotenv").config();
+
 
 const express = require("express");
 const mongoose = require("mongoose");
@@ -260,6 +260,9 @@ async function checkSecondFactor(user, body) {
 }
 
 async function sendMail(to, subject, html) {
+  // Трябва да е с require, за да съвпада с целия файл!
+  const nodemailer = require("nodemailer");
+
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
