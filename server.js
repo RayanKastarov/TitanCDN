@@ -259,9 +259,27 @@ async function checkSecondFactor(user, body) {
 }
 
 async function sendMail(to, subject, html) {
-  if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY is not configured");
-  await axios.post("https://api.resend.com/emails", { from: MAIL_FROM, to: [to], subject, html }, { headers: { Authorization: `Bearer ${RESEND_API_KEY}` }, timeout: 10000 });
+  const nodemailer = require("nodemailer");
+
+  // Create secure connection with Gmail SMTP servers
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.GMAIL_USER,       // Your Gmail address from Render Env
+      pass: process.env.GMAIL_APP_PASSWORD // Your 16-character Google App Password
+    }
+  });
+
+  const mailOptions = {
+    from: `"TitanCDN Support" <${process.env.GMAIL_USER}>`,
+    to,
+    subject,
+    html
+  };
+
+  await transporter.sendMail(mailOptions);
 }
+
 async function issueVerification(user) {
   if (!APP_URL) throw new Error("APP_URL is not configured");
   const token = crypto.randomBytes(32).toString("hex");
