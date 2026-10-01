@@ -86,6 +86,18 @@ input:focus,select:focus{border-color:var(--gold)}
 .qr{background:#fff;padding:8px;border-radius:8px;display:block;margin:10px auto}
 @media(max-width:720px){.gold-meta{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.gold-fill{transition:none}}
+
+.field-label{display:block;font-size:11px;letter-spacing:.1em;color:#a8a8a8;margin:0 0 6px;font-weight:700}
+.stripe-field{padding:12px;background:#000;border:1px solid #2c2c2c;border-radius:7px}
+.insights-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:16px}
+.insight-card{background:#0a0a0a;border:1px solid rgba(212,175,55,.45);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:10px;transition:border-color .2s,transform .2s,box-shadow .2s}
+.insight-card:hover{border-color:#d4af37;transform:translateY(-2px);box-shadow:0 8px 28px rgba(212,175,55,.12)}
+.insight-tag{font-size:10px;letter-spacing:.14em;color:#fbf5b7;font-weight:800}
+.insight-card h4{margin:0;font-size:16px;line-height:1.35;color:#fff}
+.insight-card p{margin:0;color:#a0a0a0;font-size:13px;line-height:1.55;flex:1}
+.insight-foot{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#8a8a8a}
+.insight-badge{border:1px solid #d4af37;color:#d4af37;border-radius:999px;padding:3px 9px;font-size:10px;font-weight:800;letter-spacing:.1em}
+@media(prefers-reduced-motion:reduce){.insight-card{transition:none}}
 </style>
 </head>
 <body>
@@ -138,6 +150,7 @@ input:focus,select:focus{border-color:var(--gold)}
     <button data-page="api">⌘ <span>API &amp; Webhooks</span></button>
     <button data-page="ai">✦ <span>Titan AI</span></button>
     <button data-page="billing">◇ <span>Billing &amp; Usage</span></button>
+    <button id="navInsights" data-page="viewInsights">◭ <span>Titan Insights</span></button>
   </nav>
   <div class="sidebar-bottom"><span class="status-dot"></span>CONTROL PLANE ONLINE<br><span style="margin-left:14px">v2.0.0 • BETA</span></div>
 </aside>
@@ -218,6 +231,20 @@ input:focus,select:focus{border-color:var(--gold)}
   <div class="card" style="margin-top:16px"><b>Activating a paid plan</b><p style="color:#777;font-size:12px">Payment goes through secure Stripe Checkout. Once Stripe confirms it (webhook), your account limit changes automatically, and your characters reset on every renewal.</p></div>
 </section>
 
+<section class="page view-pane" id="viewInsights">
+  <div class="card gold">
+    <div class="section-title"><h3>TITAN INSIGHTS</h3><span>MARKET INTELLIGENCE HUB</span></div>
+    <p class="sub" style="font-size:13px">Placeholder content: these are sample titles for the upcoming automated industrial articles. No real data or results are shown here yet.</p>
+  </div>
+  <div class="insights-grid">
+    <article class="insight-card"><span class="insight-tag">PRICING INTELLIGENCE</span><h4>Nike E-Commerce Price Drop Signals, Identified via the Titan Scraper Pipeline</h4><p>How automated extraction surfaces markdown timing and regional price gaps for global sportswear catalogs.</p><div class="insight-foot"><span>6 MIN READ</span><span class="insight-badge">COMING SOON</span></div></article>
+    <article class="insight-card"><span class="insight-tag">MARKET TRENDS</span><h4>Amazon Dynamic Scraper Trends — Oct 2026</h4><p>A look at how marketplace layouts, rate limits and rendering patterns are changing for data teams.</p><div class="insight-foot"><span>8 MIN READ</span><span class="insight-badge">COMING SOON</span></div></article>
+    <article class="insight-card"><span class="insight-tag">SECURITY RESEARCH</span><h4>Anti-Bot Countermeasures Across High-Security Targets</h4><p>What modern bot defenses look for, and what responsible, rate-limited collection looks like in practice.</p><div class="insight-foot"><span>9 MIN READ</span><span class="insight-badge">COMING SOON</span></div></article>
+    <article class="insight-card"><span class="insight-tag">RETAIL SIGNALS</span><h4>Detecting Stock-Outs Early with Structured Extraction</h4><p>Turning product-page availability changes into daily alerts for inventory and pricing teams.</p><div class="insight-foot"><span>5 MIN READ</span><span class="insight-badge">COMING SOON</span></div></article>
+    <article class="insight-card"><span class="insight-tag">TITAN AI</span><h4>From Raw Page to Clean JSON: Prompting for Reliable Extraction</h4><p>Practical instruction patterns that make AI extraction consistent across very different websites.</p><div class="insight-foot"><span>7 MIN READ</span><span class="insight-badge">COMING SOON</span></div></article>
+    <article class="insight-card"><span class="insight-tag">WEEKLY DIGEST</span><h4>Market Intelligence Digest: Industrial Pricing Moves</h4><p>A recurring summary of notable price and assortment changes across tracked categories.</p><div class="insight-foot"><span>4 MIN READ</span><span class="insight-badge">COMING SOON</span></div></article>
+  </div>
+</section>
 <section class="page" id="registry">
   <div class="hero"><div><div class="eyebrow">UNIVERSAL DOMAIN CONTROL</div><h2>Domain Registry</h2><p>Register any valid public hostname as a Titan channel. Channels are isolated and can be connected to compliant providers or first-party APIs by the backend.</p></div><div class="hero-badge"><b id="registryCount">12</b><span>CHANNELS</span></div></div>
   <div class="card gold"><div class="section-title"><h3>ADD DOMAIN CHANNEL</h3><span>BACKEND-READY REGISTRY</span></div><div class="builder"><input class="wide" id="newDomain" placeholder="example.com"><select id="channelRegion"><option>Auto region</option><option>EU West</option><option>EU Central</option><option>US East</option><option>AP Southeast</option></select><select id="channelMode"><option>Public web</option><option>Official API</option><option>First-party</option></select><button class="btn primary" id="addDomain">CREATE CHANNEL</button></div></div>
@@ -299,7 +326,13 @@ input:focus,select:focus{border-color:var(--gold)}
     <div class="eyebrow">FREE TRIAL • STRIPE</div>
     <h3>Validate Your Card</h3>
     <p>Your card will be verified but <b>will not be charged</b>. One card and one device can only activate a free trial once. Devices are recognized via a secure browser fingerprint stored only as a one-way hash.</p>
-    <div class="stripe-box"><div id="cardElement"></div></div>
+    <div class="stripe-box">
+      <label class="field-label" for="cardNumber">CARD NUMBER</label><div class="stripe-field" id="cardNumber"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+        <div><label class="field-label" for="cardExpiry">EXPIRY (MM / YY)</label><div class="stripe-field" id="cardExpiry"></div></div>
+        <div><label class="field-label" for="cardCvc">CVC</label><div class="stripe-field" id="cardCvc"></div></div>
+      </div>
+    </div>
     <div class="err" id="cardError" role="alert"></div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
       <button class="btn" id="trialCancel">CANCEL</button>

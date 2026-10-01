@@ -1,6 +1,6 @@
 "use strict";
 const API_BASE = "https://titancdn.onrender.com";
-const pages = { overview: "Overview", edge: "Edge Network", analytics: "Analytics", jobs: "Scrape Jobs", logs: "Request Logs", api: "API & Webhooks", ai: "Titan AI", billing: "Billing & Usage" };
+const pages = { overview: "Overview", edge: "Edge Network", analytics: "Analytics", jobs: "Scrape Jobs", logs: "Request Logs", api: "API & Webhooks", ai: "Titan AI", billing: "Billing & Usage", viewInsights: "Titan Insights" };
 const $ = id => document.getElementById(id);
 const toast = $("toast");
 let currentProfile = null, currentKeyMeta = null, secretVisible = false;
@@ -155,7 +155,7 @@ $("logoutBtn").onclick = () => {
 };
 
 /* ---------- Free trial: Stripe card verification ---------- */
-let stripeJs = null, cardEl = null, setupSecret = null;
+let stripeJs = null, cardNumberEl = null, setupSecret = null;
 const trialModal = $("trialModal");
 function closeTrial() { trialModal.classList.remove("show"); $("cardError").textContent = ""; }
 async function openTrial() {
@@ -166,7 +166,14 @@ async function openTrial() {
     const d = await api("/api/billing/setup-intent", { method: "POST", body: JSON.stringify({ fingerprint: await getFingerprint() }) });
     setupSecret = d.clientSecret; trialModal.classList.add("show");
     if (!stripeJs) stripeJs = window.Stripe(publicConfig.stripePublishableKey);
-    if (!cardEl) { cardEl = stripeJs.elements().create("card", { style: { base: { color: "#f4f4f4", fontSize: "16px", "::placeholder": { color: "#777" } }, invalid: { color: "#ff6b6b" } } }); cardEl.mount("#cardElement"); }
+    if (!cardNumberEl) {
+      const style = { base: { color: "#f4f4f4", fontSize: "16px", "::placeholder": { color: "#777" } }, invalid: { color: "#ff6b6b" } };
+      const els = stripeJs.elements();
+      cardNumberEl = els.create("cardNumber", { style, showIcon: true });
+      cardNumberEl.mount("#cardNumber");
+      els.create("cardExpiry", { style }).mount("#cardExpiry");
+      els.create("cardCvc", { style }).mount("#cardCvc");
+    }
   } catch (e) { showToast(e.message); } finally { $("trialActivate").disabled = false; }
 }
 $("trialActivate").onclick = openTrial;
@@ -174,7 +181,7 @@ $("trialCancel").onclick = closeTrial;
 $("trialConfirm").onclick = async () => {
   const btn = $("trialConfirm"); btn.disabled = true; $("cardError").textContent = "";
   try {
-    const { error, setupIntent } = await stripeJs.confirmCardSetup(setupSecret, { payment_method: { card: cardEl, billing_details: { email: currentProfile?.email } } });
+    const { error, setupIntent } = await stripeJs.confirmCardSetup(setupSecret, { payment_method: { card: cardNumberEl, billing_details: { email: currentProfile?.email } } });
     if (error) { $("cardError").textContent = error.message; return; }
     await api("/api/billing/activate-trial", { method: "POST", body: JSON.stringify({ setupIntentId: setupIntent.id, fingerprint: await getFingerprint() }) });
     closeTrial(); await loadProfile(); $("freeWelcomeModal").classList.add("show");
@@ -263,7 +270,7 @@ $("sendBtn").onclick = async () => {
     if (!getToken()) throw new Error("Sign in first");
     if (!key) throw new Error("Create a new API key first. Full keys cannot be recovered later.");
     new URL(url); out.textContent = "Rendering page and processing extraction..."; $("scraperStatus").textContent = "RUNNING";
-    const r = await fetch("/api/v1/scrape", { method: "POST", headers: { "Content-Type": "application/json", "x-api-key": key }, body: JSON.stringify({ targetUrl: url, outputFormat: format }) });
+    const r = await fetch(API_BASE + "/api/v1/scrape", { method: "POST", headers: { "Content-Type": "application/json", "x-api-key": key }, body: JSON.stringify({ targetUrl: url, outputFormat: format }) });
     const d = await r.json(); if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
     out.textContent = JSON.stringify(d, null, 2); addLog(url, d.responseCode || 200); $("scraperStatus").textContent = "READY";
     await loadProfile(); showToast(`Done • ${fmt(d.charactersProcessed)} characters used`);
