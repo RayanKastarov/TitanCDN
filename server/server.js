@@ -1,6 +1,7 @@
 "use strict";
 
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
 
 const express = require("express");
 const mongoose = require("mongoose");
@@ -259,9 +260,6 @@ async function checkSecondFactor(user, body) {
 }
 
 async function sendMail(to, subject, html) {
-  // Извикваме библиотеката директно тук, за да няма конфликт с CommonJS/ESM
-  const nodemailer = require("nodemailer");
-
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
