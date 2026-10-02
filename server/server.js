@@ -16,7 +16,7 @@ const dns = require("dns").promises;
 const net = require("net");
 const QRCode = require("qrcode");
 const Stripe = require("stripe");
-const nodemailer = require("nodemailer");
+const { sendMail, emailShell, logMailError, verifyMailer, mailStatus } = require("./mailer"); // email: Gmail API (HTTPS) / Gmail SMTP / Resend
 
 /* ------------------------------------------------------------------ */
 /* Configuration                                                       */
@@ -34,9 +34,6 @@ const OPENROUTER_MODEL = env.OPENROUTER_MODEL || "google/gemini-2.5-flash:free";
 const STRIPE_SECRET_KEY = env.STRIPE_SECRET_KEY || "";
 const STRIPE_PUBLISHABLE_KEY = env.STRIPE_PUBLISHABLE_KEY || "";
 const STRIPE_WEBHOOK_SECRET = env.STRIPE_WEBHOOK_SECRET || "";
-// Outgoing email: Gmail SMTP with an App Password (Google Account > Security > 2-Step Verification > App passwords).
-const GMAIL_USER = env.GMAIL_USER || "";
-const GMAIL_APP_PASSWORD = String(env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, ""); // Google shows it with spaces; they must be removed
 const TOTP_ENC_KEY = env.TOTP_ENC_KEY || "";
 const FINGERPRINT_SALT = env.FINGERPRINT_SALT || JWT_SECRET;
 const SCRAPE_CONCURRENCY = Math.max(1, Number(env.SCRAPE_CONCURRENCY || 2));
@@ -48,7 +45,6 @@ const TRIAL_REQUIRES_CARD = true;          // free characters stay locked until 
 if (!MONGODB_URI) throw new Error("MONGODB_URI is required");
 if (!JWT_SECRET || JWT_SECRET.length < 32) throw new Error("JWT_SECRET must be at least 32 characters");
 if (!/^[a-f0-9]{64}$/i.test(TOTP_ENC_KEY)) throw new Error("TOTP_ENC_KEY must be 64 hex characters (32 bytes). Generate: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"");
-if (!GMAIL_USER || !GMAIL_APP_PASSWORD) console.warn("[TitanCDN] GMAIL_USER / GMAIL_APP_PASSWORD are not set: verification emails cannot be sent.");
 if (NODE_ENV === "production" && !APP_URL) console.warn("[TitanCDN] APP_URL is not set: verification emails and Stripe redirects will not work.");
 
 const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
@@ -248,49 +244,6 @@ async function checkSecondFactor(user, body) {
   return false;
 }
 
-let mailTransporter = null;
-function getTransporter() {
-  if (!GMAIL_USER || !GMAIL_APP_PASSWORD) throw new Error("GMAIL_USER / GMAIL_APP_PASSWORD are not configured");
-  if (!mailTransporter) {
-    mailTransporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
-      connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 15000   // never hang a request on a blocked SMTP port
-    });
-  }
-  return mailTransporter;
-}
-function mailHint(e) {
-  const c = String((e && e.code) || "");
-  if (["ETIMEDOUT", "ECONNECTION", "ESOCKET", "ECONNREFUSED", "EDNS"].includes(c)) return "Cannot reach smtp.gmail.com. Render's FREE plan blocks outbound SMTP ports 25/465/587: upgrade the service to a paid instance, or use an HTTPS email API.";
-  if (c === "EAUTH") return "Gmail rejected the login. Use a 16-character App Password (not your normal password) with 2-Step Verification enabled, and make GMAIL_USER the same account.";
-  return "";
-}
-const logMailError = e => console.error(`[mail] ${(e && e.code) || ""} ${(e && e.message) || e}`, mailHint(e) ? `\n[mail] HINT: ${mailHint(e)}` : "");
-
-const htmlToPlain = html => html.replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<a [^>]*href="([^"]+)"[^>]*>([^<]*)<\/a>/gi, "$2 ($1)").replace(/<\/(p|h2|tr|div)>|<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n\n").trim();
-
-async function sendMail(to, subject, html, text) {
-  await getTransporter().sendMail({ from: `"TitanCDN Support" <${GMAIL_USER}>`, to, subject, html, text: text || htmlToPlain(html) });
-}
-
-// Branded transactional email (black + gold header, button, plain-link fallback).
-function emailShell({ heading, intro, buttonText, link, footnote }) {
-  const l = esc(link);
-  return `<!doctype html><html><body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:24px 0;"><tr><td align="center">
-<table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e6e6e6;">
-<tr><td style="background:#000000;padding:22px 28px;border-bottom:3px solid #d4af37;"><span style="color:#d4af37;font-size:22px;font-weight:bold;letter-spacing:2px;">TITAN<span style="color:#ffffff;">CDN</span></span></td></tr>
-<tr><td style="padding:30px 28px;color:#222222;font-size:15px;line-height:1.6;">
-<h2 style="margin:0 0 14px;font-size:20px;color:#111111;">${heading}</h2>
-<p style="margin:0 0 6px;">${intro}</p>
-<p style="margin:26px 0;"><a href="${l}" style="background:#d4af37;color:#000000;text-decoration:none;font-weight:bold;padding:13px 26px;border-radius:6px;display:inline-block;">${buttonText}</a></p>
-<p style="font-size:13px;color:#666666;margin:0 0 10px;">Button not working? Copy this link into your browser:<br><a href="${l}" style="color:#8a6d1d;word-break:break-all;">${l}</a></p>
-<p style="font-size:13px;color:#666666;margin:0;">${footnote}</p>
-</td></tr>
-<tr><td style="padding:16px 28px;background:#fafafa;color:#999999;font-size:12px;">TitanCDN &middot; This is an automated message, please do not reply.</td></tr>
-</table></td></tr></table></body></html>`;
-}
 async function issueVerification(user) {
   if (!APP_URL) throw new Error("APP_URL is not configured");
   const token = crypto.randomBytes(32).toString("hex");
@@ -514,7 +467,7 @@ async function extractWithAI(text, instructions, sourceUrl) {
 /* Routes: public                                                      */
 /* ------------------------------------------------------------------ */
 const dbState = () => (mongoose.connection.readyState === 1 ? "CONNECTED" : "UNAVAILABLE");
-app.get("/api/health", (req, res) => res.json({ success: true, service: "TitanCDN", status: "ONLINE", database: dbState() }));
+app.get("/api/health", (req, res) => res.json({ success: true, service: "TitanCDN", status: "ONLINE", database: dbState(), mail: mailStatus() }));
 app.get("/api/status", (req, res) => res.json({ success: true, engine: "ONLINE", database: dbState(), uptimeSeconds: Math.floor(process.uptime()) }));
 app.get("/api/config", (req, res) => res.json({ success: true, stripeEnabled: !!(stripe && STRIPE_PUBLISHABLE_KEY), stripePublishableKey: STRIPE_PUBLISHABLE_KEY, plans: PLANS }));
 
@@ -846,9 +799,7 @@ app.use((err, req, res, next) => {
 /* ------------------------------------------------------------------ */
 async function start() {
   await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
-  if (GMAIL_USER && GMAIL_APP_PASSWORD) {
-    getTransporter().verify().then(() => console.log(`[mail] Gmail SMTP login OK (${GMAIL_USER}). Verification and reset emails can be sent.`)).catch(logMailError);
-  } else console.warn("[mail] GMAIL_USER / GMAIL_APP_PASSWORD missing: no emails can be sent.");
+  verifyMailer(); // logs "[mail] ... ready" or the exact reason it cannot send
   if (env.MIGRATE_LEGACY_USERS === "true") {
     // Accounts created before this version have no emailVerified field: grandfather them once.
     const r = await User.updateMany({ emailVerified: { $exists: false } }, { $set: { emailVerified: true, trialActivated: true } });
