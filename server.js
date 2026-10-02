@@ -110,7 +110,7 @@ app.use("/api", apiLimiter);
 // (serving the whole parent folder would expose server/server.js and package.json).
 const WEB_ROOT = path.join(__dirname, "..");
 const staticHandler = express.static(WEB_ROOT, { dotfiles: "deny", index: false, etag: true, maxAge: NODE_ENV === "production" ? "1h" : 0 });
-const PUBLIC_ASSET = /^\/(?:app\.js|index\.html|(?:images\/)?[\w.-]+\.(?:png|jpe?g|svg|webp|ico))$/i;
+const PUBLIC_ASSET = /^\/(?:app\.js|index\.html|reset-password\.(?:html|js)|(?:images\/)?[\w.-]+\.(?:png|jpe?g|svg|webp|ico))$/i;
 app.use((req, res, next) => (PUBLIC_ASSET.test(req.path) ? staticHandler(req, res, next) : next()));
 
 /* ------------------------------------------------------------------ */
@@ -128,6 +128,7 @@ const UserSchema = new mongoose.Schema({
   emailVerifyHash: { type: String, select: false, default: null },
   emailVerifyExpires: { type: Date, select: false, default: null },
   verifySentAt: { type: Date, default: null },
+  resetSentAt: { type: Date, default: null },
 
   totpEnabled: { type: Boolean, default: false },
   totpSecretEnc: { type: String, select: false, default: null },
@@ -259,15 +260,48 @@ function getTransporter() {
   }
   return mailTransporter;
 }
-async function sendMail(to, subject, html) {
-  await getTransporter().sendMail({ from: `"TitanCDN Support" <${GMAIL_USER}>`, to, subject, html });
+function mailHint(e) {
+  const c = String((e && e.code) || "");
+  if (["ETIMEDOUT", "ECONNECTION", "ESOCKET", "ECONNREFUSED", "EDNS"].includes(c)) return "Cannot reach smtp.gmail.com. Render's FREE plan blocks outbound SMTP ports 25/465/587: upgrade the service to a paid instance, or use an HTTPS email API.";
+  if (c === "EAUTH") return "Gmail rejected the login. Use a 16-character App Password (not your normal password) with 2-Step Verification enabled, and make GMAIL_USER the same account.";
+  return "";
+}
+const logMailError = e => console.error(`[mail] ${(e && e.code) || ""} ${(e && e.message) || e}`, mailHint(e) ? `\n[mail] HINT: ${mailHint(e)}` : "");
+
+const htmlToPlain = html => html.replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<a [^>]*href="([^"]+)"[^>]*>([^<]*)<\/a>/gi, "$2 ($1)").replace(/<\/(p|h2|tr|div)>|<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n\n").trim();
+
+async function sendMail(to, subject, html, text) {
+  await getTransporter().sendMail({ from: `"TitanCDN Support" <${GMAIL_USER}>`, to, subject, html, text: text || htmlToPlain(html) });
+}
+
+// Branded transactional email (black + gold header, button, plain-link fallback).
+function emailShell({ heading, intro, buttonText, link, footnote }) {
+  const l = esc(link);
+  return `<!doctype html><html><body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:24px 0;"><tr><td align="center">
+<table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e6e6e6;">
+<tr><td style="background:#000000;padding:22px 28px;border-bottom:3px solid #d4af37;"><span style="color:#d4af37;font-size:22px;font-weight:bold;letter-spacing:2px;">TITAN<span style="color:#ffffff;">CDN</span></span></td></tr>
+<tr><td style="padding:30px 28px;color:#222222;font-size:15px;line-height:1.6;">
+<h2 style="margin:0 0 14px;font-size:20px;color:#111111;">${heading}</h2>
+<p style="margin:0 0 6px;">${intro}</p>
+<p style="margin:26px 0;"><a href="${l}" style="background:#d4af37;color:#000000;text-decoration:none;font-weight:bold;padding:13px 26px;border-radius:6px;display:inline-block;">${buttonText}</a></p>
+<p style="font-size:13px;color:#666666;margin:0 0 10px;">Button not working? Copy this link into your browser:<br><a href="${l}" style="color:#8a6d1d;word-break:break-all;">${l}</a></p>
+<p style="font-size:13px;color:#666666;margin:0;">${footnote}</p>
+</td></tr>
+<tr><td style="padding:16px 28px;background:#fafafa;color:#999999;font-size:12px;">TitanCDN &middot; This is an automated message, please do not reply.</td></tr>
+</table></td></tr></table></body></html>`;
 }
 async function issueVerification(user) {
   if (!APP_URL) throw new Error("APP_URL is not configured");
   const token = crypto.randomBytes(32).toString("hex");
   await User.updateOne({ _id: user._id }, { $set: { emailVerifyHash: sha256(token), emailVerifyExpires: new Date(Date.now() + 24 * 3600 * 1000), verifySentAt: new Date() } });
   const link = `${APP_URL}/api/auth/verify-email?token=${token}`;
-  await sendMail(user.email, "Confirm your email — TitanCDN", `<p>Hi ${esc(user.username)},</p><p>Confirm your email to activate your account:</p><p><a href="${link}">${link}</a></p><p>This link is valid for 24 hours. If you did not sign up, you can ignore this email.</p>`);
+  await sendMail(user.email, "Confirm your email — TitanCDN", emailShell({
+    heading: "Confirm your email address",
+    intro: `Hi ${esc(user.username)}, welcome to TitanCDN. Confirm your email to activate your account.`,
+    buttonText: "Confirm my email", link,
+    footnote: "This link is valid for 24 hours. If you did not create an account, you can safely ignore this email."
+  }));
 }
 
 const isVerified = u => !REQUIRE_EMAIL_VERIFICATION || u.emailVerified === true;
@@ -502,7 +536,7 @@ app.post("/api/auth/register", registerLimiter, async (req, res) => {
   let user;
   try { user = await User.create({ username, email, emailCanonical, passwordHash, plan: "free", emailVerified: false, trialActivated: false }); } // locked until Gmail link + Stripe card
   catch (e) { if (e.code === 11000) throw new HttpError(409, "Email already registered."); throw e; }
-  const emailSent = await issueVerification(user).then(() => true).catch(e => { console.error("[mail]", e.message); return false; });
+  const emailSent = await issueVerification(user).then(() => true).catch(e => { logMailError(e); return false; });
   res.status(201).json({ success: true, emailSent, message: emailSent ? "Account created. Check your inbox and confirm your email." : "Account created, but the confirmation email could not be sent. Use resend on the sign-in screen." });
 });
 
@@ -516,7 +550,7 @@ app.get("/api/auth/verify-email", sensitiveLimiter, async (req, res) => {
 app.post("/api/auth/resend-verification", sensitiveLimiter, async (req, res) => {
   const user = await User.findOne({ email: normalizeEmail(req.body.email) });
   if (user && !user.emailVerified && (!user.verifySentAt || Date.now() - user.verifySentAt.getTime() > 60000)) {
-    await issueVerification(user).catch(e => console.error("[mail]", e.message));
+    await issueVerification(user).catch(e => logMailError(e));
   }
   res.json({ success: true, message: "If the account exists and is unverified, a new email was sent." }); // no account enumeration
 });
@@ -534,6 +568,50 @@ app.post("/api/auth/login", loginLimiter, async (req, res) => {
   }
   const token = jwt.sign({ tv: user.tokenVersion }, JWT_SECRET, { algorithm: "HS256", subject: String(user._id), issuer: "titancdn", expiresIn: "2h" });
   res.json({ success: true, token, user: { id: user._id, username: user.username, email: user.email, plan: user.plan } });
+});
+
+// ---- Forgot / reset password (Gmail) ----
+// Reset tokens are signed with a DIFFERENT secret than login tokens, so a reset token can never be used as a session.
+const RESET_SECRET = crypto.createHmac("sha256", JWT_SECRET).update("titancdn:password-reset").digest("hex");
+const pwFingerprint = hash => sha256(hash).slice(0, 24); // changes the moment the password changes => every reset link is single-use
+
+app.post("/api/auth/forgot-password", sensitiveLimiter, async (req, res) => {
+  const email = normalizeEmail(req.body.email);
+  if (!validEmail(email)) throw new HttpError(400, "Enter a valid email address.");
+  // Same answer whether or not the account exists (no account enumeration), sent BEFORE any slow work (no timing leak).
+  res.json({ success: true, message: "If an account exists for that email, a reset link has been sent. Check your inbox and spam folder. The link is valid for 1 hour." });
+  try {
+    const user = await User.findOne({ email }).select("+passwordHash");
+    if (!user) return;
+    if (user.resetSentAt && Date.now() - user.resetSentAt.getTime() < 60000) return; // max 1 email / minute / account
+    if (!APP_URL) throw new Error("APP_URL is not configured");
+    const token = jwt.sign({ pwv: pwFingerprint(user.passwordHash) }, RESET_SECRET, { algorithm: "HS256", subject: String(user._id), issuer: "titancdn-reset", audience: "password-reset", expiresIn: "1h" });
+    await User.updateOne({ _id: user._id }, { $set: { resetSentAt: new Date() } });
+    await sendMail(user.email, "Reset your TitanCDN password", emailShell({
+      heading: "Reset your password",
+      intro: `Hi ${esc(user.username)}, we received a request to reset the password for your TitanCDN account.`,
+      buttonText: "Choose a new password", link: `${APP_URL}/reset-password.html?token=${encodeURIComponent(token)}`,
+      footnote: "This link is valid for 1 hour and works only once. If you did not request this, ignore this email: your password will not change."
+    }));
+  } catch (e) { logMailError(e); }
+});
+
+app.post("/api/auth/reset-password", sensitiveLimiter, async (req, res) => {
+  const token = String(req.body.token || "");
+  const password = String(req.body.password || "");
+  if (password.length < 12 || password.length > 128) throw new HttpError(400, "Password must be 12–128 characters.");
+  const invalid = () => new HttpError(400, "This reset link is invalid, expired or already used. Request a new one.", { code: "RESET_TOKEN_INVALID" });
+  let payload;
+  try { payload = jwt.verify(token, RESET_SECRET, { algorithms: ["HS256"], issuer: "titancdn-reset", audience: "password-reset" }); }
+  catch { throw invalid(); }
+  const user = await User.findById(payload.sub).select("+passwordHash");
+  if (!user || payload.pwv !== pwFingerprint(user.passwordHash)) throw invalid();
+  if (await bcrypt.compare(password, user.passwordHash)) throw new HttpError(400, "Choose a password that is different from your current one.");
+  const passwordHash = await bcrypt.hash(password, 12);
+  // Compare-and-set on the old hash: two simultaneous uses of one link cannot both win.
+  const r = await User.updateOne({ _id: user._id, passwordHash: user.passwordHash }, { $set: { passwordHash, emailVerified: true, resetSentAt: null }, $inc: { tokenVersion: 1 } }); // tokenVersion+1 signs out every old session; opening the mailbox link also proves email ownership
+  if (!r.modifiedCount) throw invalid();
+  res.json({ success: true, message: "Password updated. You can now sign in with your new password." });
 });
 
 app.post("/api/auth/logout-all", requireJwt, async (req, res) => {
@@ -768,6 +846,9 @@ app.use((err, req, res, next) => {
 /* ------------------------------------------------------------------ */
 async function start() {
   await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
+  if (GMAIL_USER && GMAIL_APP_PASSWORD) {
+    getTransporter().verify().then(() => console.log(`[mail] Gmail SMTP login OK (${GMAIL_USER}). Verification and reset emails can be sent.`)).catch(logMailError);
+  } else console.warn("[mail] GMAIL_USER / GMAIL_APP_PASSWORD missing: no emails can be sent.");
   if (env.MIGRATE_LEGACY_USERS === "true") {
     // Accounts created before this version have no emailVerified field: grandfather them once.
     const r = await User.updateMany({ emailVerified: { $exists: false } }, { $set: { emailVerified: true, trialActivated: true } });

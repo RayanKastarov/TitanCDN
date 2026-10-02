@@ -274,7 +274,9 @@ input:focus,select:focus{border-color:var(--gold)}
       <input id="authEmail" class="full" type="email" placeholder="Email">
       <input id="authPassword" class="full" type="password" placeholder="Password • 12+ characters">
       <input id="authTotp" class="full" style="display:none" inputmode="numeric" autocomplete="one-time-code" placeholder="2FA Code (6 digits) or Recovery Code">
-      <label class="full auth-note"><input type="checkbox" id="terms"> I agree to the Terms and Privacy Policy.</label>
+      <div class="full" id="forgotRow" style="display:none;text-align:right"><a href="#" id="forgotLink" style="color:#d4af37;font-size:12px;text-decoration:underline">Forgot password?</a></div>
+      <div class="full" id="backRow" style="display:none"><a href="#" id="backToSignin" style="color:#d4af37;font-size:12px;text-decoration:underline">&larr; Back to sign in</a></div>
+      <label class="full auth-note" id="termsRow"><input type="checkbox" id="terms"> I agree to the Terms and Privacy Policy.</label>
     </div>
     <div class="auth-note" id="authHint">Already have an account? Use SIGN IN above. Your free account will be instantly created and activated.</div>
     <button class="btn primary" id="authSubmit" style="width:100%;margin-top:16px">CREATE ACCOUNT</button>

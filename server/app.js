@@ -60,18 +60,26 @@ $("pingBtn").onclick = async () => { try { const d = await api("/api/health"); s
 /* ---------- Auth modal ---------- */
 const authModal = $("authModal"), profileModal = $("profileModal");
 let authMode = "signup";
+const DEFAULT_AUTH_HINT = "We email you a confirmation link. After confirming, add a card (it is never charged) to unlock your 100,000 free characters.";
 function syncAuthTabs() {
-  const up = authMode === "signup";
-  $("signupTab").classList.toggle("primary", up); $("signinTab").classList.toggle("primary", !up);
-  $("authTitle").textContent = up ? "Create TitanCDN account" : "Sign in to TitanCDN";
-  $("authSubmit").textContent = up ? "CREATE ACCOUNT" : "SIGN IN";
+  const up = authMode === "signup", forgot = authMode === "forgot";
+  $("signupTab").classList.toggle("primary", up); $("signinTab").classList.toggle("primary", authMode === "signin");
+  $("authTitle").textContent = forgot ? "Reset your password" : up ? "Create TitanCDN account" : "Sign in to TitanCDN";
+  $("authSubmit").textContent = forgot ? "SEND RESET LINK" : up ? "CREATE ACCOUNT" : "SIGN IN";
   $("authName").style.display = up ? "block" : "none"; $("authCompany").style.display = "none";
+  $("authPassword").style.display = forgot ? "none" : "block";
+  $("termsRow").style.display = forgot ? "none" : "";
   $("authTotp").style.display = "none";
+  $("forgotRow").style.display = authMode === "signin" ? "block" : "none";
+  $("backRow").style.display = forgot ? "block" : "none";
+  $("authHint").textContent = forgot ? "Enter the email you registered with. We will send you a link that is valid for 1 hour." : DEFAULT_AUTH_HINT;
 }
 function openAuth(mode = "signup") { authMode = mode; syncAuthTabs(); authModal.classList.add("show"); }
 $("authBtn").onclick = () => openAuth("signup");
 $("signupTab").onclick = () => { authMode = "signup"; syncAuthTabs(); };
 $("signinTab").onclick = () => { authMode = "signin"; syncAuthTabs(); };
+$("forgotLink").onclick = e => { e.preventDefault(); authMode = "forgot"; syncAuthTabs(); $("authEmail").focus(); };
+$("backToSignin").onclick = e => { e.preventDefault(); authMode = "signin"; syncAuthTabs(); };
 authModal.onclick = e => { if (e.target === authModal) authModal.classList.remove("show"); };
 profileModal.onclick = e => { if (e.target === profileModal) profileModal.classList.remove("show"); };
 
@@ -117,11 +125,17 @@ $("authSubmit").onclick = async () => {
   const username = $("authName").value.trim().replace(/[<>&"'`]/g, ""), email = $("authEmail").value.trim(), password = $("authPassword").value;
   const btn = $("authSubmit"); btn.disabled = true;
   try {
+    if (authMode === "forgot") {
+      if (!email) throw new Error("Enter your email address");
+      const d = await api("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) });
+      showToast("Check your inbox for the reset link"); $("authHint").textContent = d.message;
+      return;
+    }
     if (!email || !password) throw new Error("Email and password are required");
     if (authMode === "signup") {
       if (!$("terms").checked) throw new Error("Accept Terms and Privacy Policy");
       const d = await api("/api/auth/register", { method: "POST", body: JSON.stringify({ username: username || email.split("@")[0].replace(/[<>&"'`]/g, ""), email, password }) });
-      showToast(d.message); authMode = "signin"; syncAuthTabs(); $("authHint").textContent = "Account created. Sign in with your email and password.";
+      showToast(d.message); authMode = "signin"; syncAuthTabs(); $("authHint").textContent = "Account created. Open the confirmation email we just sent, then sign in.";
       return;
     }
     const totp = $("authTotp").value.trim().replace(/\s/g, "");
@@ -132,6 +146,7 @@ $("authSubmit").onclick = async () => {
     await loadProfile(); await loadKeys(); showToast("Signed in");
   } catch (e) {
     if (e.data?.twoFactorRequired) { $("authTotp").style.display = "block"; $("authTotp").focus(); }
+    if (e.data?.code === "EMAIL_NOT_VERIFIED") $("authHint").textContent = "Email not confirmed yet. Did not get it? Use \u201cForgot password?\u201d: opening that link also confirms your email.";
     showToast(e.message);
   } finally { btn.disabled = false; }
 };
