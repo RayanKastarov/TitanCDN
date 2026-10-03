@@ -17,7 +17,6 @@ const net = require("net");
 const QRCode = require("qrcode");
 const Stripe = require("stripe");
 const { sendMail, emailShell, logMailError, verifyMailer, mailStatus } = require("./mailer"); // email: Gmail API (HTTPS) / Gmail SMTP / Resend
-const nodemailer = require("nodemailer");
 
 /* ------------------------------------------------------------------ */
 /* Configuration                                                       */
