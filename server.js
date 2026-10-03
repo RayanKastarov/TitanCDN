@@ -17,7 +17,6 @@ const net = require("net");
 const QRCode = require("qrcode");
 const Stripe = require("stripe");
 const { sendMail, emailShell, verifyMailer, activeProvider, logMailError } = require("./mailer");
-
 /* ------------------------------------------------------------------ */
 /* Configuration                                                       */
 /* ------------------------------------------------------------------ */

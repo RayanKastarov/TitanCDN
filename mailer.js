@@ -132,4 +132,8 @@ async function verifyMailer() {
   } catch (e) { record(e); logMailError(e); return false; }
 }
 
-module.exports = { sendMail, emailShell,, mailStatus, activeProvider, logMailError, htmlToPlain };
+module.exports = { sendMail, emailShell, mailStatus, activeProvider, logMailError, htmlToPlain };
+// Change this:
+const mailer = require('./mailer');
+// To this:
+const mailer = require('./mailer.js');
