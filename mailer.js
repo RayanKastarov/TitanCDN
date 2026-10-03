@@ -132,4 +132,4 @@ async function verifyMailer() {
   } catch (e) { record(e); logMailError(e); return false; }
 }
 
-module.exports = { sendMail, emailShell, verifyMailer, mailStatus, activeProvider, logMailError, htmlToPlain };
+module.exports = { sendMail, emailShell,, mailStatus, activeProvider, logMailError, htmlToPlain };

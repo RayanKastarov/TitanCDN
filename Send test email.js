@@ -2,7 +2,7 @@
 // Local test:  node send-test-email.js you@example.com
 // Reads the same variables as the server (.env file in this folder).
 require("dotenv").config();
-const { sendMail, emailShell, logMailError, verifyMailer, mailStatus } = require("./server/mailer");
+const { sendMail, emailShell, verifyMailer, activeProvider, logMailError } = require("./mailer");
 
 const to = process.argv[2];
 if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) { console.log("Usage: node send-test-email.js you@example.com"); process.exit(1); }
