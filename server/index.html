@@ -151,6 +151,8 @@ input:focus,select:focus{border-color:var(--gold)}
     <button data-page="ai">✦ <span>Titan AI</span></button>
     <button data-page="billing">◇ <span>Billing &amp; Usage</span></button>
     <button id="navInsights" data-page="viewInsights">◭ <span>Titan Insights</span></button>
+    <button data-page="about">ℹ️ About Us</button>
+
   </nav>
   <div class="sidebar-bottom"><span class="status-dot"></span>CONTROL PLANE ONLINE<br><span style="margin-left:14px">v2.0.0 • BETA</span></div>
 </aside>
@@ -391,6 +393,32 @@ input:focus,select:focus{border-color:var(--gold)}
       <button class="btn primary" id="modalAction">CONTINUE DEMO</button>
     </div>
   </div>
+</div>
+section class="page view-pane" id="viewInsights">
+  <div class="card gold">
+    <div class="section-title"><h3>TITAN INSIGHTS</h3><span>MARKET INTELLIGENCE HUB</span></div>
+    <p class="sub" style="font-size:13px">Placeholder content: these are sample titles for the upcoming automated industrial articles. No real data or results are shown here yet.</p>
+  </div>
+  <div class="insights-grid">
+    <article class="insight-card"><span class="insight-tag">PRICING INTELLIGENCE</span><h4>Nike E-Commerce Price Drop Signals, Identified via the Titan Scraper Pipeline</h4><p>How automated extraction surfaces markdown timing and regional price gaps for global sportswear catalogs.</p><div class="insight-foot"><span>6 MIN READ</span><span class="insight-badge">COMING SOON</span></div></article>
+    <article class="insight-card"><span class="insight-tag">MARKET TRENDS</span><h4>Amazon Dynamic Scraper Trends — Oct 2026</h4><p>A look at how marketplace layouts, rate limits and rendering patterns are changing for data teams.</p><div class="insight-foot"><span>8 MIN READ</span><span class="insight-badge">COMING SOON</span></div></article>
+    <article class="insight-card"><span class="insight-tag">SECURITY RESEARCH</span><h4>Anti-Bot Countermeasures Across High-Security Targets</h4><p>What modern bot defenses look for, and what responsible, rate-limited collection looks like in practice.</p><div class="insight-foot"><span>9 MIN READ</span><span class="insight-badge">COMING SOON</span></div></article>
+    <article class="insight-card"><span class="insight-tag">RETAIL SIGNALS</span><h4>Detecting Stock-Outs Early with Structured Extraction</h4><p>Turning product-page availability changes into daily alerts for inventory and pricing teams.</p><div class="insight-foot"><span>5 MIN READ</span><span class="insight-badge">COMING SOON</span></div></article>
+    <article class="insight-card"><span class="insight-tag">TITAN AI</span><h4>From Raw Page to Clean JSON: Prompting for Reliable Extraction</h4><p>Practical instruction patterns that make AI extraction consistent across very different websites.</p><div class="insight-foot"><span>7 MIN READ</span><span class="insight-badge">COMING SOON</span></div></article>
+    <article class="insight-card"><span class="insight-tag">WEEKLY DIGEST</span><h4>Market Intelligence Digest: Industrial Pricing Moves</h4><p>A recurring summary of notable price and assortment changes across tracked categories.</p><div class="insight-foot"><span>4 MIN READ</span><span class="insight-badge">COMING SOON</span></div></article>
+  </div>
+</section>
+<section class="page" id="registry">
+  <div class="hero"><div><div class="eyebrow">UNIVERSAL DOMAIN CONTROL</div><h2>Domain Registry</h2><p>Register any valid public hostname as a Titan channel. Channels are isolated and can be connected to compliant providers or first-party APIs by the backend.</p></div><div class="hero-badge"><b id="registryCount">12</b><span>CHANNELS</span></div></div>
+  <div class="card gold"><div class="section-title"><h3>ADD DOMAIN CHANNEL</h3><span>BACKEND-READY REGISTRY</span></div><div class="builder"><input class="wide" id="newDomain" placeholder="example.com"><select id="channelRegion"><option>Auto region</option><option>EU West</option><option>EU Central</option><option>US East</option><option>AP Southeast</option></select><select id="channelMode"><option>Public web</option><option>Official API</option><option>First-party</option></select><button class="btn primary" id="addDomain">CREATE CHANNEL</button></div></div>
+  <div class="section-title"><h3>REGISTERED CHANNELS</h3><span>SEARCH • ISOLATE • OBSERVE</span></div><div class="card"><div class="search-row"><input id="registrySearch" placeholder="Search hostname, channel ID or region..."><button class="btn" id="exportRegistry">EXPORT JSON</button></div><div id="registryList" style="margin-top:16px"></div></div>
+</section>
+<section class="page" id="security">
+ <div class="hero"><div><div class="eyebrow">ZERO-TRUST CONTROL PLANE</div><h2>Security Center</h2><p>Credential lifecycle, access policies, audit visibility and account protection.</p></div><div class="hero-badge"><b>92</b><span>SECURITY SCORE</span></div></div>
+ <div class="grid analytics-grid"><div class="card gold"><h3>Account protection</h3><div class="metric-row"><span>Password</span><b class="green">HASHED SERVER-SIDE</b></div><div class="metric-row"><span>Two-factor authentication</span><b>READY FOR BACKEND</b></div><div class="metric-row"><span>Session policy</span><b>12 HOURS</b></div><div class="metric-row"><span>Suspicious login alerts</span><b class="green">ENABLED</b></div><button class="btn primary" style="margin-top:18px">ENABLE 2FA</button></div><div class="card"><h3>API policy</h3><div class="metric-row"><span>Default scope</span><b>scrape:read</b></div><div class="metric-row"><span>IP allowlist</span><b>OPTIONAL</b></div><div class="metric-row"><span>Key rotation</span><b>90 DAYS</b></div><div class="metric-row"><span>Webhook signatures</span><b class="green">REQUIRED</b></div><button class="btn" style="margin-top:18px">EDIT POLICY</button></div></div>
+ <div class="card" style="margin-top:16px"><div class="section-title"><h3>AUDIT TRAIL</h3><span>IMMUTABLE EVENT VIEW</span></div><div class="logline"><b>credential.created</b><span>Master API credential provisioned</span><time>Today</time></div><div class="logline"><b>session.login</b><span>Dashboard session established</span><time>Today</time></div><div class="logline"><b>policy.checked</b><span>Domain isolation policy healthy</span><time>Today</time></div></div>
+</section>
+</main>
 </div>
 
 <script src="https://js.stripe.com/v3/" defer></script>

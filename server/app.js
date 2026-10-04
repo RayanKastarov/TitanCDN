@@ -1,6 +1,6 @@
 "use strict";
 const API_BASE = "https://titancdn.onrender.com";
-const pages = { overview: "Overview", edge: "Edge Network", analytics: "Analytics", jobs: "Scrape Jobs", logs: "Request Logs", api: "API & Webhooks", ai: "Titan AI", billing: "Billing & Usage", viewInsights: "Titan Insights" };
+const pages = { overview: "Overview", edge: "Edge Network", analytics: "Analytics", jobs: "Scrape Jobs", logs: "Request Logs", api: "API & Webhooks", ai: "Titan AI", billing: "Billing & Usage", viewInsights: "Titan Insights", about: "About Us" };
 const $ = id => document.getElementById(id);
 const toast = $("toast");
 let currentProfile = null, currentKeyMeta = null, secretVisible = false;
