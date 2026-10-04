@@ -108,6 +108,7 @@ function smtpTransporter() {
 }
 
 /* ---------------- public API ---------------- */
+/* ---------------- public API ---------------- */
 async function sendMail(to, subject, html, text) {
   const provider = activeProvider();
   if (!provider) { const e = new Error("No email provider configured"); e.code = "NO_PROVIDER"; record(e); throw e; }
@@ -132,4 +133,4 @@ async function verifyMailer() {
   } catch (e) { record(e); logMailError(e); return false; }
 }
 
-module.exports = { sendMail, emailShell, verifyMailer, mailStatus, activeProvider, logMailError, htmlToPlain };
+module.exports = { sendMail, emailShell, mailStatus, activeProvider, logMailError, htmlToPlain };
