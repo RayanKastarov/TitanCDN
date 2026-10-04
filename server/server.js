@@ -91,11 +91,18 @@ app.use(helmet({
     directives: {
       "script-src": ["'self'", "https://js.stripe.com", "https://openfpcdn.io"],
       "frame-src": ["https://js.stripe.com", "https://hooks.stripe.com", "https://m.stripe.network"],
-      "connect-src": ["'self'", "https://api.stripe.com", "https://openfpcdn.io"],
+      "connect-src": [
+        "'self'", 
+        "https://api.stripe.com", 
+        "https://openfpcdn.io", 
+        "https://cdntitan.com", 
+        "https://titancdn.onrender.com"
+      ],
       "img-src": ["'self'", "data:", "https://*.stripe.com"]
     }
   }
 }));
+
 
 const sensitiveLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: "draft-7", legacyHeaders: false, message: { success: false, error: "Too many attempts. Try again later." } });
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: "draft-7", legacyHeaders: false, message: { success: false, error: "Too many login attempts. Try again later." } });
