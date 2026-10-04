@@ -9,12 +9,13 @@ const virtualMailer = {
   logMailError: (err) => console.error(err),
   mailStatus: () => "OPERATIONAL"
 };
-require.cache[require.resolve('./mailer')] = {
-  id: require.resolve('./mailer'),
-  filename: require.resolve('./mailer'),
+require.cache[require.resolve('./Mailer')] = {
+  id: require.resolve('./Mailer'),
+  filename: require.resolve('./Mailer'),
   loaded: true,
   exports: virtualMailer
 };
+
 
 require("dotenv").config();
 
