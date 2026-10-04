@@ -9,11 +9,11 @@ const virtualMailer = {
   logMailError: (err) => console.error(err),
   mailStatus: () => "OPERATIONAL"
 };
-require.cache[require.resolve('./Mailer')] = {
-  id: require.resolve('./Mailer'),
-  filename: require.resolve('./Mailer'),
+require.cache[require.resolve('./mailer')] = {
+  id: require.resolve('./mailer'),
+  filename: require.resolve('./mailer'),
   loaded: true,
-  exports: virtualMailer
+  exports: virtualmailer
 };
 
 
@@ -33,7 +33,7 @@ const dns = require("dns").promises;
 const net = require("net");
 const QRCode = require("qrcode");
 const Stripe = require("stripe");
-const { sendMail, emailShell, verifyMailer, activeProvider, logMailError } = require("./Mailer");
+const { sendMail, emailShell, verifyMailer, activeProvider, logMailError } = require("./mailer");
 /* ------------------------------------------------------------------ */
 /* Configuration                                                       */
 /* ------------------------------------------------------------------ */
