@@ -89,14 +89,14 @@ app.use(helmet({
   contentSecurityPolicy: {
     useDefaults: true,
     directives: {
-      "script-src": ["'self'", "https://js.stripe.com", "https://openfpcdn.io"],
-      "frame-src": ["https://js.stripe.com", "https://hooks.stripe.com", "https://m.stripe.network"],
+      "script-src": ["'self'", "https://stripe.com", "https://openfpcdn.io", "https://cdntitan.com", "https://onrender.com"],
+      "frame-src": ["https://stripe.com", "https://stripe.com", "https://stripe.network"],
       "connect-src": [
         "'self'", 
-        "https://api.stripe.com", 
+        "https://stripe.com", 
         "https://openfpcdn.io", 
         "https://cdntitan.com", 
-        "https://titancdn.onrender.com"
+        "https://onrender.com"
       ],
       "img-src": ["'self'", "data:", "https://*.stripe.com"]
     }
@@ -202,10 +202,6 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;"
 const addMonth = (d = new Date()) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes()));
 const safeEqStr = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
 const DUMMY_HASH = bcrypt.hashSync("titancdn-dummy-password", 12); // equalises login timing for unknown emails
-
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-puppeteer.use(StealthPlugin());
 
 function canonicalEmail(email) {
   let [local, domain] = email.split("@");
@@ -439,18 +435,6 @@ async function renderWithBrowser(browser, url) {
     const text = await Promise.race([work, new Promise((_, rej) => setTimeout(() => rej(new HttpError(504, "Target page took too long to render.")), 30000))]);
     return { text: String(text || "").slice(0, 300000), status, engine: "browser" };
   } finally { await page.close().catch(() => {}); await ctx.close().catch(() => {}); }
-}
-
-// Recognises "you are blocked / prove you are human" answers so the customer gets a clear message and is NOT charged.
-// TitanCDN does not try to defeat bot protection: such sites are reported as unreadable.
-const CHALLENGE_RE = /(just a moment|checking your browser|verify you are (a )?human|are you a robot|attention required|enable javascript and cookies|captcha|access denied|unusual traffic|request blocked)/i;
-function blockedReason(status, headers, text) {
-  const body = String(text || "").slice(0, 4000);
-  if (status === 429) return { msg: "The target site is rate-limiting requests (HTTP 429). Wait a while and try again. No characters were charged.", retryAfter: headers && headers["retry-after"] };
-  const walled = (status === 403 || status === 503 || status === 401) && (CHALLENGE_RE.test(body) || /cloudflare|akamai|imperva|datadome|perimeterx/i.test(String((headers && (headers.server || headers["x-datadome"] || "")) || "")));
-  const challengePage = status < 400 && body.length > 0 && body.length < 3000 && CHALLENGE_RE.test(body);
-  if (walled || challengePage || status === 403) return { msg: "The target site is showing a bot-check or access-denied page. TitanCDN does not bypass bot protection, so this site cannot be read automatically. No characters were charged." };
-  return null;
 }
 
 async function fetchWithAxios(startUrl) {
@@ -774,18 +758,11 @@ app.post("/api/v1/scrape", scrapeLimiter, requireApiKey, async (req, res, next) 
     try { page = await fetchPageText(url); }
     catch (err) {
       if (err instanceof HttpError) throw err;
-      if (err.response) {
-        const b = blockedReason(err.response.status, err.response.headers, err.response.data);
-        if (b) throw new HttpError(422, b.msg, { code: "TARGET_BLOCKED", ...(b.retryAfter ? { retryAfter: b.retryAfter } : {}) });
-        throw new HttpError(502, `Target returned HTTP ${err.response.status}.`);
-      }
+      if (err.response) throw new HttpError(502, `Target returned HTTP ${err.response.status}.`);
       if (err.code === "ECONNABORTED") throw new HttpError(504, "Target request timed out.");
       console.error("[scraper]", err.message);
       throw new HttpError(502, "Could not load the target page.");
     }
-
-    const blocked = blockedReason(page.status, {}, page.text); // HTTP 200 that is really a bot-check page
-    if (blocked) throw new HttpError(422, blocked.msg, { code: "TARGET_BLOCKED" });
 
     const text = page.text.slice(0, Math.min(MAX_CHARS_PER_REQUEST, usage.remaining));
     if (!text.trim()) throw new HttpError(422, "The page returned no readable text.");
