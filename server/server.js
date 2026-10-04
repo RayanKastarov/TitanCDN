@@ -1,7 +1,7 @@
 "use strict";
 // ⚡ TITAN MAIL SHIELD — BYPASS MODULE_NOT_FOUND FOREVER
 const moduleAlias = require('module');
-const virtualMailer = {
+const virtualmailer = {
   sendMail: async (to, subj, html) => console.log(`[Titan Mail] Virtual delivery to ${to}`),
   emailShell: (data) => data,
   verifyMailer: async () => true,
