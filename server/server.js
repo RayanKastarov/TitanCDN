@@ -32,7 +32,7 @@ const dns = require("dns").promises;
 const net = require("net");
 const QRCode = require("qrcode");
 const Stripe = require("stripe");
-const { sendMail, emailShell, verifyMailer, activeProvider, logMailError } = require("./mailer");
+const { sendMail, emailShell, verifyMailer, activeProvider, logMailError } = require("./Mailer");
 /* ------------------------------------------------------------------ */
 /* Configuration                                                       */
 /* ------------------------------------------------------------------ */
