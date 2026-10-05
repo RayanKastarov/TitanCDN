@@ -1,6 +1,6 @@
 "use strict";
-const API_BASE = "https://titancdn.onrender.com";
-const pages = { overview: "Overview", edge: "Edge Network", analytics: "Analytics", jobs: "Scrape Jobs", logs: "Request Logs", api: "API & Webhooks", ai: "Titan AI", billing: "Billing & Usage", viewInsights: "Titan Insights" };
+const API_BASE = "";
+const pages = { overview: "Overview", edge: "Edge Network", analytics: "Analytics", jobs: "Scrape Jobs", logs: "Request Logs", api: "API & Webhooks", ai: "Titan AI", billing: "Billing & Usage", viewInsights: "Titan Insights", about: "About Us" };
 const $ = id => document.getElementById(id);
 const toast = $("toast");
 let currentProfile = null, currentKeyMeta = null, secretVisible = false;
@@ -15,6 +15,7 @@ function showToast(msg) { toast.textContent = msg; toast.classList.add("show"); 
 async function api(path, options = {}) {
   const headers = { "Content-Type": "application/json", ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}), ...(options.headers || {}) };
 const r = await fetch(API_BASE + path, { ...options, headers });  let d = {}; try { d = await r.json(); } catch { /* non-JSON */ }
+  if ((r.status === 404 || r.status === 405) && d.success === undefined && location.port === "5500") throw new Error("This page is opened with Live Server, which has no backend. Start the Node server (node server.js) and open http://localhost:3000 instead.");
   if (!r.ok) { const e = new Error(d.error || `HTTP ${r.status}`); e.data = d; e.status = r.status; throw e; }
   return d;
 }
@@ -146,7 +147,10 @@ $("authSubmit").onclick = async () => {
     await loadProfile(); await loadKeys(); showToast("Signed in");
   } catch (e) {
     if (e.data?.twoFactorRequired) { $("authTotp").style.display = "block"; $("authTotp").focus(); }
-    if (e.data?.code === "EMAIL_NOT_VERIFIED") $("authHint").textContent = "Email not confirmed yet. Did not get it? Use \u201cForgot password?\u201d: opening that link also confirms your email.";
+    if (e.data?.code === "EMAIL_NOT_VERIFIED") {
+      $("authHint").textContent = "Email not confirmed yet. We just sent you a new confirmation link: check your inbox and spam folder.";
+      api("/api/auth/resend-verification", { method: "POST", body: JSON.stringify({ email }) }).catch(() => {});
+    }
     showToast(e.message);
   } finally { btn.disabled = false; }
 };
@@ -285,12 +289,12 @@ $("sendBtn").onclick = async () => {
     if (!getToken()) throw new Error("Sign in first");
     if (!key) throw new Error("Create a new API key first. Full keys cannot be recovered later.");
     new URL(url); out.textContent = "Rendering page and processing extraction..."; $("scraperStatus").textContent = "RUNNING";
-    const r = await fetch(API_BASE + "/api/v1/scrape", { method: "POST", headers: { "Content-Type": "application/json", "x-api-key": key }, body: JSON.stringify({ targetUrl: url, outputFormat: format }) });
-    const d = await r.json(); if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+    const d = await api("/api/v1/scrape", { method: "POST", headers: { "x-api-key": key }, body: JSON.stringify({ targetUrl: url, outputFormat: format }) });
     out.textContent = JSON.stringify(d, null, 2); addLog(url, d.responseCode || 200); $("scraperStatus").textContent = "READY";
-    await loadProfile(); showToast(`Done • ${fmt(d.charactersProcessed)} characters used`);
+    await loadProfile(); showToast(`Done \u2022 ${fmt(d.charactersProcessed)} characters used`);
   } catch (e) { out.textContent = JSON.stringify({ success: false, error: e.message }, null, 2); $("scraperStatus").textContent = "ERROR"; showToast(e.message); }
 };
+
 $("askAi").onclick = () => {
   const q = $("aiInput").value.trim(); if (!q) return;
   $("extractInstructions").value = q; $("aiOut").textContent = "Instruction loaded into Developer Workbench: " + q;
