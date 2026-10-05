@@ -122,8 +122,8 @@ function renderUser(u) {
 async function loadProfile() { const d = await api("/api/profile"); renderUser(d.user); renderUsage(d.user); renderTrialBanner(d.user); return d.user; }
 
 /* ---------- Register / sign in ---------- */
-\$("authSubmit").onclick = async () => {
-  const username = \$("authName").value.trim().replace(/[<>&"'`]/g, ""), 
+$("authSubmit").onclick = async () => {
+  const username = $("authName").value.trim().replace(/[<>&"'`]/g, ""), 
         email = $("authEmail").value.trim(), 
         password = $("authPassword").value;
   const btn = $("authSubmit"); 
@@ -146,19 +146,19 @@ async function loadProfile() { const d = await api("/api/profile"); renderUser(d
       if (password !== passwordConfirm) throw new Error("Passwords do not match!");
       
       const d = await api("/api/auth/register", { method: "POST", body: JSON.stringify({ username: username || email.split("@")[0].replace(/[<>&"'`]/g, ""), email, password }) });
-      showToast(d.message); authMode = "signin"; syncAuthTabs(); \$("authHint").textContent = "Account created. Open the confirmation email we just sent, then sign in.";
+      showToast(d.message); authMode = "signin"; syncAuthTabs(); $("authHint").textContent = "Account created. Open the confirmation email we just sent, then sign in.";
       return;
     }
-    const totp = \$("authTotp").value.trim().replace(/\s/g, "");
+    const totp = $("authTotp").value.trim().replace(/\s/g, "");
     const body = { email, password };
-    if (totp) { if (/^\d{6}\$/.test(totp)) body.totp = totp; else body.recoveryCode = totp; }
+    if (totp) { if (/^\d{6}$/.test(totp)) body.totp = totp; else body.recoveryCode = totp; }
     const d = await api("/api/auth/login", { method: "POST", body: JSON.stringify(body) });
-    sessionStorage.setItem("titanJwt", d.token); authModal.classList.remove("show"); \$("authTotp").value = "";
+    sessionStorage.setItem("titanJwt", d.token); authModal.classList.remove("show"); $("authTotp").value = "";
     await loadProfile(); await loadKeys(); showToast("Signed in");
   } catch (e) {
     if (e.data?.twoFactorRequired) { ("authTotp").style.display = "block"; ("authTotp").focus(); }
     if (e.data?.code === "EMAIL_NOT_VERIFIED") {
-      \$("authHint").textContent = "Email not confirmed yet. We just sent you a new confirmation link: check your inbox and spam folder.";
+      $("authHint").textContent = "Email not confirmed yet. We just sent you a new confirmation link: check your inbox and spam folder.";
       api("/api/auth/resend-verification", { method: "POST", body: JSON.stringify({ email }) }).catch(() => {});
     }
     showToast(e.message);
