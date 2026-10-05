@@ -17,7 +17,7 @@ html,body{margin:0;min-height:100%;background:radial-gradient(circle at 75% -10%
 button,input,select{font:inherit}
 button{cursor:pointer}
 .app{display:flex;min-height:100vh}
-.sidebar{width:260px;background:linear-gradient(180deg,#101010,#080808);border-right:1px solid #292929;padding:24px 14px;position:fixed;inset:0 auto 0 0;z-index:20}
+.sidebar{width:260px;background:linear-gradient(180deg,#101010,#080808);border-right:1px solid #292929;padding:24px 14px;position:fixed;inset:0 auto 0 0;z-index:20;overflow-y:auto;display:flex;flex-direction:column}
 .brand{display:flex;align-items:center;gap:12px;padding:8px 10px 28px}
 .logo{width:38px;height:38px;border:1px solid var(--gold);display:grid;place-items:center;transform:rotate(45deg);box-shadow:0 0 24px rgba(212,175,55,.12)}
 .logo span{transform:rotate(-45deg);font-weight:900;color:var(--gold)}
@@ -26,7 +26,7 @@ button{cursor:pointer}
 .nav button{border:0;background:transparent;color:#999;text-align:left;padding:14px 14px;border-radius:7px;position:relative;transition:.2s;display:flex;gap:12px;align-items:center}
 .nav button:hover,.nav button.active{background:rgba(212,175,55,.045);color:var(--gold2)}
 .nav button.active:before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;background:var(--gold);box-shadow:0 0 12px var(--gold)}
-.sidebar-bottom{position:absolute;left:18px;right:18px;bottom:22px;border-top:1px solid #222;padding-top:15px;color:#666;font-size:11px}
+.sidebar-bottom{margin:auto 4px 0;flex-shrink:0;border-top:1px solid #222;padding:15px 0 6px;color:#666;font-size:11px}.nav{flex-shrink:0;margin-bottom:20px}
 .status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 9px var(--green);margin-right:7px}
 .main{margin-left:260px;width:calc(100% - 260px);padding:26px;max-width:1700px}
 .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
@@ -439,6 +439,6 @@ input:focus,select:focus{border-color:var(--gold)}
 </div>
 
 <script src="https://js.stripe.com/v3/" defer></script>
-<script src="app.js?v=2"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>

@@ -15,6 +15,7 @@ function showToast(msg) { toast.textContent = msg; toast.classList.add("show"); 
 async function api(path, options = {}) {
   const headers = { "Content-Type": "application/json", ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}), ...(options.headers || {}) };
 const r = await fetch(API_BASE + path, { ...options, headers });  let d = {}; try { d = await r.json(); } catch { /* non-JSON */ }
+  if ((r.status === 404 || r.status === 405) && d.success === undefined && location.port === "5500") throw new Error("This page is opened with Live Server, which has no backend. Start the Node server (node server.js) and open http://localhost:3000 instead.");
   if (!r.ok) { const e = new Error(d.error || `HTTP ${r.status}`); e.data = d; e.status = r.status; throw e; }
   return d;
 }
