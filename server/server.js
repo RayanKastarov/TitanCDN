@@ -1,22 +1,4 @@
 "use strict";
-// ⚡ TITAN MAIL SHIELD — BYPASS MODULE_NOT_FOUND FOREVER
-const moduleAlias = require('module');
-const virtualmailer = {
-  sendMail: async (to, subj, html) => console.log(`[Titan Mail] Virtual delivery to ${to}`),
-  emailShell: (data) => data,
-  verifyMailer: async () => true,
-  activeProvider: () => "Titan Virtual Engine",
-  logMailError: (err) => console.error(err),
-  mailStatus: () => "OPERATIONAL"
-};
-require.cache[require.resolve('./mailer')] = {
-  id: require.resolve('./mailer'),
-  filename: require.resolve('./mailer'),
-  loaded: true,
-  exports: virtualmailer
-};
-
-
 require("dotenv").config();
 
 const express = require("express");
@@ -33,7 +15,7 @@ const dns = require("dns").promises;
 const net = require("net");
 const QRCode = require("qrcode");
 const Stripe = require("stripe");
-const { sendMail, emailShell, verifyMailer, activeProvider, logMailError } = require("./mailer");
+const { sendMail, emailShell, verifyMailer, activeProvider, logMailError, mailStatus } = require("./mailer");
 /* ------------------------------------------------------------------ */
 /* Configuration                                                       */
 /* ------------------------------------------------------------------ */
@@ -82,27 +64,20 @@ class HttpError extends Error {
 /* ------------------------------------------------------------------ */
 const app = express();
 app.disable("x-powered-by");
-if (NODE_ENV === "production") app.set("trust proxy", 1);
+if (NODE_ENV === "production" || env.RENDER) app.set("trust proxy", 1);
 
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "same-origin" },
   contentSecurityPolicy: {
     useDefaults: true,
     directives: {
-      "script-src": ["'self'", "https://stripe.com", "https://openfpcdn.io", "https://cdntitan.com", "https://onrender.com"],
-      "frame-src": ["https://stripe.com", "https://stripe.com", "https://stripe.network"],
-      "connect-src": [
-        "'self'", 
-        "https://stripe.com", 
-        "https://openfpcdn.io", 
-        "https://cdntitan.com", 
-        "https://onrender.com"
-      ],
+      "script-src": ["'self'", "https://js.stripe.com", "https://openfpcdn.io"],
+      "frame-src": ["'self'", "https://js.stripe.com", "https://hooks.stripe.com", "https://checkout.stripe.com", "https://m.stripe.network"],
+      "connect-src": ["'self'", "https://api.stripe.com", "https://m.stripe.network", "https://r.stripe.com", "https://openfpcdn.io"],
       "img-src": ["'self'", "data:", "https://*.stripe.com"]
     }
   }
 }));
-
 
 const sensitiveLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: "draft-7", legacyHeaders: false, message: { success: false, error: "Too many attempts. Try again later." } });
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: "draft-7", legacyHeaders: false, message: { success: false, error: "Too many login attempts. Try again later." } });
@@ -513,7 +488,7 @@ app.post("/api/auth/register", registerLimiter, async (req, res) => {
   try { user = await User.create({ username, email, emailCanonical, passwordHash, plan: "free", emailVerified: false, trialActivated: false }); } // locked until Gmail link + Stripe card
   catch (e) { if (e.code === 11000) throw new HttpError(409, "Email already registered."); throw e; }
   const emailSent = await issueVerification(user).then(() => true).catch(e => { logMailError(e); return false; });
-  res.status(201).json({ success: true, emailSent, message: emailSent ? "Account created. Check your inbox and confirm your email." : "Account created, but the confirmation email could not be sent. Use resend on the sign-in screen." });
+  res.status(201).json({ success: true, emailSent, message: emailSent ? "Account created. Check your inbox and confirm your email." : "Account created, but the confirmation email could not be sent. Try signing in: we will send it again." });
 });
 
 
