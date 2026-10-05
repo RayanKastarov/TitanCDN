@@ -15,7 +15,136 @@ const dns = require("dns").promises;
 const net = require("net");
 const QRCode = require("qrcode");
 const Stripe = require("stripe");
-const { sendMail, emailShell, verifyMailer, activeProvider, logMailError, mailStatus } = require("./mailer");
+// ---- Email (self-contained, no extra file). Provider is picked from environment variables: ----
+//   resend      : RESEND_API_KEY (+ MAIL_FROM = "TitanCDN <no-reply@your-verified-domain.com>")
+//   gmail-api   : GMAIL_USER, GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN  (HTTPS)
+//   gmail-smtp  : GMAIL_USER, GMAIL_APP_PASSWORD  (blocked on Render's free plan)
+// MAIL_PROVIDER=resend|gmail-api|gmail-smtp forces one of them.
+const { sendMail, emailShell, verifyMailer, mailStatus, activeProvider, logMailError } = (function buildMailer() {
+  const axios = require("axios");
+  const env = process.env;
+  const appPassword = () => String(env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, "");
+  const fromName = () => env.MAIL_FROM_NAME || "TitanCDN Support";
+  const resendFrom = () => env.MAIL_FROM || "TitanCDN <onboarding@resend.dev>";
+  const clean = s => String(s).replace(/[\r\n]+/g, " ").trim(); // blocks header injection
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  function activeProvider() {
+    const ok = {
+      "resend": !!env.RESEND_API_KEY,
+      "gmail-api": !!(env.GMAIL_USER && env.GMAIL_CLIENT_ID && env.GMAIL_CLIENT_SECRET && env.GMAIL_REFRESH_TOKEN),
+      "gmail-smtp": !!(env.GMAIL_USER && appPassword())
+    };
+    const want = String(env.MAIL_PROVIDER || "").toLowerCase();
+    if (want && ok[want]) return want;
+    return ["resend", "gmail-api", "gmail-smtp"].find(p => ok[p]) || null;
+  }
+
+  /* ---------- diagnostics ---------- */
+  const state = { ready: null, lastOkAt: null, lastError: null };
+  const bodyOf = e => (e && e.response && e.response.data) || {};
+  function errorSummary(e) {
+    const d = bodyOf(e);
+    const inner = typeof d.error === "object" && d.error ? d.error.message : d.error;
+    return String(d.error_description || inner || d.message || (e && e.message) || e);
+  }
+  function mailHint(e) {
+    const c = String((e && e.code) || ""), status = e && e.response && e.response.status, d = bodyOf(e);
+    const txt = (errorSummary(e) + " " + (typeof d.error === "string" ? d.error : "") + " " + (d.name || "")).toLowerCase();
+    if (c === "NO_PROVIDER") return "No email settings found. Set RESEND_API_KEY and MAIL_FROM (Resend), or the Gmail settings.";
+    if (activeProvider() === "resend") {
+      if (/only send testing emails|verify a domain/.test(txt)) return "Resend is in TEST mode: it delivers only to the email of your own Resend account. Verify your domain in Resend > Domains, then set MAIL_FROM=TitanCDN <no-reply@your-domain.com>.";
+      if (status === 401 || /api key is invalid|missing_api_key|restricted_api_key/.test(txt)) return "RESEND_API_KEY is missing, wrong or restricted. Create a key with Sending access in Resend > API Keys.";
+      if (/not verified|domain is not/.test(txt)) return "The domain used in MAIL_FROM is not verified in Resend yet. Add the DNS records and click Verify.";
+      if (status === 422 || /invalid.?from|from/.test(txt)) return "MAIL_FROM is invalid. Use exactly: TitanCDN <no-reply@your-verified-domain.com>";
+    }
+    if (txt.includes("invalid_grant")) return "Google refused the refresh token (expired or revoked). If the OAuth consent screen is in Testing, tokens die after 7 days: click Publish app, then create a NEW refresh token.";
+    if (txt.includes("invalid_client") || txt.includes("unauthorized_client")) return "GMAIL_CLIENT_ID / GMAIL_CLIENT_SECRET do not match the client that issued the refresh token.";
+    if (status === 403 && /(has not been used|disabled|accessnotconfigured)/.test(txt)) return "Enable the Gmail API for your Google Cloud project.";
+    if (c === "EAUTH") return "Gmail rejected the SMTP login. Use a 16-character App Password and the same account in GMAIL_USER.";
+    if (["ETIMEDOUT", "ECONNECTION", "ESOCKET", "ECONNREFUSED", "EDNS"].includes(c)) return "Cannot reach the mail server. Render's FREE plan blocks outbound SMTP: use Resend (HTTPS) or the Gmail API settings.";
+    return "";
+  }
+  function record(e) { state.ready = false; state.lastError = { code: String((e && e.code) || (e && e.response && e.response.status) || "ERROR"), hint: mailHint(e) || errorSummary(e).slice(0, 160) }; }
+  function logMailError(e) {
+    const hint = mailHint(e);
+    console.error(`[mail] ${(e && e.code) || (e && e.response && e.response.status) || ""} ${errorSummary(e)}${hint ? `\n[mail] HINT: ${hint}` : ""}`);
+  }
+  const mailStatus = () => ({ provider: activeProvider(), ready: state.ready, lastOkAt: state.lastOkAt, lastError: state.lastError });
+
+  /* ---------- building the message ---------- */
+  const htmlToPlain = html => String(html).replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<a [^>]*href="([^"]+)"[^>]*>([^<]*)<\/a>/gi, "$2 ($1)").replace(/<\/(p|h2|tr|div)>|<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&middot;/g, "·").replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n\n").trim();
+
+  function emailShell({ heading, intro, buttonText, link, footnote }) {
+    const l = esc(link);
+    return `<!doctype html><html><body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:24px 0;"><tr><td align="center">
+<table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e6e6e6;">
+<tr><td style="background:#000000;padding:22px 28px;border-bottom:3px solid #d4af37;"><span style="color:#d4af37;font-size:22px;font-weight:bold;letter-spacing:2px;">TITAN<span style="color:#ffffff;">CDN</span></span></td></tr>
+<tr><td style="padding:30px 28px;color:#222222;font-size:15px;line-height:1.6;">
+<h2 style="margin:0 0 14px;font-size:20px;color:#111111;">${heading}</h2>
+<p style="margin:0 0 6px;">${intro}</p>
+<p style="margin:26px 0;"><a href="${l}" style="background:#d4af37;color:#000000;text-decoration:none;font-weight:bold;padding:13px 26px;border-radius:6px;display:inline-block;">${buttonText}</a></p>
+<p style="font-size:13px;color:#666666;margin:0 0 10px;">Button not working? Copy this link into your browser:<br><a href="${l}" style="color:#8a6d1d;word-break:break-all;">${l}</a></p>
+<p style="font-size:13px;color:#666666;margin:0;">${footnote}</p>
+</td></tr>
+<tr><td style="padding:16px 28px;background:#fafafa;color:#999999;font-size:12px;">TitanCDN &middot; This is an automated message, please do not reply.</td></tr>
+</table></td></tr></table></body></html>`;
+  }
+
+  /* ---------- providers ---------- */
+  async function sendViaResend(msg) {
+    await axios.post("https://api.resend.com/emails", { from: msg.from, to: [msg.to], subject: msg.subject, html: msg.html, text: msg.text }, { headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" }, timeout: 15000 });
+  }
+  let tokenCache = { token: null, exp: 0 };
+  async function gmailAccessToken(force) {
+    if (!force && tokenCache.token && Date.now() < tokenCache.exp - 60000) return tokenCache.token;
+    const form = new URLSearchParams({ client_id: env.GMAIL_CLIENT_ID, client_secret: env.GMAIL_CLIENT_SECRET, refresh_token: env.GMAIL_REFRESH_TOKEN, grant_type: "refresh_token" });
+    const r = await axios.post("https://oauth2.googleapis.com/token", form.toString(), { headers: { "Content-Type": "application/x-www-form-urlencoded" }, timeout: 10000 });
+    tokenCache = { token: r.data.access_token, exp: Date.now() + (Number(r.data.expires_in) || 3600) * 1000 };
+    return tokenCache.token;
+  }
+  const buildRaw = msg => new Promise((resolve, reject) => { const MailComposer = require("nodemailer/lib/mail-composer"); new MailComposer(msg).compile().build((err, buf) => (err ? reject(err) : resolve(buf.toString("base64url")))); });
+  async function sendViaGmailApi(msg) {
+    const raw = await buildRaw(msg);
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const token = await gmailAccessToken(attempt > 0);
+      try { await axios.post("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", { raw }, { headers: { Authorization: `Bearer ${token}` }, timeout: 15000 }); return; }
+      catch (e) { if (!(e.response && e.response.status === 401 && attempt === 0)) throw e; }
+    }
+  }
+  let smtp = null;
+  const smtpTransporter = () => smtp || (smtp = require("nodemailer").createTransport({ service: "gmail", auth: { user: env.GMAIL_USER, pass: appPassword() }, connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 15000 }));
+
+  /* ---------- public API ---------- */
+  async function sendMail(to, subject, html, text) {
+    const provider = activeProvider();
+    if (!provider) { const e = new Error("No email provider configured"); e.code = "NO_PROVIDER"; record(e); throw e; }
+    const msg = { from: provider === "resend" ? resendFrom() : `"${fromName()}" <${env.GMAIL_USER}>`, to: clean(to), subject: clean(subject), html, text: text || htmlToPlain(html) };
+    try {
+      if (provider === "resend") await sendViaResend(msg);
+      else if (provider === "gmail-api") await sendViaGmailApi(msg);
+      else await smtpTransporter().sendMail(msg);
+      state.ready = true; state.lastOkAt = new Date().toISOString(); state.lastError = null;
+    } catch (e) { record(e); throw e; }
+  }
+
+  async function verifyMailer() {
+    const provider = activeProvider();
+    if (!provider) { console.warn("[mail] No email provider configured. " + mailHint({ code: "NO_PROVIDER" })); return false; }
+    try {
+      if (provider === "gmail-api") await gmailAccessToken(true);
+      else if (provider === "gmail-smtp") await smtpTransporter().verify();
+      state.ready = true;
+      console.log(`[mail] ${provider} ready. Verification and reset emails can be sent.`);
+      if (provider === "resend" && !env.MAIL_FROM) console.warn("[mail] WARNING: MAIL_FROM is not set, so Resend uses its sandbox sender and delivers ONLY to your own Resend account email. Verify your domain in Resend and set MAIL_FROM.");
+      return true;
+    } catch (e) { record(e); logMailError(e); return false; }
+  }
+
+  return { sendMail, emailShell, verifyMailer, mailStatus, activeProvider, logMailError };
+})();
+
 /* ------------------------------------------------------------------ */
 /* Configuration                                                       */
 /* ------------------------------------------------------------------ */
@@ -64,7 +193,7 @@ class HttpError extends Error {
 /* ------------------------------------------------------------------ */
 const app = express();
 app.disable("x-powered-by");
-if (NODE_ENV === "production" || env.RENDER) app.set("trust proxy", 1);
+if (NODE_ENV === "production") app.set("trust proxy", 1);
 
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "same-origin" },
@@ -72,8 +201,8 @@ app.use(helmet({
     useDefaults: true,
     directives: {
       "script-src": ["'self'", "https://js.stripe.com", "https://openfpcdn.io"],
-      "frame-src": ["'self'", "https://js.stripe.com", "https://hooks.stripe.com", "https://checkout.stripe.com", "https://m.stripe.network"],
-      "connect-src": ["'self'", "https://api.stripe.com", "https://m.stripe.network", "https://r.stripe.com", "https://openfpcdn.io"],
+      "frame-src": ["https://js.stripe.com", "https://hooks.stripe.com", "https://m.stripe.network"],
+      "connect-src": ["'self'", "https://api.stripe.com", "https://openfpcdn.io"],
       "img-src": ["'self'", "data:", "https://*.stripe.com"]
     }
   }
@@ -412,6 +541,18 @@ async function renderWithBrowser(browser, url) {
   } finally { await page.close().catch(() => {}); await ctx.close().catch(() => {}); }
 }
 
+// Recognises "you are blocked / prove you are human" answers so the customer gets a clear message and is NOT charged.
+// TitanCDN does not try to defeat bot protection: such sites are reported as unreadable.
+const CHALLENGE_RE = /(just a moment|checking your browser|verify you are (a )?human|are you a robot|attention required|enable javascript and cookies|captcha|access denied|unusual traffic|request blocked)/i;
+function blockedReason(status, headers, text) {
+  const body = String(text || "").slice(0, 4000);
+  if (status === 429) return { msg: "The target site is rate-limiting requests (HTTP 429). Wait a while and try again. No characters were charged.", retryAfter: headers && headers["retry-after"] };
+  const walled = (status === 403 || status === 503 || status === 401) && (CHALLENGE_RE.test(body) || /cloudflare|akamai|imperva|datadome|perimeterx/i.test(String((headers && (headers.server || headers["x-datadome"] || "")) || "")));
+  const challengePage = status < 400 && body.length > 0 && body.length < 3000 && CHALLENGE_RE.test(body);
+  if (walled || challengePage || status === 403) return { msg: "The target site is showing a bot-check or access-denied page. TitanCDN does not bypass bot protection, so this site cannot be read automatically. No characters were charged." };
+  return null;
+}
+
 async function fetchWithAxios(startUrl) {
   let current = startUrl, prev = null, r;
   for (let hop = 0; hop <= 3; hop++) {
@@ -488,7 +629,7 @@ app.post("/api/auth/register", registerLimiter, async (req, res) => {
   try { user = await User.create({ username, email, emailCanonical, passwordHash, plan: "free", emailVerified: false, trialActivated: false }); } // locked until Gmail link + Stripe card
   catch (e) { if (e.code === 11000) throw new HttpError(409, "Email already registered."); throw e; }
   const emailSent = await issueVerification(user).then(() => true).catch(e => { logMailError(e); return false; });
-  res.status(201).json({ success: true, emailSent, message: emailSent ? "Account created. Check your inbox and confirm your email." : "Account created, but the confirmation email could not be sent. Try signing in: we will send it again." });
+  res.status(201).json({ success: true, emailSent, message: emailSent ? "Account created. Check your inbox and confirm your email." : "Account created, but the confirmation email could not be sent. Use resend on the sign-in screen." });
 });
 
 
@@ -733,11 +874,18 @@ app.post("/api/v1/scrape", scrapeLimiter, requireApiKey, async (req, res, next) 
     try { page = await fetchPageText(url); }
     catch (err) {
       if (err instanceof HttpError) throw err;
-      if (err.response) throw new HttpError(502, `Target returned HTTP ${err.response.status}.`);
+      if (err.response) {
+        const b = blockedReason(err.response.status, err.response.headers, err.response.data);
+        if (b) throw new HttpError(422, b.msg, { code: "TARGET_BLOCKED", ...(b.retryAfter ? { retryAfter: b.retryAfter } : {}) });
+        throw new HttpError(502, `Target returned HTTP ${err.response.status}.`);
+      }
       if (err.code === "ECONNABORTED") throw new HttpError(504, "Target request timed out.");
       console.error("[scraper]", err.message);
       throw new HttpError(502, "Could not load the target page.");
     }
+
+    const blocked = blockedReason(page.status, {}, page.text); // HTTP 200 that is really a bot-check page
+    if (blocked) throw new HttpError(422, blocked.msg, { code: "TARGET_BLOCKED" });
 
     const text = page.text.slice(0, Math.min(MAX_CHARS_PER_REQUEST, usage.remaining));
     if (!text.trim()) throw new HttpError(422, "The page returned no readable text.");
@@ -777,6 +925,37 @@ app.get("/api/admin/overview", requireJwt, requireAdmin, async (req, res) => {
 /* Fallbacks + errors                                                  */
 /* ------------------------------------------------------------------ */
 app.use("/api", (req, res) => res.status(404).json({ success: false, error: "API route not found." }));
+// Script for /reset-password.html, served from here so that only one extra HTML file is needed.
+const RESET_PAGE_JS = String.raw`"use strict";
+const $ = id => document.getElementById(id);
+const token = new URLSearchParams(location.search).get("token") || "";
+history.replaceState(null, "", location.pathname); // remove the token from the address bar and browser history
+const form = $("resetForm"), msg = $("msg"), back = $("backLink");
+function show(text, ok) { msg.textContent = text; msg.className = "msg " + (ok ? "ok" : "bad"); }
+if (!/^[\w-]+\.[\w-]+\.[\w-]+$/.test(token)) {
+  form.style.display = "none";
+  show("This reset link is missing or damaged. Go back and use \u201cForgot password?\u201d to get a new one.", false);
+  back.style.display = "block"; back.textContent = "BACK TO TITANCDN";
+}
+$("showPw").addEventListener("change", e => { const t = e.target.checked ? "text" : "password"; $("pw").type = t; $("pw2").type = t; });
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  const pw = $("pw").value, pw2 = $("pw2").value, btn = $("submitBtn");
+  if (pw.length < 12) return show("Password must be at least 12 characters.", false);
+  if (pw.length > 128) return show("Password must be at most 128 characters.", false);
+  if (pw !== pw2) return show("The two passwords do not match.", false);
+  btn.disabled = true; show("Updating...", true);
+  try {
+    const r = await fetch("/api/auth/reset-password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: token, password: pw }) });
+    let d = {}; try { d = await r.json(); } catch (_) { d = {}; }
+    if (!r.ok) throw new Error(d.error || ("HTTP " + r.status));
+    form.style.display = "none"; $("pw").value = ""; $("pw2").value = "";
+    show((d.message || "Password updated.") + " Redirecting to sign in...", true); back.style.display = "block";
+    setTimeout(function () { location.href = "/"; }, 4000);
+  } catch (err) { show(err.message, false); btn.disabled = false; }
+});
+`;
+app.get("/reset-password.js", (req, res) => res.set("Cache-Control", "no-store").type("application/javascript").send(RESET_PAGE_JS));
 app.get("/google1a515c3efc6e5a68.html", (req, res) => res.type("text/plain").send("google-site-verification: google1a515c3efc6e5a68.html"));
 app.get("/*splat", (req, res) => res.sendFile(path.join(__dirname, "../index.html")));
 // serve the home page at the root URL
