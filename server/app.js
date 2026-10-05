@@ -122,9 +122,13 @@ function renderUser(u) {
 async function loadProfile() { const d = await api("/api/profile"); renderUser(d.user); renderUsage(d.user); renderTrialBanner(d.user); return d.user; }
 
 /* ---------- Register / sign in ---------- */
-$("authSubmit").onclick = async () => {
-  const username = $("authName").value.trim().replace(/[<>&"'`]/g, ""), email = $("authEmail").value.trim(), password = $("authPassword").value;
-  const btn = $("authSubmit"); btn.disabled = true;
+\$("authSubmit").onclick = async () => {
+  const username = \$("authName").value.trim().replace(/[<>&"'`]/g, ""), 
+        email = $("authEmail").value.trim(), 
+        password = $("authPassword").value;
+  const btn = $("authSubmit"); 
+  btn.disabled = true;
+  
   try {
     if (authMode === "forgot") {
       if (!email) throw new Error("Enter your email address");
@@ -133,27 +137,34 @@ $("authSubmit").onclick = async () => {
       return;
     }
     if (!email || !password) throw new Error("Email and password are required");
+    
     if (authMode === "signup") {
       if (!$("terms").checked) throw new Error("Accept Terms and Privacy Policy");
+      
+      // ⚡ ПРАВИЛНОТО МЯСТО НА ПРОВЕРКАТА:
+      const passwordConfirm = $("authPasswordConfirm").value;
+      if (password !== passwordConfirm) throw new Error("Passwords do not match!");
+      
       const d = await api("/api/auth/register", { method: "POST", body: JSON.stringify({ username: username || email.split("@")[0].replace(/[<>&"'`]/g, ""), email, password }) });
-      showToast(d.message); authMode = "signin"; syncAuthTabs(); $("authHint").textContent = "Account created. Open the confirmation email we just sent, then sign in.";
+      showToast(d.message); authMode = "signin"; syncAuthTabs(); \$("authHint").textContent = "Account created. Open the confirmation email we just sent, then sign in.";
       return;
     }
-    const totp = $("authTotp").value.trim().replace(/\s/g, "");
+    const totp = \$("authTotp").value.trim().replace(/\s/g, "");
     const body = { email, password };
-    if (totp) { if (/^\d{6}$/.test(totp)) body.totp = totp; else body.recoveryCode = totp; }
+    if (totp) { if (/^\d{6}\$/.test(totp)) body.totp = totp; else body.recoveryCode = totp; }
     const d = await api("/api/auth/login", { method: "POST", body: JSON.stringify(body) });
-    sessionStorage.setItem("titanJwt", d.token); authModal.classList.remove("show"); $("authTotp").value = "";
+    sessionStorage.setItem("titanJwt", d.token); authModal.classList.remove("show"); \$("authTotp").value = "";
     await loadProfile(); await loadKeys(); showToast("Signed in");
   } catch (e) {
-    if (e.data?.twoFactorRequired) { $("authTotp").style.display = "block"; $("authTotp").focus(); }
+    if (e.data?.twoFactorRequired) { ("authTotp").style.display = "block"; ("authTotp").focus(); }
     if (e.data?.code === "EMAIL_NOT_VERIFIED") {
-      $("authHint").textContent = "Email not confirmed yet. We just sent you a new confirmation link: check your inbox and spam folder.";
+      \$("authHint").textContent = "Email not confirmed yet. We just sent you a new confirmation link: check your inbox and spam folder.";
       api("/api/auth/resend-verification", { method: "POST", body: JSON.stringify({ email }) }).catch(() => {});
     }
     showToast(e.message);
   } finally { btn.disabled = false; }
 };
+
 const passwordConfirm = $("authPasswordConfirm").value;
 if (authMode === "signup" && password !== passwordConfirm) {
   showToast("Passwords do not match!");
