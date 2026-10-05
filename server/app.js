@@ -154,6 +154,11 @@ $("authSubmit").onclick = async () => {
     showToast(e.message);
   } finally { btn.disabled = false; }
 };
+const passwordConfirm = $("authPasswordConfirm").value;
+if (authMode === "signup" && password !== passwordConfirm) {
+  showToast("Passwords do not match!");
+  return;
+}
 
 /* ---------- Profile ---------- */
 $("profileBtn").onclick = async () => {
