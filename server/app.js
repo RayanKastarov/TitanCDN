@@ -156,7 +156,7 @@ $("authSubmit").onclick = async () => {
     sessionStorage.setItem("titanJwt", d.token); authModal.classList.remove("show"); $("authTotp").value = "";
     await loadProfile(); await loadKeys(); showToast("Signed in");
   } catch (e) {
-    if (e.data?.twoFactorRequired) { ("authTotp").style.display = "block"; ("authTotp").focus(); }
+    if (e.data?.twoFactorRequired)$("authTotp").style.display = "block"; $("authTotp").focus();
     if (e.data?.code === "EMAIL_NOT_VERIFIED") {
       $("authHint").textContent = "Email not confirmed yet. We just sent you a new confirmation link: check your inbox and spam folder.";
       api("/api/auth/resend-verification", { method: "POST", body: JSON.stringify({ email }) }).catch(() => {});
@@ -164,12 +164,6 @@ $("authSubmit").onclick = async () => {
     showToast(e.message);
   } finally { btn.disabled = false; }
 };
-
-const passwordConfirm = $("authPasswordConfirm").value;
-if (authMode === "signup" && password !== passwordConfirm) {
-  showToast("Passwords do not match!");
-  return;
-}
 
 /* ---------- Profile ---------- */
 $("profileBtn").onclick = async () => {
