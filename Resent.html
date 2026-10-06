@@ -6,37 +6,39 @@
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#000000">
-<title>Reset password • TitanCDN</title>
+<title>Set a new password • TitanCDN</title>
 <style>
-  :root{--bg:#000;--panel:#0a0a0a;--line:#2c2c2c;--gold:#d4af37;--gold-hi:#fbf5b7;--text:#f4f4f4;--muted:#9a9a9a;--bad:#ff6b6b;--ok:#5ee08a}
+  :root{--bg:#000;--panel:#0a0a0a;--line:#2c2c2c;--gold:#d4af37;--text:#f4f4f4;--muted:#9a9a9a;--bad:#ff6b6b;--ok:#5ee08a}
   *{box-sizing:border-box}
-  html,body{height:100%}
-  body{margin:0;background:radial-gradient(900px 500px at 50% -10%,rgba(212,175,55,.10),transparent 60%),var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;display:flex;align-items:center;justify-content:center;padding:20px}
+  html,body{min-height:100%}
+  body{margin:0;background:radial-gradient(900px 500px at 50% -10%,rgba(212,175,55,.10),transparent 60%),var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;display:flex;align-items:center;justify-content:center;padding:20px;min-height:100vh}
   .box{width:100%;max-width:440px;background:var(--panel);border:1px solid rgba(212,175,55,.45);border-radius:12px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
   .brand{font-weight:800;letter-spacing:.18em;color:var(--gold);font-size:18px;margin-bottom:6px}.brand span{color:#fff}
   h1{margin:6px 0 4px;font-size:22px}
-  p.sub{margin:0 0 20px;color:var(--muted);font-size:14px}
-  label{display:block;font-size:11px;letter-spacing:.1em;color:#a8a8a8;margin:14px 0 6px;font-weight:700}
-  input{width:100%;padding:13px 14px;background:#000;border:1px solid var(--line);border-radius:8px;color:var(--text);font-size:16px}
-  input:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:var(--gold)}
+  p.sub{margin:0 0 18px;color:var(--muted);font-size:14px}
+  label.lbl{display:block;font-size:11px;letter-spacing:.1em;color:#a8a8a8;margin:14px 0 6px;font-weight:700}
+  input[type=password],input[type=text]{width:100%;padding:13px 14px;background:#000;border:1px solid var(--line);border-radius:8px;color:var(--text);font-size:16px}
+  input[type=password]:focus,input[type=text]:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:var(--gold)}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px}
+  .show{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;color:var(--muted);cursor:pointer}
   .btn{display:block;width:100%;margin-top:20px;padding:14px;border:0;border-radius:8px;background:linear-gradient(90deg,#b38728,#fbf5b7 50%,#d4af37);color:#000;font-weight:800;letter-spacing:.06em;font-size:14px;cursor:pointer;text-align:center;text-decoration:none}
   .btn:disabled{opacity:.55;cursor:not-allowed}
   .msg{margin-top:16px;font-size:14px;min-height:20px}.msg.bad{color:var(--bad)}.msg.ok{color:var(--ok)}
-  .hint{font-size:12px;color:var(--muted);margin-top:6px}
   #backLink{display:none}
 </style>
 </head>
 <body>
 <main class="box">
   <div class="brand">TITAN<span>CDN</span></div>
-  <h1>Choose a new password</h1>
-  <p class="sub">Use at least 12 characters. This link works only once.</p>
+  <h1>Set a new password</h1>
+  <p class="sub">Choose a strong password with at least 12 characters. This link works only once.</p>
   <form id="resetForm" autocomplete="off">
-    <label for="pw">NEW PASSWORD</label>
+    <label class="lbl" for="pw">NEW PASSWORD</label>
     <input id="pw" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
     <div class="hint">Minimum 12 characters.</div>
-    <label for="pw2">CONFIRM NEW PASSWORD</label>
+    <label class="lbl" for="pw2">REPEAT NEW PASSWORD</label>
     <input id="pw2" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+    <label class="show"><input type="checkbox" id="showPw"> Show passwords</label>
     <button class="btn" id="submitBtn" type="submit">UPDATE PASSWORD</button>
   </form>
   <div class="msg" id="msg" role="status" aria-live="polite"></div>
