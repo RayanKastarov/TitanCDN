@@ -75,99 +75,22 @@ const { sendMail, emailShell, verifyMailer, mailStatus, activeProvider, logMailE
   /* ---------- building the message ---------- */
   const htmlToPlain = html => String(html).replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<a [^>]*href="([^"]+)"[^>]*>([^<]*)<\/a>/gi, "$2 ($1)").replace(/<\/(p|h2|tr|div)>|<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&middot;/g, "·").replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n\n").trim();
 
- function emailShell({ heading, intro, buttonText, link, footnote }) {
-  const l = esc(link);
-
-  return `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-</head>
-
-<body style="margin:0;padding:0;background:#f3f3f3;font-family:Arial,Helvetica,sans-serif;color:#171717;">
-
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-  style="width:100%;background:#f3f3f3;padding:40px 16px;">
-  <tr>
-    <td align="center">
-
-      <table role="presentation" width="560" cellpadding="0" cellspacing="0"
-        style="width:100%;max-width:560px;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e5e5e5;">
-
-        <!-- HEADER -->
-        <tr>
-          <td style="background:#050505;padding:26px 32px;border-bottom:3px solid #d4af37;">
-            <span style="color:#d4af37;font-size:23px;font-weight:800;letter-spacing:2.5px;">
-              TITAN<span style="color:#ffffff;">CDN</span>
-            </span>
-          </td>
-        </tr>
-
-        <!-- CONTENT -->
-        <tr>
-          <td style="padding:38px 32px 34px;color:#222222;font-size:15px;line-height:1.7;">
-
-            <h1 style="margin:0 0 18px;font-size:24px;line-height:1.3;color:#111111;font-weight:700;">
-              ${heading}
-            </h1>
-
-            <p style="margin:0;color:#444444;">
-              ${intro}
-            </p>
-
-            <!-- BUTTON -->
-            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:30px 0;">
-              <tr>
-                <td style="background:#d4af37;border-radius:7px;">
-                  <a href="${l}"
-                    style="display:inline-block;padding:14px 28px;color:#000000;text-decoration:none;font-size:15px;font-weight:700;">
-                    ${buttonText}
-                  </a>
-                </td>
-              </tr>
-            </table>
-
-            <!-- SECURITY NOTE -->
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-              style="margin-top:8px;background:#f8f8f8;border-left:3px solid #d4af37;border-radius:4px;">
-              <tr>
-                <td style="padding:15px 17px;color:#666666;font-size:13px;line-height:1.6;">
-                  ${footnote}
-                </td>
-              </tr>
-            </table>
-
-          </td>
-        </tr>
-
-        <!-- FOOTER -->
-        <tr>
-          <td style="padding:22px 32px;background:#fafafa;border-top:1px solid #eeeeee;text-align:center;">
-            <div style="color:#777777;font-size:12px;line-height:1.6;">
-              <strong style="color:#333333;">TitanCDN</strong><br>
-              Intelligent web data infrastructure
-            </div>
-
-            <div style="margin-top:10px;color:#aaaaaa;font-size:11px;">
-              This is an automated security message. Please do not reply.
-            </div>
-          </td>
-        </tr>
-
-      </table>
-
-      <div style="max-width:560px;margin-top:18px;text-align:center;color:#aaaaaa;font-size:11px;line-height:1.5;">
-        © ${new Date().getFullYear()} TitanCDN. All rights reserved.
-      </div>
-
-    </td>
-  </tr>
-</table>
-
-</body>
-</html>`;
-}
+  function emailShell({ heading, intro, buttonText, link, footnote }) {
+    const l = esc(link);
+    return `<!doctype html><html><body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:24px 0;"><tr><td align="center">
+<table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e6e6e6;">
+<tr><td style="background:#000000;padding:22px 28px;border-bottom:3px solid #d4af37;"><span style="color:#d4af37;font-size:22px;font-weight:bold;letter-spacing:2px;">TITAN<span style="color:#ffffff;">CDN</span></span></td></tr>
+<tr><td style="padding:30px 28px;color:#222222;font-size:15px;line-height:1.6;">
+<h2 style="margin:0 0 14px;font-size:20px;color:#111111;">${heading}</h2>
+<p style="margin:0 0 6px;">${intro}</p>
+<p style="margin:26px 0;"><a href="${l}" style="background:#d4af37;color:#000000;text-decoration:none;font-weight:bold;padding:13px 26px;border-radius:6px;display:inline-block;">${buttonText}</a></p>
+<p style="font-size:13px;color:#666666;margin:0 0 10px;">Button not working? Copy this link into your browser:<br><a href="${l}" style="color:#8a6d1d;word-break:break-all;">${l}</a></p>
+<p style="font-size:13px;color:#666666;margin:0;">${footnote}</p>
+</td></tr>
+<tr><td style="padding:16px 28px;background:#fafafa;color:#999999;font-size:12px;">TitanCDN &middot; This is an automated message, please do not reply.</td></tr>
+</table></td></tr></table></body></html>`;
+  }
 
   /* ---------- providers ---------- */
   async function sendViaResend(msg) {
@@ -255,11 +178,31 @@ const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
 
 // Limits are in CHARACTERS. Internal keys (pro/business/enterprise) are kept so existing accounts keep working.
 const PLANS = Object.freeze({
-  free:       { name: "Free Trial",      limit: 100000,    priceEur: 0 },
-  pro:        { name: "Starter",         limit: 1000000,   priceEur: 69.99 },
-  business:   { name: "Medium Factory",  limit: 350000000,   priceEur: 339.99 },  // 350 million characters
-  enterprise: { name: "Mega Factory",    limit: 1000000000, priceEur: 1099.99 }  // 1 billion characters
+  free: { 
+    name: "Free Trial",      
+    limit: 100000,    
+    priceEur: 0 
+  },
+  pro: { 
+    name: "Starter",         
+    limit: 1000000,   
+    priceEur: 69.99,
+    stripePriceId: "price_1UNuOzIbX9FLQCZIR35e347n"
+  },
+  business: { 
+    name: "Medium Factory",  
+    limit: 350000000,   
+    priceEur: 369.99,
+    stripePriceId: "price_1UNuQEIbX9FLQCZIl8YE7t4A"
+  },
+  enterprise: { 
+    name: "Mega Factory",    
+    limit: 1000000000, 
+    priceEur: 1099.99,
+    stripePriceId: "price_1UNuS6lbX9FLQCZIJXwjLkMh" // Ето този, който видяхме на скрийншота!
+  }
 });
+
 
 class HttpError extends Error {
   constructor(status, message, extra = {}) { super(message); this.statusCode = status; this.extra = extra; }
@@ -645,12 +588,41 @@ async function fetchWithAxios(startUrl) {
   const body = typeof r.data === "string" ? r.data : JSON.stringify(r.data);
   const isHtml = /html/i.test(String(r.headers["content-type"] || ""));
   
-  if (isHtml) {
-    const $ = cheerio.load(body);
-    $('script, style, nav, footer, noscript, svg').remove(); // drop page clutter
-    const cleanText = $('body').text().replace(/\s+/g, ' ').trim();
-    return { text: cleanText.slice(0, 300000), status: r.status, engine: "http" };
-  }
+ if (isHtml) {
+  const $ = cheerio.load(body);
+  $('script, style, nav, footer, noscript, svg').remove(); // drop page clutter
+
+  // Preserve destination URLs before converting the page to plain text.
+  $('a[href]').each((_, el) => {
+    const anchor = $(el);
+    const href = String(anchor.attr('href') || '').trim();
+
+    if (!href || href.startsWith('#') || href.toLowerCase().startsWith('javascript:')) {
+      return;
+    }
+
+    try {
+      const absoluteUrl = new URL(href, current).toString();
+      const label = anchor.text().replace(/\s+/g, ' ').trim();
+
+      if (label) {
+        anchor.replaceWith(`${label} [URL: ${absoluteUrl}]`);
+      } else {
+        anchor.replaceWith(`[URL: ${absoluteUrl}]`);
+      }
+    } catch {
+      // Ignore malformed URLs.
+    }
+  });
+
+  const cleanText = $('body').text().replace(/\s+/g, ' ').trim();
+
+  return {
+    text: cleanText.slice(0, 300000),
+    status: r.status,
+    engine: "http"
+  };
+}
   
   return { text: body.slice(0, 300000), status: r.status, engine: "http" };
 }
@@ -790,7 +762,8 @@ app.post("/api/auth/logout-all", requireJwt, async (req, res) => {
 
 app.get("/api/profile", requireJwt, async (req, res) => {
   const u = req.user;
-res.json({ success: true, user: { id: u._id, username: u.username, email: u.email, createdAt: u.createdAt, plan: PLANS[u.plan] ? u.plan : "free", planName: PLANS[u.plan]?.name || "Free Trial", role: u.role, emailVerified: isVerified(u), totpEnabled: !!u.totpEnabled, trialActivated: trialOk(u), usage: usageOf(u) } });});
+  res.json({ success: true, user: { id: u._id, username: u.username, email: u.email, createdAt: u.createdAt, plan: u.plan, planName: PLANS[u.plan].name, role: u.role, emailVerified: isVerified(u), totpEnabled: !!u.totpEnabled, trialActivated: trialOk(u), usage: usageOf(u) } });
+});
 
 /* ------------------------------------------------------------------ */
 /* Routes: 2FA (TOTP)                                                  */
