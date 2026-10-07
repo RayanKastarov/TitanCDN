@@ -713,8 +713,7 @@ app.post("/api/auth/logout-all", requireJwt, async (req, res) => {
 
 app.get("/api/profile", requireJwt, async (req, res) => {
   const u = req.user;
-  res.json({ success: true, user: { id: u._id, username: u.username, email: u.email, createdAt: u.createdAt, plan: u.plan, planName: PLANS[u.plan].name, role: u.role, emailVerified: isVerified(u), totpEnabled: !!u.totpEnabled, trialActivated: trialOk(u), usage: usageOf(u) } });
-});
+res.json({ success: true, user: { id: u._id, username: u.username, email: u.email, createdAt: u.createdAt, plan: PLANS[u.plan] ? u.plan : "free", planName: PLANS[u.plan]?.name || "Free Trial", role: u.role, emailVerified: isVerified(u), totpEnabled: !!u.totpEnabled, trialActivated: trialOk(u), usage: usageOf(u) } });});
 
 /* ------------------------------------------------------------------ */
 /* Routes: 2FA (TOTP)                                                  */
@@ -995,5 +994,3 @@ async function shutdown(signal) {
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
 // Force clear cache 2026
-
-// Force deploy 2026
