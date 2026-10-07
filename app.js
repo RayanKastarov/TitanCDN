@@ -123,12 +123,12 @@ async function loadProfile() { const d = await api("/api/profile"); renderUser(d
 
 /* ---------- Register / sign in ---------- */
 $("authSubmit").onclick = async () => {
-  const username = $("authName").value.trim().replace(/[<>&"'`]/g, ""), 
-        email = $("authEmail").value.trim(), 
+  const username = $("authName").value.trim().replace(/[<>&"'`]/g, ""),
+        email = $("authEmail").value.trim(),
         password = $("authPassword").value;
-  const btn = $("authSubmit"); 
+  const btn = $("authSubmit");
   btn.disabled = true;
-  
+
   try {
     if (authMode === "forgot") {
       if (!email) throw new Error("Enter your email address");
@@ -137,14 +137,14 @@ $("authSubmit").onclick = async () => {
       return;
     }
     if (!email || !password) throw new Error("Email and password are required");
-    
+
     if (authMode === "signup") {
       if (!$("terms").checked) throw new Error("Accept Terms and Privacy Policy");
-      
+
       // ⚡ ПРАВИЛНОТО МЯСТО НА ПРОВЕРКАТА:
       const passwordConfirm = $("authPasswordConfirm").value;
       if (password !== passwordConfirm) throw new Error("Passwords do not match!");
-      
+
       const d = await api("/api/auth/register", { method: "POST", body: JSON.stringify({ username: username || email.split("@")[0].replace(/[<>&"'`]/g, ""), email, password }) });
       showToast(d.message); authMode = "signin"; syncAuthTabs(); $("authHint").textContent = "Account created. Open the confirmation email we just sent, then sign in.";
       return;
@@ -247,15 +247,164 @@ $("twofaOff").onclick = async () => {
 };
 
 /* ---------- API keys ---------- */
-async function loadKeys() {
-  if (!getToken()) return;
-  const d = await api("/api/keys");
-  const active = (d.keys || []).find(k => !k.revokedAt); currentKeyMeta = active || null;
-  const raw = sessionStorage.getItem("titanApiKey");
-  if (raw) $("apiKey").value = raw.slice(0, 22) + "••••••••••••"; else if (active) $("apiKey").value = active.prefix + "••••••••••••"; else $("apiKey").value = "No API key — click CREATE KEY";
-  if (active) { $("apiAiInput").value = active.extractionInstructions || ""; $("apiKeyProfile").textContent = active.extractionMode === "custom" ? `CUSTOM • ${active.extractionInstructions}` : "ALL AVAILABLE DATA"; }
-  else $("apiKeyProfile").textContent = "Not configured yet";
+let allApiKeys = [];
+
+function renderApiKeyList() {
+  const list = $("apiKeyList");
+  const count = $("apiKeyCount");
+  const search = $("apiKeySearch");
+
+  if (!list || !count) return;
+
+  const query = (search?.value || "").trim().toLowerCase();
+
+  const activeKeys = allApiKeys.filter(k => !k.revokedAt);
+
+  const filtered = activeKeys.filter(k => {
+    const searchable = [
+      k.name,
+      k.prefix,
+      k.extractionInstructions,
+      k.extractionMode
+    ].filter(Boolean).join(" ").toLowerCase();
+
+    return searchable.includes(query);
+  });
+
+  count.textContent = `${activeKeys.length} ${activeKeys.length === 1 ? "KEY" : "KEYS"}`;
+  list.replaceChildren();
+
+  if (!filtered.length) {
+    const empty = document.createElement("div");
+    empty.className = "sub";
+    empty.style.padding = "18px 4px";
+    empty.textContent = query
+      ? "No API keys match your search."
+      : "No active API keys yet.";
+    list.appendChild(empty);
+    return;
+  }
+
+  for (const key of filtered) {
+    const row = document.createElement("div");
+    row.style.cssText =
+      "display:grid;grid-template-columns:minmax(120px,1fr) minmax(130px,1fr) minmax(180px,2fr) auto;gap:12px;align-items:center;padding:12px 8px;border-bottom:1px solid #202020;";
+
+    const name = document.createElement("div");
+    const nameStrong = document.createElement("b");
+    nameStrong.textContent = key.name || "API Key";
+
+    const created = document.createElement("small");
+    created.style.cssText = "display:block;color:#666;margin-top:4px;";
+    created.textContent = key.createdAt
+      ? `Created ${new Date(key.createdAt).toLocaleDateString()}`
+      : "Active credential";
+
+    name.append(nameStrong, created);
+
+    const prefix = document.createElement("div");
+    prefix.className = "code";
+    prefix.style.color = "#d4af37";
+    prefix.textContent = `${key.prefix || "titan_live_"}••••`;
+
+    const profile = document.createElement("div");
+    profile.className = "sub";
+    profile.style.cssText =
+      "margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
+
+    profile.textContent =
+      key.extractionMode === "custom" && key.extractionInstructions
+        ? key.extractionInstructions
+        : "ALL AVAILABLE DATA";
+
+    profile.title = profile.textContent;
+
+    const remove = document.createElement("button");
+    remove.className = "btn danger";
+    remove.type = "button";
+    remove.title = `Revoke ${key.name || "API key"}`;
+    remove.setAttribute("aria-label", `Revoke ${key.name || "API key"}`);
+    remove.textContent = "🗑";
+
+    remove.onclick = async () => {
+      const label = key.name || key.prefix || "this API key";
+
+      if (!confirm(`Revoke "${label}"?\n\nThis API key will stop working immediately.`)) {
+        return;
+      }
+
+      remove.disabled = true;
+
+      try {
+        await api(`/api/keys/${encodeURIComponent(key.id)}`, {
+          method: "DELETE"
+        });
+
+        const raw = sessionStorage.getItem("titanApiKey");
+
+        if (currentKeyMeta?.id === key.id) {
+          currentKeyMeta = null;
+          sessionStorage.removeItem("titanApiKey");
+          secretVisible = false;
+          $("apiKey").value = "No API key loaded";
+          $("apiKeyProfile").textContent = "Not configured yet";
+          $("apiAiInput").value = "";
+          $("revealKey").textContent = "REVEAL";
+        } else if (raw && currentKeyMeta?.id === key.id) {
+          sessionStorage.removeItem("titanApiKey");
+        }
+
+        await loadKeys();
+        showToast("API key revoked");
+      } catch (e) {
+        remove.disabled = false;
+        showToast(e.message);
+      }
+    };
+
+    row.append(name, prefix, profile, remove);
+    list.appendChild(row);
+  }
 }
+
+async function loadKeys() {
+  if (!getToken()) {
+    allApiKeys = [];
+    renderApiKeyList();
+    return;
+  }
+
+  const d = await api("/api/keys");
+  allApiKeys = d.keys || [];
+
+  const active = allApiKeys.find(k => !k.revokedAt);
+  currentKeyMeta = active || null;
+
+  const raw = sessionStorage.getItem("titanApiKey");
+
+  if (raw) {
+    $("apiKey").value = raw.slice(0, 22) + "••••••••••••";
+  } else if (active) {
+    $("apiKey").value = active.prefix + "••••••••••••";
+  } else {
+    $("apiKey").value = "No API key — click CREATE KEY";
+  }
+
+  if (active) {
+    $("apiAiInput").value = active.extractionInstructions || "";
+    $("apiKeyProfile").textContent =
+      active.extractionMode === "custom"
+        ? `CUSTOM • ${active.extractionInstructions}`
+        : "ALL AVAILABLE DATA";
+  } else {
+    $("apiAiInput").value = "";
+    $("apiKeyProfile").textContent = "Not configured yet";
+  }
+
+  renderApiKeyList();
+}
+
+$("apiKeySearch")?.addEventListener("input", renderApiKeyList);
 let keySetupTimer = null, keySetupSeconds = 10, keySetupTouched = false, keySetupCreating = false;
 function closeKeySetup() { clearInterval(keySetupTimer); $("keySetupModal").classList.remove("show"); }
 async function createConfiguredKey() {
@@ -266,8 +415,9 @@ async function createConfiguredKey() {
     sessionStorage.setItem("titanApiKey", d.key.value); currentKeyMeta = d.key; secretVisible = true;
     $("apiKey").value = d.key.value; $("revealKey").textContent = "HIDE"; $("rotateKey").textContent = "CREATE NEW";
     $("apiKeyProfile").textContent = instructions ? `CUSTOM • ${instructions}` : "ALL AVAILABLE DATA";
-    closeKeySetup(); showToast(instructions ? "API key created with custom AI extraction" : "API key created • ALL AVAILABLE DATA mode");
-  } catch (e) { showToast(e.message); } finally { keySetupCreating = false; $("keySetupCreate").disabled = false; $("keySetupCreate").textContent = "CONFIRM & CREATE KEY"; }
+closeKeySetup();
+await loadKeys();
+showToast(instructions ? "API key created with custom AI extraction" : "API key created • ALL AVAILABLE DATA mode");  } catch (e) { showToast(e.message); } finally { keySetupCreating = false; $("keySetupCreate").disabled = false; $("keySetupCreate").textContent = "CONFIRM & CREATE KEY"; }
 }
 function openKeySetup() {
   if (!getToken()) { showToast("Sign in first"); return; }

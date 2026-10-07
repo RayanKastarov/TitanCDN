@@ -230,7 +230,87 @@ input:focus,select:focus{border-color:var(--gold)}
 
 <section class="page" id="jobs"><div class="card gold"><div class="section-title"><h3>EXTRACTION JOB</h3><span>URL + AI INSTRUCTIONS</span></div><p class="sub">Use the Developer Workbench for live extraction. Persistent scheduled jobs are the next backend module.</p><button class="btn primary" id="createJob">OPEN WORKBENCH</button></div></section>
 <section class="page" id="logs"><div class="card gold"><div class="section-title"><h3>REQUEST LOGS</h3><span>LIVE SESSION</span></div><div id="logTable"><div class="sub">Successful workbench requests will appear here during this browser session.</div></div></div></section>
-<section class="page" id="api"><div class="card gold"><div class="section-title"><h3>MASTER API CREDENTIAL</h3><span>REAL SERVER-SIDE KEY</span></div><div id="apiSignedOut"><p class="sub">API keys are available only after registration and sign-in.</p><button class="btn primary" id="apiSignupBtn">SIGN UP / SIGN IN</button></div><div id="apiSignedIn" hidden=""><p class="sub">Create a real TitanCDN credential. The plaintext secret is shown only when it is created; the database stores only its hash.</p><div class="keyrow"><input class="code" id="apiKey" readonly="" value="No API key loaded"><button class="btn" id="revealKey">REVEAL</button><button class="btn primary" id="rotateKey">CREATE KEY</button></div><div class="auth-note">Format: titan_live_… • quota is enforced on your account plan. The key is created only after its extraction profile is chosen.</div><div class="metric-row"><span>Key extraction profile</span><b id="apiKeyProfile">Not configured yet</b></div><div class="card" style="margin-top:16px"><div class="section-title"><h3>TITAN AI EXTRACTION INSTRUCTION</h3><span>WHAT SHOULD THIS KEY EXTRACT?</span></div><p class="sub">Tell Titan AI what this API key should extract from public target pages. Leave it empty for ALL AVAILABLE DATA. This profile is saved on the key and used on every request.</p><textarea id="apiAiInput" style="width:100%;min-height:100px;background:#080808;color:#eee;border:1px solid #2c2c2c;border-radius:7px;padding:12px" placeholder="Tell Titan AI what information you want..."></textarea><button class="btn primary" id="apiAiUse" style="margin-top:10px">SAVE TO THIS API KEY</button></div></div></div></section>
+<section class="page" id="api">
+  <div class="card gold">
+    <div class="section-title">
+      <h3>MASTER API CREDENTIAL</h3>
+      <span>REAL SERVER-SIDE KEY</span>
+    </div>
+
+    <div id="apiSignedOut">
+      <p class="sub">API keys are available only after registration and sign-in.</p>
+      <button class="btn primary" id="apiSignupBtn">SIGN UP / SIGN IN</button>
+    </div>
+
+    <div id="apiSignedIn" hidden>
+      <p class="sub">
+        Create a real TitanCDN credential. The plaintext secret is shown only
+        when it is created; the database stores only its hash.
+      </p>
+
+      <div class="keyrow">
+        <input class="code" id="apiKey" readonly value="No API key loaded">
+        <button class="btn" id="revealKey">REVEAL</button>
+        <button class="btn primary" id="rotateKey">CREATE KEY</button>
+      </div>
+
+      <div class="auth-note">
+        Format: titan_live_… • quota is enforced on your account plan.
+        The key is created only after its extraction profile is chosen.
+      </div>
+
+      <div class="metric-row">
+        <span>Key extraction profile</span>
+        <b id="apiKeyProfile">Not configured yet</b>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <div class="section-title">
+          <h3>YOUR API KEYS</h3>
+          <span id="apiKeyCount">0 KEYS</span>
+        </div>
+
+        <input
+          id="apiKeySearch"
+          type="search"
+          placeholder="Search by key name, prefix or extraction instruction..."
+          autocomplete="off"
+          style="width:100%;margin-bottom:12px"
+        >
+
+        <div
+          id="apiKeyList"
+          style="max-height:320px;overflow-y:auto;padding-right:4px"
+        >
+          <div class="sub">No API keys loaded.</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <div class="section-title">
+          <h3>TITAN AI EXTRACTION INSTRUCTION</h3>
+          <span>WHAT SHOULD THIS KEY EXTRACT?</span>
+        </div>
+
+        <p class="sub">
+          Tell Titan AI what this API key should extract from public target pages.
+          Leave it empty for ALL AVAILABLE DATA. This profile is saved on the key
+          and used on every request.
+        </p>
+
+        <textarea
+          id="apiAiInput"
+          style="width:100%;min-height:100px;background:#080808;color:#eee;border:1px solid #2c2c2c;border-radius:7px;padding:12px"
+          placeholder="Tell Titan AI what information you want..."
+        ></textarea>
+
+        <button class="btn primary" id="apiAiUse" style="margin-top:10px">
+          SAVE TO THIS API KEY
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
 <section class="page" id="ai"><div class="card gold"><div class="section-title"><h3>TITAN AI EXTRACTION</h3><span>URL CONTENT → REQUESTED DATA</span></div><div class="preview" id="aiOut">Titan AI is used by the Developer Workbench. Enter a URL and describe exactly what information you want extracted.</div><div class="search-row" style="margin-top:10px"><input id="aiInput" placeholder="Describe the information you want extracted"><button class="btn primary" id="askAi">USE IN WORKBENCH</button></div></div></section>
 <section class="page" id="billing">
   <div class="section-title"><h3>PLANS</h3><span>MONTHLY LIMITS IN CHARACTERS</span></div>
