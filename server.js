@@ -178,11 +178,31 @@ const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
 
 // Limits are in CHARACTERS. Internal keys (pro/business/enterprise) are kept so existing accounts keep working.
 const PLANS = Object.freeze({
-  free:       { name: "Free Trial",      limit: 100000,    priceEur: 0 },
-  pro:        { name: "Starter",         limit: 1000000,   priceEur: 69.99 },
-  business:   { name: "Medium Factory",  limit: 350000000,   priceEur: 339.99 },  // 350 million characters
-  enterprise: { name: "Mega Factory",    limit: 1000000000, priceEur: 1099.99 }  // 1 billion characters
+  free: { 
+    name: "Free Trial",      
+    limit: 100000,    
+    priceEur: 0 
+  },
+  pro: { 
+    name: "Starter",         
+    limit: 1000000,   
+    priceEur: 69.99,
+    stripePriceId: "price_1UNuOzIbX9FLQCZIR35e347n"
+  },
+  business: { 
+    name: "Medium Factory",  
+    limit: 350000000,   
+    priceEur: 369.99,
+    stripePriceId: "price_1UNuQEIbX9FLQCZIl8YE7t4A"
+  },
+  enterprise: { 
+    name: "Mega Factory",    
+    limit: 1000000000, 
+    priceEur: 1099.99,
+    stripePriceId: "price_1UNuS6lbX9FLQCZIJXwjLkMh" // Ето този, който видяхме на скрийншота!
+  }
 });
+
 
 class HttpError extends Error {
   constructor(status, message, extra = {}) { super(message); this.statusCode = status; this.extra = extra; }
