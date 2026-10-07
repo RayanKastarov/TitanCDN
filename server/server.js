@@ -176,33 +176,38 @@ if (NODE_ENV === "production" && !APP_URL) console.warn("[TitanCDN] APP_URL is n
 
 const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
 
-// Limits are in CHARACTERS. Internal keys (pro/business/enterprise) are kept so existing accounts keep working.
+// Limits are in CHARACTERS. Internal keys are kept so existing accounts keep working.
 const PLANS = Object.freeze({
-  free: { 
-    name: "Free Trial",      
-    limit: 100000,    
-    priceEur: 0 
+  free: {
+    name: "Free Trial",
+    limit: 100000,
+    priceEur: 0
   },
-  pro: { 
-    name: "Starter",         
-    limit: 1000000,   
+  pro: {
+    name: "Starter",
+    limit: 25000000,
     priceEur: 69.99,
     stripePriceId: "price_1UNuOzIbX9FLQCZIR35e347n"
   },
-  business: { 
-    name: "Medium Factory",  
-    limit: 350000000,   
-    priceEur: 369.99,
-    stripePriceId: "price_1UNuQEIbX9FLQCZIl8YE7t4A"
+  business: {
+    name: "Business",
+    limit: 250000000,
+    priceEur: 299.99,
+    stripePriceId: "price_1UNw8TIbX9FLQCZIYMqepZHu"
   },
-  enterprise: { 
-    name: "Mega Factory",    
-    limit: 1000000000, 
-    priceEur: 1099.99,
-    stripePriceId: "price_1UNuS6lbX9FLQCZIJXwjLkMh" // Ето този, който видяхме на скрийншота!
+  enterprise: {
+    name: "Mega Factory",
+    limit: 1000000000,
+    priceEur: 899.99,
+    stripePriceId: "price_1UNw6WIbX9FLQCZI0Pd7KfSo"
+  },
+  titan: {
+    name: "Titan Enterprise",
+    limit: 3000000000,
+    priceEur: 1999.99,
+    stripePriceId: "price_1UNw4DIbX9FLQCZIBzeMQTCv"
   }
 });
-
 
 class HttpError extends Error {
   constructor(status, message, extra = {}) { super(message); this.statusCode = status; this.extra = extra; }
@@ -279,7 +284,7 @@ const UserSchema = new mongoose.Schema({
   totpRecoveryHashes: { type: [String], select: false, default: [] },
   totpLastStep: { type: Number, default: 0 },
 
-  plan: { type: String, enum: ["free", "pro", "business", "enterprise"], default: "free" },
+plan: { type: String, enum: ["free", "pro", "business", "enterprise", "titan"], default: "free" },
   trialActivated: { type: Boolean, default: false },
   trialCharsUsed: { type: Number, default: 0 },   // lifetime, never resets
   charsUsed: { type: Number, default: 0 },        // paid plans, reset on each paid invoice
@@ -878,13 +883,13 @@ app.post("/api/billing/checkout", sensitiveLimiter, requireJwt, requireVerified,
   requireStripe();
   if (!APP_URL) throw new HttpError(503, "APP_URL is not configured.");
   const planKey = String(req.body.plan || "");
-  if (!["pro", "business", "enterprise"].includes(planKey)) throw new HttpError(400, "Unknown plan.");
-  if (req.user.stripeSubscriptionId) throw new HttpError(409, "You already have an active subscription. Contact support to change plans.");
+if (!["pro", "business", "enterprise", "titan"].includes(planKey)) throw new HttpError(400, "Unknown plan."); 
+ if (req.user.stripeSubscriptionId) throw new HttpError(409, "You already have an active subscription. Contact support to change plans.");
   const plan = PLANS[planKey];
   const customer = await ensureCustomer(req.user);
   const session = await stripe.checkout.sessions.create({
     mode: "subscription", customer, client_reference_id: String(req.user._id),
-    line_items: [{ quantity: 1, price_data: { currency: "eur", unit_amount: Math.round(plan.priceEur * 100), recurring: { interval: "month" }, product_data: { name: `TitanCDN ${plan.name}` } } }],
+line_items: [{ quantity: 1, price: plan.stripePriceId }],
     metadata: { userId: String(req.user._id), plan: planKey },
     subscription_data: { metadata: { userId: String(req.user._id), plan: planKey } },
     success_url: `${APP_URL}/?checkout=success`, cancel_url: `${APP_URL}/?checkout=cancel`
