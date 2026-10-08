@@ -81,16 +81,66 @@ chart.appendChild(bar);
 
 refreshTrafficChart();
 setInterval(refreshTrafficChart, 30000);
-let engine = false, timer = null;
-function setEngine(on) {
-  engine = on; $("engineBtn").classList.toggle("on", on);
-  $("engineText").textContent = on ? "ENGINE ONLINE" : "ENGINE OFFLINE"; $("telemetryState").textContent = on ? "Live telemetry running" : "Engine stopped"; $("scraperStatus").textContent = on ? "READY" : "STANDBY";
-  if (timer) clearInterval(timer);
-  /* Telemetry values are now provided by MongoDB analytics. */
-}
-$("engineBtn").onclick = () => setEngine(!engine);
-$("pingBtn").onclick = async () => { try { const d = await api("/api/health"); showToast(`API ${d.status} • DB ${d.database}`); } catch (e) { showToast(e.message); } };
+let engine = false;
 
+function setEngine(on) {
+  engine = on;
+
+  const button = $("engineBtn");
+  const label = $("engineText");
+  const telemetry = $("telemetryState");
+  const scraper = $("scraperStatus");
+
+  if (button) {
+    button.classList.toggle("on", on);
+    button.setAttribute("aria-label", on ? "Backend online" : "Backend offline");
+    button.title = "Live backend health status";
+  }
+
+  if (label) label.textContent = on ? "ENGINE ONLINE" : "ENGINE OFFLINE";
+  if (telemetry) telemetry.textContent = on
+    ? "Backend connected · real telemetry"
+    : "Backend unavailable";
+
+  if (scraper) scraper.textContent = on ? "READY" : "OFFLINE";
+}
+
+async function refreshEngineHealth() {
+  try {
+    const response = await fetch("/api/health", {
+      cache: "no-store"
+    });
+
+    if (!response.ok) throw new Error("Health check failed");
+
+    const data = await response.json();
+
+    const healthy =
+      data.success === true &&
+      data.status === "ONLINE" &&
+      data.database === "CONNECTED";
+
+    setEngine(healthy);
+    return healthy;
+  } catch (err) {
+    setEngine(false);
+    return false;
+  }
+}
+
+// The indicator displays actual backend health, not a manual toggle.
+$("engineBtn").onclick = async () => {
+  await refreshEngineHealth();
+  showToast(engine ? "Backend online · MongoDB connected" : "Backend unavailable");
+};
+
+$("pingBtn").onclick = async () => {
+  await refreshEngineHealth();
+  showToast(engine ? "API ONLINE · DB CONNECTED" : "API or database unavailable");
+};
+
+refreshEngineHealth();
+setInterval(refreshEngineHealth, 30000);
 /* ---------- Auth modal ---------- */
 const authModal = $("authModal"), profileModal = $("profileModal");
 let authMode = "signup";
@@ -750,3 +800,61 @@ async function refreshRealOverview() {
 
 refreshRealOverview();
 setInterval(refreshRealOverview, 30000);
+// REAL EDGE METRICS — based on authenticated request analytics
+async function refreshEdgeMetrics() {
+  const page = document.getElementById("edge");
+  if (!page) return;
+
+  let panel = document.getElementById("realEdgeMetrics");
+
+  if (!panel) {
+    panel = document.createElement("div");
+    panel.id = "realEdgeMetrics";
+    panel.className = "card gold";
+    panel.style.marginBottom = "16px";
+
+    panel.innerHTML = `
+      <div class="section-title">
+        <h3>LIVE EDGE METRICS</h3>
+        <span>REAL DATA · LAST 24 HOURS</span>
+      </div>
+      <div class="grid stats">
+        <div class="stat"><div class="label">API REQUESTS</div><div class="value" id="edgeRequests">—</div></div>
+        <div class="stat"><div class="label">SUCCESSFUL</div><div class="value" id="edgeSuccess">—</div></div>
+        <div class="stat"><div class="label">FAILED</div><div class="value" id="edgeFailed">—</div></div>
+        <div class="stat"><div class="label">AVG DURATION</div><div class="value" id="edgeDuration">—</div></div>
+      </div>
+      <p class="sub" id="edgeMetricStatus">Loading real request metrics...</p>
+    `;
+
+    page.prepend(panel);
+  }
+
+  const set = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  };
+
+  try {
+    const data = await api("/api/analytics");
+
+    if (!data || data.success !== true) {
+      throw new Error(data?.error || "Analytics unavailable");
+    }
+
+    set("edgeRequests", data.totalRequests ?? 0);
+    set("edgeSuccess", data.successfulRequests ?? 0);
+    set("edgeFailed", data.failedRequests ?? 0);
+    set("edgeDuration", `${data.averageDurationMs ?? 0} ms`);
+    set("edgeMetricStatus", "Source: authenticated MongoDB request analytics · refreshed every 30 seconds");
+  } catch (err) {
+    set("edgeRequests", "—");
+    set("edgeSuccess", "—");
+    set("edgeFailed", "—");
+    set("edgeDuration", "—");
+    set("edgeMetricStatus", "Metrics unavailable: " + err.message);
+  }
+}
+
+refreshEdgeMetrics();
+setInterval(refreshEdgeMetrics, 30000);
