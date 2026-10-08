@@ -486,8 +486,30 @@ $("freeWelcomeClose").onclick = () => $("freeWelcomeModal").classList.remove("sh
 
 /* ---------- Boot ---------- */
 async function restoreSession() {
-  if (!getToken()) { renderSignedOut(); return; }
-  try { await loadProfile(); await loadKeys(); } catch { sessionStorage.removeItem("titanJwt"); renderSignedOut(); }
+  if (!getToken()) {
+    renderSignedOut();
+    return;
+  }
+
+  try {
+    await loadProfile();
+  } catch (e) {
+    console.error("Profile loading failed:", e);
+    if (e.status === 401) {
+      sessionStorage.removeItem("titanJwt");
+      renderSignedOut();
+    } else {
+      showToast("Profile error: " + e.message);
+    }
+    return;
+  }
+
+  try {
+    await loadKeys();
+  } catch (e) {
+    console.error("API keys loading failed:", e);
+    showToast("API keys error: " + e.message);
+  }
 }
 (async function boot() {
   try { publicConfig = await api("/api/config"); } catch { /* keep defaults */ }
