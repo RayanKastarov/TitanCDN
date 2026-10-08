@@ -755,6 +755,81 @@ async function extractWithAI(text, instructions, sourceUrl) {
 /* Routes: public                                                      */
 /* ------------------------------------------------------------------ */
 const dbState = () => (mongoose.connection.readyState === 1 ? "CONNECTED" : "UNAVAILABLE");
+
+/* Live Titan Insights news from Google News RSS */
+app.get("/api/insights/news", async (req, res) => {
+  try {
+    const query = String(req.query.q || "technology AI business")
+      .trim().slice(0, 100);
+
+    const rssUrl =
+      "https://news.google.com/rss/search?q=" +
+      encodeURIComponent(query) +
+      "&hl=en-US&gl=US&ceid=US:en";
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+
+    let response;
+    try {
+      response = await fetch(rssUrl, {
+        signal: controller.signal,
+        headers: { "User-Agent": "TitanCDN-News/1.0" }
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    if (!response.ok) {
+      throw new Error("News provider returned HTTP " + response.status);
+    }
+
+    const xml = await response.text();
+
+    function decodeXml(value) {
+      return String(value || "")
+        .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+        .replace(/&amp;/g, "&")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;|&apos;/g, "'")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">");
+    }
+
+    function tag(item, name) {
+      const match = item.match(
+        new RegExp("<" + name + "(?:\\s[^>]*)?>([\\s\\S]*?)<\\/" + name + ">", "i")
+      );
+      return match ? decodeXml(match[1].trim()) : "";
+    }
+
+    const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)]
+      .slice(0, 20)
+      .map(match => {
+        const item = match[1];
+        const link = tag(item, "link");
+        const title = tag(item, "title").replace(/<[^>]*>/g, "");
+        const source = tag(item, "source").replace(/<[^>]*>/g, "");
+        const publishedAt = tag(item, "pubDate");
+
+        return { title, link, source, publishedAt };
+      })
+      .filter(item => item.title && /^https:\/\//i.test(item.link));
+
+    res.json({
+      success: true,
+      query,
+      count: items.length,
+      articles: items
+    });
+  } catch (err) {
+    res.status(502).json({
+      success: false,
+      error: "Live news temporarily unavailable."
+    });
+  }
+});
+
 app.get("/api/health", (req, res) => res.json({ success: true, service: "TitanCDN", status: "ONLINE", database: dbState(), mail: mailStatus() }));
 app.get("/api/status", (req, res) => res.json({ success: true, engine: "ONLINE", database: dbState(), uptimeSeconds: Math.floor(process.uptime()) }));
 app.get("/api/config", (req, res) => res.json({ success: true, stripeEnabled: !!(stripe && STRIPE_PUBLISHABLE_KEY), stripePublishableKey: STRIPE_PUBLISHABLE_KEY, plans: PLANS }));

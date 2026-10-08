@@ -1,5 +1,59 @@
 <!DOCTYPE html>
 <html lang="bg"><head>
+<style>
+/* TITAN INSIGHTS — GOLD THEME */
+
+#insightsSearch {
+  background: #0b0b0b !important;
+  color: #f5f5f5 !important;
+  border: 1px solid #665116 !important;
+  border-radius: 8px !important;
+  outline: none;
+}
+
+#insightsSearch:focus {
+  border-color: #e0b83e !important;
+  box-shadow: 0 0 12px #d4af3733;
+}
+
+#insightsSearchBtn {
+  background: linear-gradient(135deg, #f1cd55, #bd9021) !important;
+  color: #080808 !important;
+  border: 1px solid #e0b83e !important;
+  border-radius: 8px !important;
+  padding: 12px 22px !important;
+  font-weight: 800 !important;
+  cursor: pointer;
+}
+
+.insightsTopic {
+  background: #15120a !important;
+  color: #e5c35b !important;
+  border: 1px solid #80651c !important;
+  border-radius: 8px !important;
+  padding: 10px 16px !important;
+  font-weight: 700 !important;
+  cursor: pointer;
+}
+
+.insightsTopic:hover,
+#insightsSearchBtn:hover {
+  background: #f1cd55 !important;
+  color: #080808 !important;
+  transform: translateY(-1px);
+}
+
+#insightsNewsResults .insight-card a {
+  color: #e0b83e !important;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+#insightsNewsResults .insight-card a:hover {
+  color: #ffe58a !important;
+  text-decoration: underline;
+}
+</style>
   <meta name="google-site-verification" content="-pO-bUU70XOm7qiTRx15E6HRplpXubJsu96A2rjNW-o">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -144,7 +198,7 @@ input:focus,select:focus{border-color:var(--gold)}
             opacity: 1 !important;
         ">T</span>
     </div>
-    
+
     <!-- PAGE HEADINGS -->
     <div style="display: block !important; visibility: visible !important; opacity: 1 !important;">
         <h1 style="margin: 0 !important; font-size: 1.25rem !important; font-weight: 800 !important; letter-spacing: 1.5px !important; color: #ffffff !important; text-transform: uppercase !important; font-family: 'Segoe UI', sans-serif !important;">TITAN<span style="color: #d4af37 !important;">CDN</span></h1>
@@ -381,16 +435,34 @@ input:focus,select:focus{border-color:var(--gold)}
 <section class="page view-pane" id="viewInsights">
   <div class="card gold">
     <div class="section-title"><h3>TITAN INSIGHTS</h3><span>MARKET INTELLIGENCE HUB</span></div>
-    <p class="sub" style="font-size:13px">Placeholder content: these are sample titles for the upcoming automated industrial articles. No real data or results are shown here yet.</p>
+    <p class="sub" style="font-size:13px">Discover current business, technology and AI news from external publishers. Search by company or topic.</p>
   </div>
-  <div class="insights-grid">
-    <article class="insight-card"><span class="insight-tag">PRICING INTELLIGENCE</span><h4>Nike E-Commerce Price Drop Signals, Identified via the Titan Scraper Pipeline</h4><p>How automated extraction surfaces markdown timing and regional price gaps for global sportswear catalogs.</p><div class="insight-foot"><span>6 MIN READ</span><span class="insight-badge">COMING SOON</span></div></article>
-    <article class="insight-card"><span class="insight-tag">MARKET TRENDS</span><h4>Amazon Dynamic Scraper Trends — Oct 2026</h4><p>A look at how marketplace layouts, rate limits and rendering patterns are changing for data teams.</p><div class="insight-foot"><span>8 MIN READ</span><span class="insight-badge">COMING SOON</span></div></article>
-    <article class="insight-card"><span class="insight-tag">SECURITY RESEARCH</span><h4>Anti-Bot Countermeasures Across High-Security Targets</h4><p>What modern bot defenses look for, and what responsible, rate-limited collection looks like in practice.</p><div class="insight-foot"><span>9 MIN READ</span><span class="insight-badge">COMING SOON</span></div></article>
-    <article class="insight-card"><span class="insight-tag">RETAIL SIGNALS</span><h4>Detecting Stock-Outs Early with Structured Extraction</h4><p>Turning product-page availability changes into daily alerts for inventory and pricing teams.</p><div class="insight-foot"><span>5 MIN READ</span><span class="insight-badge">COMING SOON</span></div></article>
-    <article class="insight-card"><span class="insight-tag">TITAN AI</span><h4>From Raw Page to Clean JSON: Prompting for Reliable Extraction</h4><p>Practical instruction patterns that make AI extraction consistent across very different websites.</p><div class="insight-foot"><span>7 MIN READ</span><span class="insight-badge">COMING SOON</span></div></article>
-    <article class="insight-card"><span class="insight-tag">WEEKLY DIGEST</span><h4>Market Intelligence Digest: Industrial Pricing Moves</h4><p>A recurring summary of notable price and assortment changes across tracked categories.</p><div class="insight-foot"><span>4 MIN READ</span><span class="insight-badge">COMING SOON</span></div></article>
+
+<div class="card gold" style="margin-bottom:16px">
+  <div class="section-title">
+    <h3>LIVE BUSINESS & TECHNOLOGY NEWS</h3>
+    <span>REAL PUBLISHERS</span>
   </div>
+  <p class="sub">Search current news about companies, artificial intelligence, technology and global markets.</p>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+    <input id="insightsSearch" type="search"
+      placeholder="Search companies, AI, markets..."
+      style="flex:1;min-width:220px;padding:12px">
+    <button id="insightsSearchBtn" class="primary">SEARCH NEWS</button>
+  </div>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+    <button class="insightsTopic" data-topic="technology">Technology</button>
+    <button class="insightsTopic" data-topic="artificial intelligence">AI</button>
+    <button class="insightsTopic" data-topic="business">Business</button>
+    <button class="insightsTopic" data-topic="cybersecurity">Cybersecurity</button>
+    <button class="insightsTopic" data-topic="ecommerce">E-Commerce</button>
+  </div>
+</div>
+<div id="insightsNewsResults" class="insights-grid">
+  <p class="sub">Live news will appear here once the news API is connected.</p>
+</div>
 </section>
 <section class="page" id="about">
   <div class="card gold">

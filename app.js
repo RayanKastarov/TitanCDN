@@ -857,4 +857,106 @@ async function refreshEdgeMetrics() {
 }
 
 refreshEdgeMetrics();
-setInterval(refreshEdgeMetrics, 30000);
+setInterval(refreshEdgeMetrics, 30000); // TITAN INSIGHTS — LIVE NEWS
+async function loadTitanInsightsNews(q = "technology AI business") {
+  const box = document.getElementById("insightsNewsResults");
+  if (!box) return;
+
+  box.replaceChildren();
+  box.textContent = "Loading real news...";
+
+  try {
+    const r = await fetch("/api/insights/news?q=" + encodeURIComponent(q));
+    if (!r.ok) throw new Error("News unavailable");
+    const data = await r.json();
+    if (!data.success) throw new Error("News unavailable");
+
+    box.replaceChildren();
+
+    if (!data.articles?.length) {
+      box.textContent = "No news found.";
+      return;
+    }
+
+    for (const article of data.articles) {
+      const card = document.createElement("article");
+      card.className = "insight-card";
+
+      const source = document.createElement("span");
+      source.className = "insight-tag";
+      source.textContent = article.source || "NEWS";
+
+      const title = document.createElement("h4");
+      title.textContent = article.title;
+
+      const date = document.createElement("p");
+      date.className = "sub";
+      const d = new Date(article.publishedAt);
+      date.textContent = isNaN(d.getTime()) ? "" : d.toLocaleString();
+
+      const link = document.createElement("a");
+    const isGoogleNews = (() => {
+  try {
+    return new URL(article.link).hostname === "news.google.com";
+  } catch {
+    return true;
+  }
+})();
+
+link.href = isGoogleNews
+  ? "https://www.google.com/search?q=" +
+    encodeURIComponent('"' + article.title + '" ' + (article.source || ""))
+  : article.link;
+
+link.textContent = isGoogleNews
+  ? "FIND ORIGINAL ARTICLE →"
+  : "READ ARTICLE →";
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+
+
+      card.append(source, title, date, link);
+      box.appendChild(card);
+    }
+  } catch {
+    box.textContent = "Live news temporarily unavailable.";
+  }
+}
+
+function initTitanInsights() {
+  const input = document.getElementById("insightsSearch");
+  const button = document.getElementById("insightsSearchBtn");
+  if (!input || !button) return;
+
+  const search = () => loadTitanInsightsNews(input.value.trim() || "technology AI business");
+
+  button.addEventListener("click", search);
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") search();
+  });
+
+  document.querySelectorAll(".insightsTopic").forEach(btn => {
+    btn.addEventListener("click", () => {
+      input.value = btn.dataset.topic;
+      search();
+    });
+  });
+
+  loadTitanInsightsNews();
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initTitanInsights);
+} else {
+  initTitanInsights();
+}
+// Automatically refresh Titan Insights every 5 minutes
+setInterval(() => {
+  const insightsPage = document.getElementById("viewInsights");
+  const searchInput = document.getElementById("insightsSearch");
+
+  if (!insightsPage || !searchInput) return;
+
+  const query = searchInput.value.trim() || "technology AI business";
+  loadTitanInsightsNews(query);
+}, 5 * 60 * 1000);
