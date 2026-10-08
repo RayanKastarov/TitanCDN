@@ -24,7 +24,7 @@ const { sendMail, emailShell, verifyMailer, mailStatus, activeProvider, logMailE
   const axios = require("axios");
   const env = process.env;
   const appPassword = () => String(env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, "");
-  const fromName = () => env.MAIL_FROM_NAME || "TitanCDN Support";
+  const fromName = () => env.MAIL_FROM_NAME || "TitanCDN";
   const resendFrom = () => env.MAIL_FROM || "TitanCDN <onboarding@resend.dev>";
   const clean = s => String(s).replace(/[\r\n]+/g, " ").trim(); // blocks header injection
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -85,7 +85,6 @@ const { sendMail, emailShell, verifyMailer, mailStatus, activeProvider, logMailE
 <h2 style="margin:0 0 14px;font-size:20px;color:#111111;">${heading}</h2>
 <p style="margin:0 0 6px;">${intro}</p>
 <p style="margin:26px 0;"><a href="${l}" style="background:#d4af37;color:#000000;text-decoration:none;font-weight:bold;padding:13px 26px;border-radius:6px;display:inline-block;">${buttonText}</a></p>
-<p style="font-size:13px;color:#666666;margin:0 0 10px;">Button not working? Copy this link into your browser:<br><a href="${l}" style="color:#8a6d1d;word-break:break-all;">${l}</a></p>
 <p style="font-size:13px;color:#666666;margin:0;">${footnote}</p>
 </td></tr>
 <tr><td style="padding:16px 28px;background:#fafafa;color:#999999;font-size:12px;">TitanCDN &middot; This is an automated message, please do not reply.</td></tr>
