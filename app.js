@@ -47,13 +47,46 @@ document.querySelectorAll(".nav button").forEach(btn => btn.addEventListener("cl
 $("menuBtn").onclick = () => $("sidebar").classList.toggle("open");
 
 const chart = $("chart");
-if (chart && !chart.children.length) for (let i = 0; i < 20; i++) { const b = document.createElement("div"); b.className = "bar"; b.style.height = (18 + Math.random() * 50) + "%"; chart.appendChild(b); }
+async function refreshTrafficChart() {
+  if (!chart) return;
+
+  if (!getToken()) {
+    chart.replaceChildren();
+    return;
+  }
+
+  try {
+    const data = await api("/api/analytics/hourly");
+    const hours = Array.isArray(data.hours) ? data.hours : [];
+
+    if (hours.length !== 24) throw new Error("Invalid hourly analytics response");
+
+    const max = Math.max(1, ...hours.map(h => Number(h.requests) || 0));
+    chart.replaceChildren();
+
+    for (const hour of hours) {
+      const count = Math.max(0, Number(hour.requests) || 0);
+      const bar = document.createElement("div");
+      bar.className = "bar";
+      bar.style.height = count ? `${Math.max(4, count / max * 100)}%` : "0%";
+      bar.title = `${new Date(hour.hour).toLocaleString()}: ${count} requests`;
+      bar.title = `${new Date(hour.hour).toLocaleString("bg-BG")}\nRequests: ${count}\nSuccessful: ${Number(hour.successful) || 0}`;
+chart.appendChild(bar);
+    }
+  } catch (err) {
+    console.error("Traffic chart:", err);
+    chart.replaceChildren();
+  }
+}
+
+refreshTrafficChart();
+setInterval(refreshTrafficChart, 30000);
 let engine = false, timer = null;
 function setEngine(on) {
   engine = on; $("engineBtn").classList.toggle("on", on);
   $("engineText").textContent = on ? "ENGINE ONLINE" : "ENGINE OFFLINE"; $("telemetryState").textContent = on ? "Live telemetry running" : "Engine stopped"; $("scraperStatus").textContent = on ? "READY" : "STANDBY";
   if (timer) clearInterval(timer);
-  if (on) timer = setInterval(() => { if ($("rps")) $("rps").textContent = Math.floor(3000 + Math.random() * 1500).toLocaleString(); if ($("latency")) $("latency").textContent = Math.floor(35 + Math.random() * 25) + " ms"; }, 700);
+  /* Telemetry values are now provided by MongoDB analytics. */
 }
 $("engineBtn").onclick = () => setEngine(!engine);
 $("pingBtn").onclick = async () => { try { const d = await api("/api/health"); showToast(`API ${d.status} • DB ${d.database}`); } catch (e) { showToast(e.message); } };
@@ -520,3 +553,200 @@ async function restoreSession() {
   if (q.get("checkout") === "success") showToast("Payment received. Your plan activates once Stripe confirms it (usually a few seconds).");
   if (q.toString()) history.replaceState(null, "", location.pathname);
 })();
+
+
+/* ---------- Real MongoDB dashboard ---------- */
+async function refreshRealDashboard() {
+  if (!getToken()) {
+    for (const id of ["realRequests", "realSuccess", "realCharacters", "realDuration"]) {
+      const el = $(id);
+      if (el) el.textContent = "—";
+    }
+    if ($("logTable")) {
+      $("logTable").textContent = "Sign in to view your request history.";
+    }
+    return;
+  }
+
+  try {
+    const [stats, history] = await Promise.all([
+      api("/api/analytics"),
+      api("/api/request-logs")
+    ]);
+
+    const total = Number(stats.totalRequests) || 0;
+    const successful = Number(stats.successfulRequests) || 0;
+    const failed = Number(stats.failedRequests) || 0;
+
+    if ($("realRequests")) $("realRequests").textContent = fmt(total);
+    if ($("realSuccess")) {
+      $("realSuccess").textContent =
+        total ? ((successful / total) * 100).toFixed(1) + "%" : "N/A";
+    }
+    if ($("realFailures")) {
+      $("realFailures").textContent = `${fmt(successful)} successful · ${fmt(failed)} failed`;
+    }
+    if ($("realCharacters")) {
+      $("realCharacters").textContent = fmt(stats.charactersProcessed);
+    }
+    if ($("realDuration")) {
+      $("realDuration").textContent =
+        total ? `${fmt(stats.averageDurationMs)} ms` : "N/A";
+    }
+
+    const table = $("logTable");
+    if (!table) return;
+
+    const logs = Array.isArray(history.logs) ? history.logs : [];
+    table.replaceChildren();
+
+    if (!logs.length) {
+      table.textContent = "No recorded scraping requests yet.";
+      return;
+    }
+
+    const header = document.createElement("div");
+    header.className = "metric-row";
+    const headerText = document.createElement("b");
+    headerText.textContent = "DATE · ENDPOINT · STATUS · DURATION · CHARACTERS";
+    header.appendChild(headerText);
+    table.appendChild(header);
+
+    for (const log of logs) {
+      const row = document.createElement("div");
+      row.className = "metric-row";
+
+      const left = document.createElement("span");
+      const time = new Date(log.createdAt).toLocaleString();
+      left.textContent = `${time} · ${log.method} ${log.endpoint}`;
+
+      const right = document.createElement("b");
+      right.textContent =
+        `${log.statusCode} · ${log.durationMs} ms · ${fmt(log.charactersProcessed)} chars`;
+      if (Number(log.statusCode) >= 400) right.className = "red";
+      else right.className = "green";
+
+      row.append(left, right);
+      table.appendChild(row);
+    }
+  } catch (error) {
+    console.error("Real dashboard:", error);
+    if ($("logTable")) {
+      $("logTable").textContent = "Could not load request history. Please retry.";
+    }
+  }
+}
+
+refreshRealDashboard();
+setInterval(refreshRealDashboard, 30000);
+
+/* TITAN REAL OVERVIEW V1 */
+async function refreshRealOverview() {
+  if (!getToken()) return;
+
+  try {
+    const [stats, hourly, history] = await Promise.all([
+      api("/api/analytics"),
+      api("/api/analytics/hourly"),
+      api("/api/request-logs")
+    ]);
+
+    const values = {
+      rps: fmt(stats.totalRequests),
+      ovSuccessful: fmt(stats.successfulRequests),
+      ovFailed: fmt(stats.failedRequests),
+      ovCharacters: fmt(stats.charactersProcessed),
+      latency: stats.totalRequests ? `${fmt(stats.averageDurationMs)} ms` : "N/A"
+    };
+
+    for (const [id, value] of Object.entries(values)) {
+      if ($(id)) $(id).textContent = value;
+    }
+
+    const hours = Array.isArray(hourly.hours) ? hourly.hours : [];
+
+    if ($("chart") && !$("chartHours")) {
+      const labels = document.createElement("div");
+      labels.id = "chartHours";
+      labels.style.cssText = "display:flex;justify-content:space-between;margin-top:10px;color:#999;font-size:11px";
+
+      const dates = document.createElement("div");
+      dates.id = "chartDate";
+      dates.className = "sub";
+      dates.style.marginTop = "8px";
+
+      $("chart").after(labels, dates);
+    }
+    if (hours.length === 24 && $("chartHours")) {
+      const labels = [0, 6, 12, 18, 23].map(i =>
+        new Date(hours[i].hour).toLocaleTimeString("bg-BG", {
+          hour: "2-digit",
+          minute: "2-digit"
+        })
+      );
+
+      $("chartHours").replaceChildren();
+      for (const label of labels) {
+        const span = document.createElement("span");
+        span.textContent = label;
+        $("chartHours").appendChild(span);
+      }
+
+      const first = new Date(hours[0].hour).toLocaleDateString("bg-BG");
+      const last = new Date(hours[23].hour).toLocaleDateString("bg-BG");
+      if ($("chartDate")) {
+        $("chartDate").textContent =
+          `Requests per hour · ${first}${first === last ? "" : " – " + last} · UTC buckets`;
+      }
+    }
+
+    const logs = Array.isArray(history.logs) ? history.logs : [];
+    const jobs = $("jobHistory");
+    if (jobs) {
+      jobs.replaceChildren();
+
+      if (!logs.length) {
+        jobs.textContent = "No scraping executions recorded yet.";
+      } else {
+        for (const log of logs) {
+          const row = document.createElement("div");
+          row.className = "metric-row";
+
+          const left = document.createElement("span");
+          left.textContent =
+            `${new Date(log.createdAt).toLocaleString("bg-BG")} · ${log.endpoint}`;
+
+          const right = document.createElement("b");
+          right.textContent =
+            `${log.statusCode} · ${log.durationMs} ms · ${fmt(log.charactersProcessed)} chars`;
+          right.className = log.statusCode >= 400 ? "red" : "green";
+
+          row.append(left, right);
+          jobs.appendChild(row);
+        }
+      }
+    }
+
+    const stream = $("liveStream");
+    if (stream) {
+      stream.replaceChildren();
+
+      for (const log of logs.slice(0, 8)) {
+        const item = document.createElement("div");
+        item.className = "metric-row";
+        item.textContent =
+          `${new Date(log.createdAt).toLocaleTimeString("bg-BG")} · ${log.method} ${log.endpoint} · HTTP ${log.statusCode}`;
+        stream.appendChild(item);
+      }
+
+      if (!logs.length) {
+        stream.textContent = "No recorded requests.";
+      }
+    }
+  } catch (err) {
+    console.error("Overview analytics:", err);
+  }
+}
+
+refreshRealOverview();
+setInterval(refreshRealOverview, 30000);

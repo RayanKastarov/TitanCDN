@@ -189,12 +189,33 @@ input:focus,select:focus{border-color:var(--gold)}
     <div style="display:flex;gap:8px;margin-top:12px"><button class="btn primary" id="trialActivate">ACTIVATE WITH CARD</button></div>
   </div>
   <div class="grid stats kpi5">
-    <div class="card gold"><div class="card-label">Request Throughput</div><div class="big" id="rps">0</div><div class="sub">requests / second</div></div>
-    <div class="card"><div class="card-label">Edge Nodes</div><div class="big">12</div><div class="sub green" id="nodeHealthy">7 healthy • 2 blocked</div></div>
-    <div class="card"><div class="card-label">Latency</div><div class="big" id="latency">--</div><div class="sub">global median</div></div>
-    <div class="card"><div class="card-label">Uptime</div><div class="big">99.98%</div><div class="sub">last 30 days</div></div><div class="card"><div class="card-label">Success Rate</div><div class="big">99.42%</div><div class="sub green">+0.18% today</div></div>
+  <div class="card gold">
+    <div class="card-label">API Requests · 24h</div>
+    <div class="big" id="rps">—</div>
+    <div class="sub">Recorded scraping requests</div>
   </div>
-  <div class="grid telemetry">
+  <div class="card">
+    <div class="card-label">Successful Requests · 24h</div>
+    <div class="big" id="ovSuccessful">—</div>
+    <div class="sub">HTTP 2xx / 3xx</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Failed Requests · 24h</div>
+    <div class="big" id="ovFailed">—</div>
+    <div class="sub">HTTP 4xx / 5xx</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Characters Processed · 24h</div>
+    <div class="big" id="ovCharacters">—</div>
+    <div class="sub">Successfully processed</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Average Duration · 24h</div>
+    <div class="big" id="latency">—</div>
+    <div class="sub">Measured API processing time</div>
+  </div>
+</div>
+<div class="grid telemetry">
     <div class="card gold"><div class="section-title"><h3>LIVE TELEMETRY</h3><span id="telemetryState">Engine stopped</span></div><div class="chart" id="chart"><div class="bar" style="height: 46.67%;"></div><div class="bar" style="height: 36.536%;"></div><div class="bar" style="height: 61.6379%;"></div><div class="bar" style="height: 55.5945%;"></div><div class="bar" style="height: 56.844%;"></div><div class="bar" style="height: 44.5561%;"></div><div class="bar" style="height: 15.5042%;"></div><div class="bar" style="height: 40.8085%;"></div><div class="bar" style="height: 69.4034%;"></div><div class="bar" style="height: 53.7163%;"></div><div class="bar" style="height: 42.1075%;"></div><div class="bar" style="height: 56.6586%;"></div><div class="bar" style="height: 72.8271%;"></div><div class="bar" style="height: 70.8988%;"></div><div class="bar" style="height: 51.167%;"></div><div class="bar" style="height: 36.3394%;"></div><div class="bar" style="height: 47.7628%;"></div><div class="bar" style="height: 48.2273%;"></div><div class="bar" style="height: 58.9834%;"></div><div class="bar" style="height: 73.901%;"></div><div class="bar" style="height: 65.8406%;"></div><div class="bar" style="height: 66.4165%;"></div><div class="bar" style="height: 35.297%;"></div><div class="bar" style="height: 18.7881%;"></div><div class="bar" style="height: 72.9602%;"></div><div class="bar" style="height: 19.93%;"></div><div class="bar" style="height: 59.5921%;"></div><div class="bar" style="height: 27.9745%;"></div><div class="bar" style="height: 62.2367%;"></div><div class="bar live" style="height: 93.825%;"></div></div></div>
     <div class="card"><div class="section-title"><h3>SYSTEM SIGNAL</h3><span>REAL-TIME</span></div>
       <div class="metric-row"><span>API Gateway</span><b class="green">HEALTHY</b></div>
@@ -221,15 +242,48 @@ input:focus,select:focus{border-color:var(--gold)}
 
 <section class="page" id="analytics">
   <div class="grid analytics-grid">
-    <div class="card gold"><div class="card-label">Traffic Volume</div><div class="big" id="traffic">0.14 TB</div><div class="sub">simulated control-plane telemetry</div><div class="progress"><i style="--w:74%"></i></div></div>
-    <div class="card"><div class="card-label">Success Rate</div><div class="big">99.42%</div><div class="sub">last 24 hours</div><div class="progress"><i style="--w:99%"></i></div></div>
-    <div class="card"><h3>Regional Performance</h3><div class="metric-row"><span>Europe</span><b>42 ms</b></div><div class="metric-row"><span>North America</span><b>71 ms</b></div><div class="metric-row"><span>Asia Pacific</span><b>89 ms</b></div></div>
-    <div class="card"><h3>Security Events</h3><div class="metric-row"><span>Rate-limit events</span><b>24</b></div><div class="metric-row"><span>Rejected auth</span><b>7</b></div><div class="metric-row"><span>Blocked targets</span><b class="red">2</b></div></div>
+    <div class="card gold">
+      <div class="card-label">API Requests · 24h</div>
+      <div class="big" id="realRequests">—</div>
+      <div class="sub">Recorded scraping API requests</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Success Rate · 24h</div>
+      <div class="big" id="realSuccess">—</div>
+      <div class="sub" id="realFailures">Waiting for data</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Characters Processed · 24h</div>
+      <div class="big" id="realCharacters">—</div>
+      <div class="sub">Actual processed characters</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Average Request Duration · 24h</div>
+      <div class="big" id="realDuration">—</div>
+      <div class="sub">Measured API processing time</div>
+    </div>
   </div>
 </section>
-
-<section class="page" id="jobs"><div class="card gold"><div class="section-title"><h3>EXTRACTION JOB</h3><span>URL + AI INSTRUCTIONS</span></div><p class="sub">Use the Developer Workbench for live extraction. Persistent scheduled jobs are the next backend module.</p><button class="btn primary" id="createJob">OPEN WORKBENCH</button></div></section>
-<section class="page" id="logs"><div class="card gold"><div class="section-title"><h3>REQUEST LOGS</h3><span>LIVE SESSION</span></div><div id="logTable"><div class="sub">Successful workbench requests will appear here during this browser session.</div></div></div></section>
+<section class="page" id="jobs">
+  <div class="card gold" style="margin-bottom:16px">
+    <div class="section-title">
+      <h3>SCRAPE EXECUTION HISTORY</h3>
+      <span>MONGODB · LATEST 50</span>
+    </div>
+    <p class="sub">Real scraping requests, HTTP status, duration and processed characters.</p>
+    <div id="jobHistory" style="margin-top:16px">Loading request history...</div>
+  </div><div class="card gold"><div class="section-title"><h3>EXTRACTION JOB</h3><span>URL + AI INSTRUCTIONS</span></div><p class="sub">Use the Developer Workbench for live extraction. Persistent scheduled jobs are the next backend module.</p><button class="btn primary" id="createJob">OPEN WORKBENCH</button></div></section>
+<section class="page" id="logs">
+  <div class="card gold">
+    <div class="section-title">
+      <h3>REQUEST LOGS</h3>
+      <span>MONGODB HISTORY · LATEST 50</span>
+    </div>
+    <div id="logTable">
+      <div class="sub">Loading real request history...</div>
+    </div>
+  </div>
+</section>
 <section class="page" id="api">
   <div class="card gold">
     <div class="section-title">

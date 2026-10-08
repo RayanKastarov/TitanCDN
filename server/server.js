@@ -316,6 +316,102 @@ const TrialClaimSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+const RequestLogSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+  apiKeyId: { type: String, default: null },
+  endpoint: { type: String, required: true },
+  method: { type: String, required: true },
+  statusCode: { type: Number, required: true },
+  durationMs: { type: Number, required: true },
+  charactersProcessed: { type: Number, default: 0 },
+  createdAt: { type: Date, default: Date.now, index: true }
+});
+
+RequestLogSchema.index({ userId: 1, createdAt: -1 });
+
+const ScrapeJobSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+    index: true
+  },
+  apiKeyId: {
+    type: String,
+    required: true
+  },
+  name: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: 100
+  },
+  targetUrl: {
+    type: String,
+    required: true,
+    maxlength: 2048
+  },
+  outputFormat: {
+    type: String,
+    enum: ["JSON", "TEXT"],
+    default: "JSON"
+  },
+  schedule: {
+    enabled: { type: Boolean, default: false },
+    time: { type: String, default: null },
+    timezone: { type: String, default: "UTC" },
+    nextRunAt: { type: Date, default: null }
+  },
+  status: {
+    type: String,
+    enum: ["idle", "queued", "running", "completed", "failed"],
+    default: "idle"
+  },
+  lastRunAt: {
+    type: Date,
+    default: null
+  },
+  lastFinishedAt: {
+    type: Date,
+    default: null
+  },
+  lastStatusCode: {
+    type: Number,
+    default: null
+  },
+  lastDurationMs: {
+    type: Number,
+    default: null
+  },
+  lastCharactersProcessed: {
+    type: Number,
+    default: 0
+  },
+  lastError: {
+    type: String,
+    default: null
+  },
+  lastResult: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+ScrapeJobSchema.index({
+  "schedule.enabled": 1,
+  "schedule.nextRunAt": 1
+});
+
+const ScrapeJob = mongoose.model("ScrapeJob", ScrapeJobSchema);
+const RequestLog = mongoose.model("RequestLog", RequestLogSchema);
 const User = mongoose.model("User", UserSchema);
 const ApiKey = mongoose.model("ApiKey", ApiKeySchema);
 const TrialClaim = mongoose.model("TrialClaim", TrialClaimSchema);
@@ -591,7 +687,7 @@ async function fetchWithAxios(startUrl) {
   if (r.status >= 300) throw new HttpError(502, "Too many redirects.");
   const body = typeof r.data === "string" ? r.data : JSON.stringify(r.data);
   const isHtml = /html/i.test(String(r.headers["content-type"] || ""));
-  
+
  if (isHtml) {
   const $ = cheerio.load(body);
   $('script, style, nav, footer, noscript, svg').remove(); // drop page clutter
@@ -627,7 +723,7 @@ async function fetchWithAxios(startUrl) {
     engine: "http"
   };
 }
-  
+
   return { text: body.slice(0, 300000), status: r.status, engine: "http" };
 }
 
@@ -808,7 +904,7 @@ app.post("/api/keys", requireJwt, requireVerified, async (req, res) => {
   // 📈 SMART ENTERPRISE API KEY LIMITS (Tier-based from 2 to 50 keys)
   const currentKeys = await ApiKey.countDocuments({ userId: req.user._id, revokedAt: null });
   let maxKeys = 2; // Базов лимит за безплатния пробен период (Free Trial)
-  
+
   if (req.user.plan === "pro") maxKeys = 5;         // Starter
   else if (req.user.plan === "business") maxKeys = 10;   // Medium Factory
   else if (req.user.plan === "enterprise") maxKeys = 25; // Mega Factory
@@ -926,15 +1022,42 @@ async function handleStripeEvent(event) {
 /* ------------------------------------------------------------------ */
 /* Routes: scraper                                                     */
 /* ------------------------------------------------------------------ */
-app.post("/api/v1/scrape", scrapeLimiter, requireApiKey, async (req, res, next) => {
+const recordScrapeRequest = (req, res, next) => {
+  const startedAt = process.hrtime.bigint();
+  let charactersProcessed = 0;
+
+  res.locals.setCharactersProcessed = value => {
+    charactersProcessed = Math.max(0, Number(value) || 0);
+  };
+
+  res.once("finish", () => {
+    if (!req.apiUser?._id) return;
+
+    const durationMs = Number(process.hrtime.bigint() - startedAt) / 1e6;
+
+    RequestLog.create({
+      userId: req.apiUser._id,
+      apiKeyId: req.apiKeyRecord?.keyId || null,
+      endpoint: "/api/v1/scrape",
+      method: req.method,
+      statusCode: res.statusCode,
+      durationMs: Math.round(durationMs),
+      charactersProcessed: res.statusCode < 400 ? charactersProcessed : 0
+    }).catch(err => console.error("[request-log]", err.message));
+  });
+
+  next();
+};
+
+async function executeScrape(input, apiUser, apiKeyRecord) {
   let charged = 0, field = null;
   try {
-    const targetUrl = String(req.body.targetUrl || "").trim();
-    const outputFormat = String(req.body.outputFormat || "JSON").toUpperCase();
+    const targetUrl = String(input.targetUrl || "").trim();
+    const outputFormat = String(input.outputFormat || "JSON").toUpperCase();
     if (!targetUrl) throw new HttpError(400, "targetUrl is required.");
-    const instructions = req.apiKeyRecord.extractionMode === "custom" ? String(req.apiKeyRecord.extractionInstructions || "").trim().slice(0, 4000) : "";
+    const instructions = apiKeyRecord.extractionMode === "custom" ? String(apiKeyRecord.extractionInstructions || "").trim().slice(0, 4000) : "";
     const url = await validatePublicTarget(targetUrl);
-    const usage = usageOf(req.apiUser);
+    const usage = usageOf(apiUser);
 
     let page;
     try { page = await fetchPageText(url); }
@@ -957,9 +1080,9 @@ app.post("/api/v1/scrape", scrapeLimiter, requireApiKey, async (req, res, next) 
     if (!text.trim()) throw new HttpError(422, "The page returned no readable text.");
 
     // Deduct the processed characters immediately and atomically (no double-spend under concurrency).
-    field = counterField(req.apiUser); charged = text.length;
-    const updated = await User.findOneAndUpdate({ _id: req.apiUser._id, plan: req.apiUser.plan, [field]: { $lte: usage.limit - charged } }, { $inc: { [field]: charged } }, { new: true });
-    if (!updated) { charged = 0; throw new HttpError(429, "Character limit reached.", { plan: req.apiUser.plan, remaining: 0 }); }
+    field = counterField(apiUser); charged = text.length;
+    const updated = await User.findOneAndUpdate({ _id: apiUser._id, plan: apiUser.plan, [field]: { $lte: usage.limit - charged } }, { $inc: { [field]: charged } }, { new: true });
+    if (!updated) { charged = 0; throw new HttpError(429, "Character limit reached.", { plan: apiUser.plan, remaining: 0 }); }
 
     let extraction;
     try { extraction = await extractWithAI(text, instructions, url.toString()); }
@@ -968,10 +1091,219 @@ app.post("/api/v1/scrape", scrapeLimiter, requireApiKey, async (req, res, next) 
       console.error("[ai]", err.response?.status || "", err.response?.data?.error?.message || err.message);
       throw new HttpError(502, "AI extraction service failed. Characters were refunded.");
     }
+
     const after = usageOf(updated);
-    res.json({ success: true, source: url.toString(), format: outputFormat, engine: page.engine, responseCode: page.status, charactersProcessed: charged, timestamp: new Date().toISOString(), extraction, usage: { used: after.used, limit: after.limit, remaining: after.remaining, resetAt: after.resetAt } });
+    return { success: true, source: url.toString(), format: outputFormat, engine: page.engine, responseCode: page.status, charactersProcessed: charged, timestamp: new Date().toISOString(), extraction, usage: { used: after.used, limit: after.limit, remaining: after.remaining, resetAt: after.resetAt } };
   } catch (err) {
-    if (charged > 0 && field) await User.updateOne({ _id: req.apiUser._id, [field]: { $gte: charged } }, { $inc: { [field]: -charged } }).catch(() => {});
+    if (charged > 0 && field) await User.updateOne({ _id: apiUser._id, [field]: { $gte: charged } }, { $inc: { [field]: -charged } }).catch(() => {});
+    throw err;
+  }
+}
+
+app.post("/api/v1/scrape", scrapeLimiter, requireApiKey, recordScrapeRequest, async (req, res, next) => {
+  try {
+    const result = await executeScrape(req.body, req.apiUser, req.apiKeyRecord);
+    res.locals.setCharactersProcessed(result.charactersProcessed);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+/* Scrape Jobs: create and list */
+app.post("/api/jobs", requireJwt, requireVerified, async (req, res, next) => {
+  try {
+    const name = String(req.body?.name || "").trim();
+    const targetUrl = String(req.body?.targetUrl || "").trim();
+    const outputFormat = String(req.body?.outputFormat || "JSON").toUpperCase();
+    const apiKeyId = String(req.body?.apiKeyId || "").trim();
+
+    if (!name || name.length > 100) {
+      throw new HttpError(400, "Job name must be 1–100 characters.");
+    }
+    if (!targetUrl || targetUrl.length > 2048) {
+      throw new HttpError(400, "Target URL is required (maximum 2048 characters).");
+    }
+    if (!["JSON", "TEXT"].includes(outputFormat)) {
+      throw new HttpError(400, "Invalid output format.");
+    }
+
+    // Only allow active API keys belonging to the signed-in user.
+    const key = await ApiKey.findOne({
+      userId: req.user._id,
+      keyId: apiKeyId,
+      revokedAt: null,
+      scopes: "scrape:read"
+    });
+
+    if (!key) {
+      throw new HttpError(400, "Choose an active scraping API key.");
+    }
+
+    // Validate before storing, including SSRF restrictions.
+    await validatePublicTarget(targetUrl);
+
+    const job = await ScrapeJob.create({
+      userId: req.user._id,
+      apiKeyId: key.keyId,
+      name,
+      targetUrl,
+      outputFormat,
+      status: "idle"
+    });
+
+    res.status(201).json({
+      success: true,
+      job
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get("/api/jobs", requireJwt, async (req, res, next) => {
+  try {
+    const jobs = await ScrapeJob.find({
+      userId: req.user._id
+    })
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .lean();
+
+    res.json({ success: true, jobs });
+  } catch (err) {
+    next(err);
+  }
+});
+app.get("/api/request-logs", requireJwt, async (req, res, next) => {
+  try {
+    const logs = await RequestLog.find({
+      userId: req.user._id
+    })
+      .select("endpoint method statusCode durationMs charactersProcessed createdAt")
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean();
+
+    res.json({
+      success: true,
+      logs
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+app.get("/api/analytics/hourly", requireJwt, async (req, res, next) => {
+  try {
+    const now = new Date();
+    const currentHour = new Date(now);
+    currentHour.setUTCMinutes(0, 0, 0);
+
+    const since = new Date(currentHour.getTime() - 23 * 60 * 60 * 1000);
+
+    const results = await RequestLog.aggregate([
+      {
+        $match: {
+          userId: req.user._id,
+          createdAt: { $gte: since, $lte: now }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateTrunc: {
+              date: "$createdAt",
+              unit: "hour",
+              timezone: "UTC"
+            }
+          },
+          requests: { $sum: 1 },
+          successful: {
+            $sum: {
+              $cond: [
+                { $and: [
+                  { $gte: ["$statusCode", 200] },
+                  { $lt: ["$statusCode", 400] }
+                ] },
+                1,
+                0
+              ]
+            }
+          }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    const byHour = new Map(
+      results.map(item => [new Date(item._id).toISOString(), item])
+    );
+
+    const hours = Array.from({ length: 24 }, (_, index) => {
+      const hour = new Date(since.getTime() + index * 60 * 60 * 1000);
+      const entry = byHour.get(hour.toISOString());
+
+      return {
+        hour: hour.toISOString(),
+        requests: entry?.requests || 0,
+        successful: entry?.successful || 0
+      };
+    });
+
+    res.json({ success: true, period: "24h", hours });
+  } catch (err) {
+    next(err);
+  }
+});
+app.get("/api/analytics", requireJwt, async (req, res, next) => {
+  try {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    const results = await RequestLog.aggregate([
+      {
+        $match: {
+          userId: req.user._id,
+          createdAt: { $gte: since }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalRequests: { $sum: 1 },
+          successfulRequests: {
+            $sum: {
+              $cond: [
+                { $and: [
+                  { $gte: ["$statusCode", 200] },
+                  { $lt: ["$statusCode", 400] }
+                ] },
+                1,
+                0
+              ]
+            }
+          },
+          charactersProcessed: { $sum: "$charactersProcessed" },
+          averageDurationMs: { $avg: "$durationMs" }
+        }
+      }
+    ]);
+
+    const stats = results[0] || {
+      totalRequests: 0,
+      successfulRequests: 0,
+      charactersProcessed: 0,
+      averageDurationMs: 0
+    };
+
+    res.json({
+      success: true,
+      period: "24h",
+      totalRequests: stats.totalRequests,
+      successfulRequests: stats.successfulRequests,
+      failedRequests: stats.totalRequests - stats.successfulRequests,
+      charactersProcessed: stats.charactersProcessed,
+      averageDurationMs: Math.round(stats.averageDurationMs || 0)
+    });
+  } catch (err) {
     next(err);
   }
 });
