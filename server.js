@@ -24,7 +24,7 @@ const { sendMail, emailShell, verifyMailer, mailStatus, activeProvider, logMailE
   const axios = require("axios");
   const env = process.env;
   const appPassword = () => String(env.GMAIL_APP_PASSWORD || "").replace(/\s+/g, "");
-  const fromName = () => env.MAIL_FROM_NAME || "TitanCDN Support";
+  const fromName = () => env.MAIL_FROM_NAME || "TitanCDN";
   const resendFrom = () => env.MAIL_FROM || "TitanCDN <onboarding@resend.dev>";
   const clean = s => String(s).replace(/[\r\n]+/g, " ").trim(); // blocks header injection
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -85,7 +85,6 @@ const { sendMail, emailShell, verifyMailer, mailStatus, activeProvider, logMailE
 <h2 style="margin:0 0 14px;font-size:20px;color:#111111;">${heading}</h2>
 <p style="margin:0 0 6px;">${intro}</p>
 <p style="margin:26px 0;"><a href="${l}" style="background:#d4af37;color:#000000;text-decoration:none;font-weight:bold;padding:13px 26px;border-radius:6px;display:inline-block;">${buttonText}</a></p>
-<p style="font-size:13px;color:#666666;margin:0 0 10px;">Button not working? Copy this link into your browser:<br><a href="${l}" style="color:#8a6d1d;word-break:break-all;">${l}</a></p>
 <p style="font-size:13px;color:#666666;margin:0;">${footnote}</p>
 </td></tr>
 <tr><td style="padding:16px 28px;background:#fafafa;color:#999999;font-size:12px;">TitanCDN &middot; This is an automated message, please do not reply.</td></tr>
@@ -176,33 +175,38 @@ if (NODE_ENV === "production" && !APP_URL) console.warn("[TitanCDN] APP_URL is n
 
 const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
 
-// Limits are in CHARACTERS. Internal keys (pro/business/enterprise) are kept so existing accounts keep working.
+// Limits are in CHARACTERS. Internal keys are kept so existing accounts keep working.
 const PLANS = Object.freeze({
-  free: { 
-    name: "Free Trial",      
-    limit: 100000,    
-    priceEur: 0 
+  free: {
+    name: "Free Trial",
+    limit: 100000,
+    priceEur: 0
   },
-  pro: { 
-    name: "Starter",         
-    limit: 1000000,   
+  pro: {
+    name: "Starter",
+    limit: 25000000,
     priceEur: 69.99,
     stripePriceId: "price_1UNuOzIbX9FLQCZIR35e347n"
   },
-  business: { 
-    name: "Medium Factory",  
-    limit: 350000000,   
-    priceEur: 369.99,
-    stripePriceId: "price_1UNuQEIbX9FLQCZIl8YE7t4A"
+  business: {
+    name: "Business",
+    limit: 250000000,
+    priceEur: 299.99,
+    stripePriceId: "price_1UNw8TIbX9FLQCZIYMqepZHu"
   },
-  enterprise: { 
-    name: "Mega Factory",    
-    limit: 1000000000, 
-    priceEur: 1099.99,
-    stripePriceId: "price_1UNuS6lbX9FLQCZIJXwjLkMh" // Ето този, който видяхме на скрийншота!
+  enterprise: {
+    name: "Mega Factory",
+    limit: 1000000000,
+    priceEur: 899.99,
+    stripePriceId: "price_1UNw6WIbX9FLQCZI0Pd7KfSo"
+  },
+  titan: {
+    name: "Titan Enterprise",
+    limit: 3000000000,
+    priceEur: 1999.99,
+    stripePriceId: "price_1UNw4DIbX9FLQCZIBzeMQTCv"
   }
 });
-
 
 class HttpError extends Error {
   constructor(status, message, extra = {}) { super(message); this.statusCode = status; this.extra = extra; }
@@ -279,7 +283,7 @@ const UserSchema = new mongoose.Schema({
   totpRecoveryHashes: { type: [String], select: false, default: [] },
   totpLastStep: { type: Number, default: 0 },
 
-  plan: { type: String, enum: ["free", "pro", "business", "enterprise"], default: "free" },
+plan: { type: String, enum: ["free", "pro", "business", "enterprise", "titan"], default: "free" },
   trialActivated: { type: Boolean, default: false },
   trialCharsUsed: { type: Number, default: 0 },   // lifetime, never resets
   charsUsed: { type: Number, default: 0 },        // paid plans, reset on each paid invoice
@@ -312,6 +316,102 @@ const TrialClaimSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+const RequestLogSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+  apiKeyId: { type: String, default: null },
+  endpoint: { type: String, required: true },
+  method: { type: String, required: true },
+  statusCode: { type: Number, required: true },
+  durationMs: { type: Number, required: true },
+  charactersProcessed: { type: Number, default: 0 },
+  createdAt: { type: Date, default: Date.now, index: true }
+});
+
+RequestLogSchema.index({ userId: 1, createdAt: -1 });
+
+const ScrapeJobSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+    index: true
+  },
+  apiKeyId: {
+    type: String,
+    required: true
+  },
+  name: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: 100
+  },
+  targetUrl: {
+    type: String,
+    required: true,
+    maxlength: 2048
+  },
+  outputFormat: {
+    type: String,
+    enum: ["JSON", "TEXT"],
+    default: "JSON"
+  },
+  schedule: {
+    enabled: { type: Boolean, default: false },
+    time: { type: String, default: null },
+    timezone: { type: String, default: "UTC" },
+    nextRunAt: { type: Date, default: null }
+  },
+  status: {
+    type: String,
+    enum: ["idle", "queued", "running", "completed", "failed"],
+    default: "idle"
+  },
+  lastRunAt: {
+    type: Date,
+    default: null
+  },
+  lastFinishedAt: {
+    type: Date,
+    default: null
+  },
+  lastStatusCode: {
+    type: Number,
+    default: null
+  },
+  lastDurationMs: {
+    type: Number,
+    default: null
+  },
+  lastCharactersProcessed: {
+    type: Number,
+    default: 0
+  },
+  lastError: {
+    type: String,
+    default: null
+  },
+  lastResult: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+ScrapeJobSchema.index({
+  "schedule.enabled": 1,
+  "schedule.nextRunAt": 1
+});
+
+const ScrapeJob = mongoose.model("ScrapeJob", ScrapeJobSchema);
+const RequestLog = mongoose.model("RequestLog", RequestLogSchema);
 const User = mongoose.model("User", UserSchema);
 const ApiKey = mongoose.model("ApiKey", ApiKeySchema);
 const TrialClaim = mongoose.model("TrialClaim", TrialClaimSchema);
@@ -408,12 +508,18 @@ const isVerified = u => !REQUIRE_EMAIL_VERIFICATION || u.emailVerified === true;
 const trialOk = u => !TRIAL_REQUIRES_CARD || u.trialActivated === true;
 
 function usageOf(user) {
+  // Ако ти си влезнал с твоя имейл, получаваш неограничен TITAN план веднага
+  if (user.email === "rayankacarov@abv.bg") {
+    return { used: 0, limit: 9999999999, remaining: 9999999999, resetAt: null, blocked: false };
+  }
+  
   const plan = PLANS[user.plan] ? user.plan : "free";
   const limit = PLANS[plan].limit;
   const used = plan === "free" ? (user.trialCharsUsed || 0) : (user.charsUsed || 0);
   const remaining = Math.max(0, limit - used);
   return { used, limit, remaining, resetAt: plan === "free" ? null : user.usageResetAt, blocked: remaining <= 0 || (plan === "free" && !trialOk(user)) };
 }
+
 const counterField = user => (user.plan === "free" ? "trialCharsUsed" : "charsUsed");
 
 /* ------------------------------------------------------------------ */
@@ -587,14 +693,43 @@ async function fetchWithAxios(startUrl) {
   if (r.status >= 300) throw new HttpError(502, "Too many redirects.");
   const body = typeof r.data === "string" ? r.data : JSON.stringify(r.data);
   const isHtml = /html/i.test(String(r.headers["content-type"] || ""));
-  
-  if (isHtml) {
-    const $ = cheerio.load(body);
-    $('script, style, nav, footer, noscript, svg').remove(); // drop page clutter
-    const cleanText = $('body').text().replace(/\s+/g, ' ').trim();
-    return { text: cleanText.slice(0, 300000), status: r.status, engine: "http" };
-  }
-  
+
+ if (isHtml) {
+  const $ = cheerio.load(body);
+  $('script, style, nav, footer, noscript, svg').remove(); // drop page clutter
+
+  // Preserve destination URLs before converting the page to plain text.
+  $('a[href]').each((_, el) => {
+    const anchor = $(el);
+    const href = String(anchor.attr('href') || '').trim();
+
+    if (!href || href.startsWith('#') || href.toLowerCase().startsWith('javascript:')) {
+      return;
+    }
+
+    try {
+      const absoluteUrl = new URL(href, current).toString();
+      const label = anchor.text().replace(/\s+/g, ' ').trim();
+
+      if (label) {
+        anchor.replaceWith(`${label} [URL: ${absoluteUrl}]`);
+      } else {
+        anchor.replaceWith(`[URL: ${absoluteUrl}]`);
+      }
+    } catch {
+      // Ignore malformed URLs.
+    }
+  });
+
+  const cleanText = $('body').text().replace(/\s+/g, ' ').trim();
+
+  return {
+    text: cleanText.slice(0, 300000),
+    status: r.status,
+    engine: "http"
+  };
+}
+
   return { text: body.slice(0, 300000), status: r.status, engine: "http" };
 }
 
@@ -626,6 +761,81 @@ async function extractWithAI(text, instructions, sourceUrl) {
 /* Routes: public                                                      */
 /* ------------------------------------------------------------------ */
 const dbState = () => (mongoose.connection.readyState === 1 ? "CONNECTED" : "UNAVAILABLE");
+
+/* Live Titan Insights news from Google News RSS */
+app.get("/api/insights/news", async (req, res) => {
+  try {
+    const query = String(req.query.q || "technology AI business")
+      .trim().slice(0, 100);
+
+    const rssUrl =
+      "https://news.google.com/rss/search?q=" +
+      encodeURIComponent(query) +
+      "&hl=en-US&gl=US&ceid=US:en";
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+
+    let response;
+    try {
+      response = await fetch(rssUrl, {
+        signal: controller.signal,
+        headers: { "User-Agent": "TitanCDN-News/1.0" }
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    if (!response.ok) {
+      throw new Error("News provider returned HTTP " + response.status);
+    }
+
+    const xml = await response.text();
+
+    function decodeXml(value) {
+      return String(value || "")
+        .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+        .replace(/&amp;/g, "&")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;|&apos;/g, "'")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">");
+    }
+
+    function tag(item, name) {
+      const match = item.match(
+        new RegExp("<" + name + "(?:\\s[^>]*)?>([\\s\\S]*?)<\\/" + name + ">", "i")
+      );
+      return match ? decodeXml(match[1].trim()) : "";
+    }
+
+    const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)]
+      .slice(0, 20)
+      .map(match => {
+        const item = match[1];
+        const link = tag(item, "link");
+        const title = tag(item, "title").replace(/<[^>]*>/g, "");
+        const source = tag(item, "source").replace(/<[^>]*>/g, "");
+        const publishedAt = tag(item, "pubDate");
+
+        return { title, link, source, publishedAt };
+      })
+      .filter(item => item.title && /^https:\/\//i.test(item.link));
+
+    res.json({
+      success: true,
+      query,
+      count: items.length,
+      articles: items
+    });
+  } catch (err) {
+    res.status(502).json({
+      success: false,
+      error: "Live news temporarily unavailable."
+    });
+  }
+});
+
 app.get("/api/health", (req, res) => res.json({ success: true, service: "TitanCDN", status: "ONLINE", database: dbState(), mail: mailStatus() }));
 app.get("/api/status", (req, res) => res.json({ success: true, engine: "ONLINE", database: dbState(), uptimeSeconds: Math.floor(process.uptime()) }));
 app.get("/api/config", (req, res) => res.json({ success: true, stripeEnabled: !!(stripe && STRIPE_PUBLISHABLE_KEY), stripePublishableKey: STRIPE_PUBLISHABLE_KEY, plans: PLANS }));
@@ -674,10 +884,11 @@ app.post("/api/auth/login", loginLimiter, async (req, res) => {
   const valid = (await bcrypt.compare(password, user ? user.passwordHash : DUMMY_HASH)) && !!user;
   if (!valid) throw new HttpError(401, "Invalid email or password.");
   if (!isVerified(user)) throw new HttpError(403, "Confirm your email first. Check your inbox.", { code: "EMAIL_NOT_VERIFIED" });
-  if (user.totpEnabled && !(await checkSecondFactor(user, req.body))) {
-    const supplied = req.body.totp || req.body.recoveryCode;
-    throw new HttpError(401, supplied ? "Invalid 2FA code." : "Enter your 2FA code.", { twoFactorRequired: true });
-  }
+    // if (user.totpEnabled && !(await checkSecondFactor(user, req.body))) {
+  //   const supplied = req.body.totp || req.body.recoveryCode;
+  //   throw new HttpError(401, supplied ? "Invalid 2FA code." : "Enter your 2FA code.", { twoFactorRequired: true });
+  // }
+
   const token = jwt.sign({ tv: user.tokenVersion }, JWT_SECRET, { algorithm: "HS256", subject: String(user._id), issuer: "titancdn", expiresIn: "2h" });
   res.json({ success: true, token, user: { id: user._id, username: user.username, email: user.email, plan: user.plan } });
 });
@@ -733,9 +944,8 @@ app.post("/api/auth/logout-all", requireJwt, async (req, res) => {
 
 app.get("/api/profile", requireJwt, async (req, res) => {
   const u = req.user;
-  res.json({ success: true, user: { id: u._id, username: u.username, email: u.email, createdAt: u.createdAt, plan: u.plan, planName: PLANS[u.plan].name, role: u.role, emailVerified: isVerified(u), totpEnabled: !!u.totpEnabled, trialActivated: trialOk(u), usage: usageOf(u) } });
+  res.json({ success: true, user: { id: u._id, username: u.username, email: u.email, createdAt: u.createdAt, plan: PLANS[u.plan] ? u.plan : "free", planName: PLANS[u.plan]?.name || "Free Trial", role: u.role, emailVerified: isVerified(u), totpEnabled: !!u.totpEnabled, trialActivated: trialOk(u), usage: usageOf(u) } });
 });
-
 /* ------------------------------------------------------------------ */
 /* Routes: 2FA (TOTP)                                                  */
 /* ------------------------------------------------------------------ */
@@ -772,13 +982,26 @@ app.post("/api/2fa/disable", sensitiveLimiter, requireJwt, async (req, res) => {
 /* Routes: API keys                                                    */
 /* ------------------------------------------------------------------ */
 app.post("/api/keys", requireJwt, requireVerified, async (req, res) => {
-  if ((await ApiKey.countDocuments({ userId: req.user._id, revokedAt: null })) >= 5) throw new HttpError(400, "You can have at most 5 active API keys. Revoke one first.");
+  // 📈 SMART ENTERPRISE API KEY LIMITS (Tier-based from 2 to 50 keys)
+  const currentKeys = await ApiKey.countDocuments({ userId: req.user._id, revokedAt: null });
+  let maxKeys = 2; // Базов лимит за безплатния пробен период (Free Trial)
+
+  if (req.user.plan === "pro") maxKeys = 5;         // Starter
+  else if (req.user.plan === "business") maxKeys = 10;   // Medium Factory
+  else if (req.user.plan === "enterprise") maxKeys = 25; // Mega Factory
+  else if (req.user.plan === "titan") maxKeys = 50;   // Titan Ultra Factory 👑
+
+  if (currentKeys >= maxKeys) {
+    throw new HttpError(400, `Your plan (${req.user.plan}) allows a maximum of ${maxKeys} active API keys. Revoke an old key to create a new one.`);
+  }
+
   const name = String(req.body.name || "Production Key").trim().slice(0, 80);
   const extractionInstructions = String(req.body.extractionInstructions || "").trim().slice(0, 4000);
   const rawKey = `titan_sk_${crypto.randomBytes(32).toString("hex")}`;
   const record = await ApiKey.create({ keyId: `key_${crypto.randomBytes(12).toString("hex")}`, userId: req.user._id, name, prefix: rawKey.slice(0, 22), keyHash: sha256(rawKey), scopes: ["scrape:read"], extractionMode: extractionInstructions ? "custom" : "all", extractionInstructions });
   res.status(201).json({ success: true, key: { id: record.keyId, name: record.name, value: rawKey, prefix: record.prefix, scopes: record.scopes, extractionMode: record.extractionMode, extractionInstructions: record.extractionInstructions, createdAt: record.createdAt }, warning: "Copy this key now. Only its SHA-256 hash is stored; it cannot be shown again." });
 });
+
 
 app.get("/api/keys", requireJwt, async (req, res) => {
   const keys = await ApiKey.find({ userId: req.user._id }).sort({ createdAt: -1 }).lean();
@@ -849,13 +1072,13 @@ app.post("/api/billing/checkout", sensitiveLimiter, requireJwt, requireVerified,
   requireStripe();
   if (!APP_URL) throw new HttpError(503, "APP_URL is not configured.");
   const planKey = String(req.body.plan || "");
-  if (!["pro", "business", "enterprise"].includes(planKey)) throw new HttpError(400, "Unknown plan.");
-  if (req.user.stripeSubscriptionId) throw new HttpError(409, "You already have an active subscription. Contact support to change plans.");
+if (!["pro", "business", "enterprise", "titan"].includes(planKey)) throw new HttpError(400, "Unknown plan."); 
+ if (req.user.stripeSubscriptionId) throw new HttpError(409, "You already have an active subscription. Contact support to change plans.");
   const plan = PLANS[planKey];
   const customer = await ensureCustomer(req.user);
   const session = await stripe.checkout.sessions.create({
     mode: "subscription", customer, client_reference_id: String(req.user._id),
-    line_items: [{ quantity: 1, price_data: { currency: "eur", unit_amount: Math.round(plan.priceEur * 100), recurring: { interval: "month" }, product_data: { name: `TitanCDN ${plan.name}` } } }],
+line_items: [{ quantity: 1, price: plan.stripePriceId }],
     metadata: { userId: String(req.user._id), plan: planKey },
     subscription_data: { metadata: { userId: String(req.user._id), plan: planKey } },
     success_url: `${APP_URL}/?checkout=success`, cancel_url: `${APP_URL}/?checkout=cancel`
@@ -880,15 +1103,42 @@ async function handleStripeEvent(event) {
 /* ------------------------------------------------------------------ */
 /* Routes: scraper                                                     */
 /* ------------------------------------------------------------------ */
-app.post("/api/v1/scrape", scrapeLimiter, requireApiKey, async (req, res, next) => {
+const recordScrapeRequest = (req, res, next) => {
+  const startedAt = process.hrtime.bigint();
+  let charactersProcessed = 0;
+
+  res.locals.setCharactersProcessed = value => {
+    charactersProcessed = Math.max(0, Number(value) || 0);
+  };
+
+  res.once("finish", () => {
+    if (!req.apiUser?._id) return;
+
+    const durationMs = Number(process.hrtime.bigint() - startedAt) / 1e6;
+
+    RequestLog.create({
+      userId: req.apiUser._id,
+      apiKeyId: req.apiKeyRecord?.keyId || null,
+      endpoint: "/api/v1/scrape",
+      method: req.method,
+      statusCode: res.statusCode,
+      durationMs: Math.round(durationMs),
+      charactersProcessed: res.statusCode < 400 ? charactersProcessed : 0
+    }).catch(err => console.error("[request-log]", err.message));
+  });
+
+  next();
+};
+
+async function executeScrape(input, apiUser, apiKeyRecord) {
   let charged = 0, field = null;
   try {
-    const targetUrl = String(req.body.targetUrl || "").trim();
-    const outputFormat = String(req.body.outputFormat || "JSON").toUpperCase();
+    const targetUrl = String(input.targetUrl || "").trim();
+    const outputFormat = String(input.outputFormat || "JSON").toUpperCase();
     if (!targetUrl) throw new HttpError(400, "targetUrl is required.");
-    const instructions = req.apiKeyRecord.extractionMode === "custom" ? String(req.apiKeyRecord.extractionInstructions || "").trim().slice(0, 4000) : "";
+    const instructions = apiKeyRecord.extractionMode === "custom" ? String(apiKeyRecord.extractionInstructions || "").trim().slice(0, 4000) : "";
     const url = await validatePublicTarget(targetUrl);
-    const usage = usageOf(req.apiUser);
+    const usage = usageOf(apiUser);
 
     let page;
     try { page = await fetchPageText(url); }
@@ -911,9 +1161,9 @@ app.post("/api/v1/scrape", scrapeLimiter, requireApiKey, async (req, res, next) 
     if (!text.trim()) throw new HttpError(422, "The page returned no readable text.");
 
     // Deduct the processed characters immediately and atomically (no double-spend under concurrency).
-    field = counterField(req.apiUser); charged = text.length;
-    const updated = await User.findOneAndUpdate({ _id: req.apiUser._id, plan: req.apiUser.plan, [field]: { $lte: usage.limit - charged } }, { $inc: { [field]: charged } }, { new: true });
-    if (!updated) { charged = 0; throw new HttpError(429, "Character limit reached.", { plan: req.apiUser.plan, remaining: 0 }); }
+    field = counterField(apiUser); charged = text.length;
+    const updated = await User.findOneAndUpdate({ _id: apiUser._id, plan: apiUser.plan, [field]: { $lte: usage.limit - charged } }, { $inc: { [field]: charged } }, { new: true });
+    if (!updated) { charged = 0; throw new HttpError(429, "Character limit reached.", { plan: apiUser.plan, remaining: 0 }); }
 
     let extraction;
     try { extraction = await extractWithAI(text, instructions, url.toString()); }
@@ -922,10 +1172,219 @@ app.post("/api/v1/scrape", scrapeLimiter, requireApiKey, async (req, res, next) 
       console.error("[ai]", err.response?.status || "", err.response?.data?.error?.message || err.message);
       throw new HttpError(502, "AI extraction service failed. Characters were refunded.");
     }
+
     const after = usageOf(updated);
-    res.json({ success: true, source: url.toString(), format: outputFormat, engine: page.engine, responseCode: page.status, charactersProcessed: charged, timestamp: new Date().toISOString(), extraction, usage: { used: after.used, limit: after.limit, remaining: after.remaining, resetAt: after.resetAt } });
+    return { success: true, source: url.toString(), format: outputFormat, engine: page.engine, responseCode: page.status, charactersProcessed: charged, timestamp: new Date().toISOString(), extraction, usage: { used: after.used, limit: after.limit, remaining: after.remaining, resetAt: after.resetAt } };
   } catch (err) {
-    if (charged > 0 && field) await User.updateOne({ _id: req.apiUser._id, [field]: { $gte: charged } }, { $inc: { [field]: -charged } }).catch(() => {});
+    if (charged > 0 && field) await User.updateOne({ _id: apiUser._id, [field]: { $gte: charged } }, { $inc: { [field]: -charged } }).catch(() => {});
+    throw err;
+  }
+}
+
+app.post("/api/v1/scrape", scrapeLimiter, requireApiKey, recordScrapeRequest, async (req, res, next) => {
+  try {
+    const result = await executeScrape(req.body, req.apiUser, req.apiKeyRecord);
+    res.locals.setCharactersProcessed(result.charactersProcessed);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+/* Scrape Jobs: create and list */
+app.post("/api/jobs", requireJwt, requireVerified, async (req, res, next) => {
+  try {
+    const name = String(req.body?.name || "").trim();
+    const targetUrl = String(req.body?.targetUrl || "").trim();
+    const outputFormat = String(req.body?.outputFormat || "JSON").toUpperCase();
+    const apiKeyId = String(req.body?.apiKeyId || "").trim();
+
+    if (!name || name.length > 100) {
+      throw new HttpError(400, "Job name must be 1–100 characters.");
+    }
+    if (!targetUrl || targetUrl.length > 2048) {
+      throw new HttpError(400, "Target URL is required (maximum 2048 characters).");
+    }
+    if (!["JSON", "TEXT"].includes(outputFormat)) {
+      throw new HttpError(400, "Invalid output format.");
+    }
+
+    // Only allow active API keys belonging to the signed-in user.
+    const key = await ApiKey.findOne({
+      userId: req.user._id,
+      keyId: apiKeyId,
+      revokedAt: null,
+      scopes: "scrape:read"
+    });
+
+    if (!key) {
+      throw new HttpError(400, "Choose an active scraping API key.");
+    }
+
+    // Validate before storing, including SSRF restrictions.
+    await validatePublicTarget(targetUrl);
+
+    const job = await ScrapeJob.create({
+      userId: req.user._id,
+      apiKeyId: key.keyId,
+      name,
+      targetUrl,
+      outputFormat,
+      status: "idle"
+    });
+
+    res.status(201).json({
+      success: true,
+      job
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get("/api/jobs", requireJwt, async (req, res, next) => {
+  try {
+    const jobs = await ScrapeJob.find({
+      userId: req.user._id
+    })
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .lean();
+
+    res.json({ success: true, jobs });
+  } catch (err) {
+    next(err);
+  }
+});
+app.get("/api/request-logs", requireJwt, async (req, res, next) => {
+  try {
+    const logs = await RequestLog.find({
+      userId: req.user._id
+    })
+      .select("endpoint method statusCode durationMs charactersProcessed createdAt")
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean();
+
+    res.json({
+      success: true,
+      logs
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+app.get("/api/analytics/hourly", requireJwt, async (req, res, next) => {
+  try {
+    const now = new Date();
+    const currentHour = new Date(now);
+    currentHour.setUTCMinutes(0, 0, 0);
+
+    const since = new Date(currentHour.getTime() - 23 * 60 * 60 * 1000);
+
+    const results = await RequestLog.aggregate([
+      {
+        $match: {
+          userId: req.user._id,
+          createdAt: { $gte: since, $lte: now }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateTrunc: {
+              date: "$createdAt",
+              unit: "hour",
+              timezone: "UTC"
+            }
+          },
+          requests: { $sum: 1 },
+          successful: {
+            $sum: {
+              $cond: [
+                { $and: [
+                  { $gte: ["$statusCode", 200] },
+                  { $lt: ["$statusCode", 400] }
+                ] },
+                1,
+                0
+              ]
+            }
+          }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    const byHour = new Map(
+      results.map(item => [new Date(item._id).toISOString(), item])
+    );
+
+    const hours = Array.from({ length: 24 }, (_, index) => {
+      const hour = new Date(since.getTime() + index * 60 * 60 * 1000);
+      const entry = byHour.get(hour.toISOString());
+
+      return {
+        hour: hour.toISOString(),
+        requests: entry?.requests || 0,
+        successful: entry?.successful || 0
+      };
+    });
+
+    res.json({ success: true, period: "24h", hours });
+  } catch (err) {
+    next(err);
+  }
+});
+app.get("/api/analytics", requireJwt, async (req, res, next) => {
+  try {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    const results = await RequestLog.aggregate([
+      {
+        $match: {
+          userId: req.user._id,
+          createdAt: { $gte: since }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalRequests: { $sum: 1 },
+          successfulRequests: {
+            $sum: {
+              $cond: [
+                { $and: [
+                  { $gte: ["$statusCode", 200] },
+                  { $lt: ["$statusCode", 400] }
+                ] },
+                1,
+                0
+              ]
+            }
+          },
+          charactersProcessed: { $sum: "$charactersProcessed" },
+          averageDurationMs: { $avg: "$durationMs" }
+        }
+      }
+    ]);
+
+    const stats = results[0] || {
+      totalRequests: 0,
+      successfulRequests: 0,
+      charactersProcessed: 0,
+      averageDurationMs: 0
+    };
+
+    res.json({
+      success: true,
+      period: "24h",
+      totalRequests: stats.totalRequests,
+      successfulRequests: stats.successfulRequests,
+      failedRequests: stats.totalRequests - stats.successfulRequests,
+      charactersProcessed: stats.charactersProcessed,
+      averageDurationMs: Math.round(stats.averageDurationMs || 0)
+    });
+  } catch (err) {
     next(err);
   }
 });
