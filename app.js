@@ -1123,3 +1123,6 @@ setInterval(() => {
   else body.classList.add("view-landing");
   onScroll();
 })();
+
+// Workspace shortcuts: delegate to the existing page router.
+document.querySelectorAll("[data-jump]").forEach(el => el.addEventListener("click", () => document.querySelector(`.nav button[data-page="${el.dataset.jump}"]`)?.click()));

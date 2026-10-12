@@ -443,6 +443,52 @@ body.view-dashboard .page{animation:fade .18s ease}
 @media(max-width:720px){body.view-dashboard .sidebar{width:244px}body.view-dashboard .main{margin-left:0;width:100%;padding:20px 15px 50px}body.view-dashboard .topbar{align-items:flex-start}body.view-dashboard .engine{flex-wrap:wrap}body.view-dashboard .kpi5{grid-template-columns:1fr 1fr}}
 @media(max-width:480px){body.view-dashboard .kpi5,body.view-dashboard .stats{grid-template-columns:1fr}body.view-dashboard .card{padding:18px}}
 
+
+/* TITAN STUDIO V3: completely rebuilt workspace layout */
+body.view-dashboard{--nav-h:72px;background:#f6f7f9;color:#202633}
+body.view-dashboard #siteNav{background:#10131b!important;border-bottom:0!important}
+body.view-dashboard .app{background:#f6f7f9;min-height:100vh;color:#202633}
+body.view-dashboard .sidebar{width:230px;top:72px;padding:24px 14px;background:#fff;border-right:1px solid #e8ebf0;box-shadow:none}
+body.view-dashboard .sidebar::before{display:none}
+.studio-mark{display:flex;align-items:center;gap:11px;padding:8px 11px 29px;border-bottom:1px solid #eceef2;margin-bottom:24px}
+.studio-glyph{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:#edecff;color:#6156d9;font-size:28px}
+.studio-mark strong{font-size:12px;letter-spacing:1px;color:#232b3b}.studio-mark small{display:block;color:#9da5b3;font-size:9px;letter-spacing:1.4px;margin-top:4px}
+body.view-dashboard .nav{gap:7px}
+body.view-dashboard .nav button{font-size:13px;color:#697386;border-radius:11px;padding:12px 13px;font-weight:600}
+body.view-dashboard .nav button:hover{background:#f3f2ff;color:#4f46a5}
+body.view-dashboard .nav button.active{background:#eeeaff;color:#5b49cb;box-shadow:none}
+body.view-dashboard .nav button.active:before{display:none}
+.rail-icon{font-size:20px;min-width:25px;text-align:center;font-weight:500}
+body.view-dashboard .sidebar-bottom{color:#8992a2;border-top:1px solid #eceef2;padding:20px 12px;line-height:1.6}
+.workspace-health{display:flex;align-items:center;gap:5px;color:#333b4b;font-size:12px;margin-bottom:5px}.workspace-health .status-dot{background:#43c48c;box-shadow:none}
+body.view-dashboard .main{margin-left:230px;width:calc(100% - 230px);max-width:none;padding:36px clamp(20px,3.5vw,66px) 70px}
+body.view-dashboard .topbar{border-bottom:0;margin-bottom:30px;padding:0;align-items:center}
+body.view-dashboard .eyebrow{color:#8993a4;letter-spacing:1.2px;font-size:10px;font-weight:700}.crumb{margin:0 7px;color:#c4c9d4}
+body.view-dashboard .topbar h2{color:#1c2431;font-size:27px;letter-spacing:-.8px;margin:6px 0 0}
+body.view-dashboard .engine-state{color:#758092}
+body.view-dashboard .switch{background:#e4e7ee;border-color:#d4d9e3}body.view-dashboard .switch.on{background:#e4ddff;border-color:#8775ec}body.view-dashboard .switch.on i{background:#6753d9;box-shadow:none}
+body.view-dashboard .btn.primary{background:#6454d8!important;color:white!important;border-color:#6454d8!important;box-shadow:none!important}
+.welcome-hero{position:relative;overflow:hidden;display:grid;grid-template-columns:1.15fr 1fr;min-height:310px;background:#1d1b38;border-radius:25px;color:#fff;padding:44px 48px}
+.welcome-copy{position:relative;z-index:2}.welcome-tag{font-size:10px;letter-spacing:2px;color:#d6ceff;font-weight:800}.welcome-tag .status-dot{background:#b6f2d0;box-shadow:none}
+.welcome-hero h3{font-size:clamp(34px,4vw,58px);letter-spacing:-2.5px;line-height:1.08;margin:21px 0 16px;font-weight:750}.welcome-hero h3 em{font-style:normal;color:#b8aaff}
+.welcome-hero p{max-width:430px;font-size:14px;color:#c9c8de;line-height:1.7}.welcome-actions{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:25px}
+.hero-action{background:#c9baff;color:#211c40;border:0;padding:15px 18px;border-radius:12px;font-weight:800}.hero-action span{margin-left:22px}.hero-secondary{background:none;border:0;color:#ded8ff;font-weight:700}
+.hero-illustration{position:relative;min-height:220px}.orbit{position:absolute;border:1px solid #706a9b;border-radius:50%;inset:10% 10%;transform:rotate(-22deg)}.orbit-b{inset:0 22%;transform:rotate(48deg)}.float-center{position:absolute;top:33%;left:43%;font-size:70px;color:#c9baff;text-shadow:0 0 55px #9a86ff}
+.float-code,.float-result{position:absolute;background:#fff;color:#22283b;border-radius:12px;padding:15px 18px;box-shadow:0 20px 50px #100d2c80;transform:rotate(-8deg);top:13%;left:5%;font-family:monospace;font-size:11px}.float-result{top:65%;left:43%;transform:rotate(6deg)}.float-code span,.float-result span{display:block;color:#8a7ec1;font-size:9px;margin-bottom:7px;letter-spacing:1px}
+.studio-section-label{display:flex;justify-content:space-between;align-items:center;margin:32px 0 16px}.studio-section-label h3{margin:0;font-size:19px;letter-spacing:-.4px}.studio-section-label span,.surface-kicker{font-size:10px;color:#9199a8;letter-spacing:1.5px;font-weight:800}
+.overview-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}.mini-stat{background:white;border:1px solid #e9ebf1;border-radius:18px;padding:23px;min-width:0}.mini-stat>span{color:#8992a1;font-size:12px}.mini-stat strong{display:block;font-size:34px;margin:14px 0 5px;color:#23263a;letter-spacing:-1px}.mini-stat small{color:#a5adba;font-size:11px}
+.studio-overview-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:18px;margin-top:19px}.usage-surface,.quick-surface{background:#fff;border:1px solid #e9ebf1;border-radius:20px;padding:28px}.surface-heading{display:flex;justify-content:space-between;align-items:center}.surface-heading h3,.quick-surface h3{margin:8px 0 26px;font-size:20px;letter-spacing:-.5px}.usage-surface .gold-pct{font-size:25px;color:#6553d6}.usage-surface .gold-bar{border:0;background:#eeecf9;height:12px;border-radius:12px}.usage-surface .gold-fill{background:linear-gradient(90deg,#6454d8,#a38ef9)}.usage-detail{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:25px}.usage-detail small{display:block;color:#949cab;font-size:11px;margin-bottom:7px}.usage-detail b{font-size:12px;color:#293146;word-break:break-word}
+.quick-surface button{display:flex;align-items:center;width:100%;gap:14px;background:none;border:0;border-top:1px solid #eef0f4;text-align:left;padding:13px 0;color:#505c70}.quick-surface button>span:nth-child(2){flex:1}.quick-surface button strong{display:block;color:#2b3444;font-size:12px}.quick-surface button small{display:block;color:#9aa4b3;margin-top:3px;font-size:11px}.quick-icon{width:35px;height:35px;border-radius:10px;background:#f0edff;color:#6656d6;display:grid;place-items:center;font-size:18px}
+.diagnostics{margin-top:24px;border:1px solid #e8ebf0;border-radius:17px;background:#fff;padding:20px}.diagnostics summary{cursor:pointer;font-weight:750;color:#4b5364}.diagnostics summary span{float:right;color:#9da6b5;font-size:11px;font-weight:400}.diagnostics-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+body.view-dashboard .card{background:white;border:1px solid #e8ebf0;border-radius:18px;box-shadow:none;color:#252d3b}body.view-dashboard .card.gold{background:white;border-color:#e8ebf0}body.view-dashboard .sub{color:#8994a5}body.view-dashboard .section-title span{color:#929bab}body.view-dashboard .card-label{color:#8c95a5}
+body.view-dashboard .metric-row{border-color:#edf0f4}body.view-dashboard .preview,body.view-dashboard .live-stream{background:#111827;color:#9fe6c3;border:0;border-radius:12px}
+.playground-layout{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:22px;min-height:580px}.playground-editor,.playground-result{background:#fff;border:1px solid #e5e8ef;border-radius:20px;overflow:hidden}.editor-top{display:flex;justify-content:space-between;align-items:center;padding:19px 24px;background:#f9f9fd;border-bottom:1px solid #e8ebf0;font-size:10px;letter-spacing:1.5px;font-weight:800;color:#8792a5}.editor-dots{color:#b7a5ff;font-size:15px;letter-spacing:3px}.editor-live{color:#31b47a}.editor-content{padding:28px}.editor-label{display:block;color:#7d889a;font-size:10px;font-weight:800;letter-spacing:1.4px;margin:0 0 10px}.editor-content input,.editor-content select,.editor-content textarea{width:100%;background:#f8f9fc!important;color:#263044!important;border:1px solid #e1e5ed!important;border-radius:12px!important;padding:16px!important;font-size:13px}.editor-controls{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:22px 0}.editor-content textarea{min-height:140px;resize:vertical}.run-extraction{width:100%;margin-top:22px;background:#6555d9;border:0;border-radius:12px;color:white;font-weight:800;padding:17px 20px;text-align:left}.run-extraction span{float:right}.playground-result{padding:28px;background:#f0eefb;border-color:#e4e0fa}.result-head h3{font-size:23px;line-height:1.3;max-width:280px;letter-spacing:-.6px}.result-badge{display:inline-block;background:#e2ddff;color:#6454d8;border-radius:30px;padding:7px 12px;font-size:10px;font-weight:800}.playground-result .preview{margin-top:24px;min-height:340px;padding:24px;line-height:1.8}.result-tip{margin-top:18px;color:#8e87ac;font-size:12px}
+body.view-dashboard .page:not(#overview):not(#workbench)>.card,body.view-dashboard .page:not(#overview):not(#workbench)>.grid{max-width:1400px}body.view-dashboard input,body.view-dashboard select,body.view-dashboard textarea{background:#f8f9fc!important;color:#252d3b!important;border:1px solid #dfe4ec!important}body.view-dashboard .stripe-field{background:#fff}
+body.view-dashboard .insight-card{background:#fff;border:1px solid #e6e9f0;border-radius:17px}body.view-dashboard .insight-card h4{color:#263044}body.view-dashboard .insight-card p{color:#778294}body.view-dashboard .insight-tag,body.view-dashboard #insightsNewsResults .insight-card a{color:#6654d8!important}body.view-dashboard .insightsTopic{background:#eeeaff!important;color:#6050c8!important;border-color:#dcd5ff!important}
+@media(max-width:1100px){.welcome-hero{grid-template-columns:1fr}.hero-illustration{display:none}.overview-stats{grid-template-columns:repeat(2,1fr)}.studio-overview-grid,.playground-layout{grid-template-columns:1fr}}
+@media(max-width:720px){body.view-dashboard .sidebar{width:230px}body.view-dashboard .main{margin-left:0;width:100%;padding:22px 15px}.welcome-hero{padding:32px 25px;min-height:0}.overview-stats{gap:10px}.mini-stat{padding:18px}.mini-stat strong{font-size:28px}.diagnostics-grid{grid-template-columns:1fr}.studio-overview-grid{grid-template-columns:1fr}.topbar .engine{flex-wrap:wrap;justify-content:flex-end}}
+@media(max-width:480px){.overview-stats{grid-template-columns:1fr 1fr}.usage-detail{grid-template-columns:1fr}.welcome-hero h3{font-size:36px}.editor-controls{grid-template-columns:1fr}.diagnostics summary span{display:none}}
+
 </style>
 </head>
 <body class="view-landing">
@@ -708,76 +754,46 @@ body.view-dashboard .page{animation:fade .18s ease}
 <!-- ======================= DASHBOARD (control plane) ======================= -->
 <div class="app" id="dashboardView">
 <aside class="sidebar" id="sidebar">
-  <nav class="nav">
-    <button class="active" data-page="overview">◈ <span>Overview</span></button>
-    <button data-page="workbench">⌥ <span>Developer Workbench</span></button>
-    <button data-page="edge">◎ <span>Edge Network</span></button>
-    <button data-page="analytics">◒ <span>Analytics</span></button>
-    <button data-page="jobs" style="display:none">◫ <span>Scrape Jobs</span></button>
-    <button data-page="logs">≡ <span>Request Logs</span></button>
-    <button data-page="api">⌘ <span>API &amp; Webhooks</span></button>
-    <button data-page="ai">✦ <span>Titan AI</span></button>
-    <button data-page="billing">◇ <span>Billing &amp; Usage</span></button>
-    <button id="navInsights" data-page="viewInsights">◭ <span>Titan Insights</span></button>
+  <div class="studio-mark"><span class="studio-glyph">✳</span><div><strong>TITAN STUDIO</strong><small>YOUR WORKSPACE</small></div></div>
+  <nav class="nav" aria-label="Workspace navigation">
+    <button class="active" data-page="overview"><span class="rail-icon">▦</span><span>Home</span></button>
+    <button data-page="workbench"><span class="rail-icon">⌘</span><span>Playground</span></button>
+    <button data-page="edge"><span class="rail-icon">◉</span><span>Network</span></button>
+    <button data-page="analytics"><span class="rail-icon">▥</span><span>Analytics</span></button>
+    <button data-page="jobs" style="display:none"><span>Jobs</span></button>
+    <button data-page="logs"><span class="rail-icon">≡</span><span>Activity</span></button>
+    <button data-page="api"><span class="rail-icon">⌁</span><span>API Keys</span></button>
+    <button data-page="ai"><span class="rail-icon">✦</span><span>AI Assistant</span></button>
+    <button data-page="billing"><span class="rail-icon">◷</span><span>Usage</span></button>
+    <button id="navInsights" data-page="viewInsights"><span class="rail-icon">◈</span><span>Discover</span></button>
   </nav>
-  <div class="sidebar-bottom"><span class="status-dot"></span>CONTROL PLANE ONLINE<br><span style="margin-left:14px">v2.0.0 • BETA</span></div>
+  <div class="sidebar-bottom"><div class="workspace-health"><span class="status-dot"></span><strong>Workspace ready</strong></div><small>Connected services are checked when you sign in.</small></div>
 </aside>
-
 <main class="main">
 <header class="topbar">
-  <div><button class="btn mobile-menu" id="menuBtn">☰</button><div class="eyebrow">TitanCDN / Control Plane</div><h2 id="pageTitle">Overview</h2></div>
+  <div class="workspace-heading"><button class="btn mobile-menu" id="menuBtn">☰</button><div class="eyebrow">WORKSPACE <span class="crumb">/</span> TITAN STUDIO</div><h2 id="pageTitle">Overview</h2></div>
   <div class="engine"><span class="engine-state" id="engineText">ENGINE OFFLINE</span><button class="switch" id="engineBtn" aria-label="Start Engine"><i></i></button><button class="btn primary" id="authBtn">SIGN UP</button><button class="profile-chip" id="profileBtn" hidden=""><span class="avatar" id="avatar">T</span><span><b id="profileName">Titan User</b><small>MY PROFILE</small></span></button></div>
 </header>
-
 <section class="page active" id="overview">
-  <div class="card gold" id="goldUsage" style="margin-bottom:16px">
-    <div class="section-title"><h3>CHARACTERS USED</h3><span class="gold-pct" id="goldPct">0%</span></div>
-    <div class="gold-bar" id="goldBarWrap" role="progressbar" aria-label="Characters used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="gold-fill" id="goldFill"></div></div>
-    <div class="gold-meta">
-      <div>Current plan: <b id="gPlan">—</b></div>
-      <div>Used: <b id="gUsed">0</b> / <b id="gLimit">0</b> characters</div>
-      <div>Remaining limit: <b id="gRemain">0</b> characters</div>
-    </div>
+  <div class="welcome-hero"><div class="welcome-copy"><span class="welcome-tag"><span class="status-dot"></span> YOUR EXTRACTION WORKSPACE</span><h3>Turn the web into<br><em>what you need.</em></h3><p>Build a request, extract useful data, and see what your API is doing — all from one place.</p><div class="welcome-actions"><button class="hero-action" type="button" data-jump="workbench">✦ &nbsp; New extraction <span>↗</span></button><button class="hero-secondary" type="button" data-jump="api">Manage API keys ↗</button></div></div><div class="hero-illustration" aria-hidden="true"><div class="orbit orbit-a"></div><div class="orbit orbit-b"></div><div class="float-code"><span>INPUT / URL</span><b>https://example.com</b></div><div class="float-center">✳</div><div class="float-result"><span>OUTPUT / JSON</span><b>{ "data": "ready" }</b></div></div></div>
+  <div class="studio-section-label"><h3>At a glance</h3><span>LIVE ACCOUNT DATA</span></div>
+  <div class="overview-stats">
+    <div class="mini-stat"><span>Requests today</span><strong id="rps">—</strong><small>Last 24 hours</small></div>
+    <div class="mini-stat"><span>Successful</span><strong id="ovSuccessful">—</strong><small>Completed requests</small></div>
+    <div class="mini-stat"><span>Failed</span><strong id="ovFailed">—</strong><small>Unsuccessful requests</small></div>
+    <div class="mini-stat"><span>Avg. response</span><strong id="latency">—</strong><small>Last 24 hours</small></div>
+    <span id="ovCharacters" hidden="">—</span>
   </div>
-  <div class="card gold" id="trialBanner" style="display:none;margin-bottom:16px">
-    <div class="section-title"><h3>ACTIVATE YOUR FREE TRIAL</h3><span>100,000 CHARACTERS • ONE-TIME</span></div>
-    <p class="sub" id="trialText" style="font-size:13px"></p>
-    <div style="display:flex;gap:8px;margin-top:12px"><button class="btn primary" id="trialActivate">ACTIVATE WITH CARD</button></div>
+  <div class="studio-overview-grid">
+    <div class="usage-surface" id="goldUsage"><div class="surface-heading"><div><span class="surface-kicker">YOUR CAPACITY</span><h3>Usage overview</h3></div><span class="gold-pct" id="goldPct">0%</span></div><div class="gold-bar" id="goldBarWrap" role="progressbar" aria-label="Characters used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="gold-fill" id="goldFill"></div></div><div class="usage-detail"><div><small>Plan</small><b id="gPlan">—</b></div><div><small>Consumed</small><b><span id="gUsed">0</span> / <span id="gLimit">0</span></b></div><div><small>Available</small><b id="gRemain">0</b></div></div></div>
+    <div class="quick-surface"><span class="surface-kicker">QUICK ACCESS</span><h3>Pick up where you left off</h3><button type="button" data-jump="workbench"><span class="quick-icon">↗</span><span><strong>Open Playground</strong><small>Test a new URL</small></span><span>→</span></button><button type="button" data-jump="logs"><span class="quick-icon">≡</span><span><strong>Request history</strong><small>Review recent activity</small></span><span>→</span></button><button type="button" data-jump="viewInsights"><span class="quick-icon">◈</span><span><strong>Explore Insights</strong><small>Latest industry stories</small></span><span>→</span></button></div>
   </div>
-  <div class="grid stats kpi5">
-    <div class="card gold"><div class="card-label">API Requests · 24h</div><div class="big" id="rps">—</div><div class="sub">Recorded scraping requests</div></div>
-    <div class="card"><div class="card-label">Successful Requests · 24h</div><div class="big" id="ovSuccessful">—</div><div class="sub">HTTP 2xx / 3xx</div></div>
-    <div class="card"><div class="card-label">Failed Requests · 24h</div><div class="big" id="ovFailed">—</div><div class="sub">HTTP 4xx / 5xx</div></div>
-    <div class="card"><div class="card-label">Characters Processed · 24h</div><div class="big" id="ovCharacters">—</div><div class="sub">Successfully processed</div></div>
-    <div class="card"><div class="card-label">Average Duration · 24h</div><div class="big" id="latency">—</div><div class="sub">Measured API processing time</div></div>
-  </div>
-  <div class="grid telemetry">
-    <div class="card gold"><div class="section-title"><h3>LIVE TELEMETRY</h3><span id="telemetryState">Engine stopped</span></div><div class="chart" id="chart"></div></div>
-    <div class="card"><div class="section-title"><h3>SYSTEM SIGNAL</h3><span>REAL-TIME</span></div>
-      <div class="metric-row"><span>API Gateway</span><b class="green">HEALTHY</b></div>
-      <div class="metric-row"><span>Database</span><b class="green">CONNECTED</b></div>
-      <div class="metric-row"><span>Auth Layer</span><b class="green">SECURE</b></div>
-      <div class="metric-row"><span>Scraper</span><b id="scraperStatus" class="">STANDBY</b></div>
-      <div style="margin-top:20px"><button class="btn primary" id="pingBtn">PING INFRASTRUCTURE</button></div>
-    </div>
-  </div>
-  <div class="grid split" style="margin-top:16px"><div class="card"><div class="section-title"><h3>LIVE REQUEST STREAM</h3><span>CONTROL-PLANE EVENTS</span></div><div class="live-stream" id="liveStream"></div></div><div class="card gold"><div class="section-title"><h3>USAGE &amp; COST</h3><span>CHARACTERS</span></div><div class="big" id="usageUsed">—</div><div class="sub" id="usageSummary">Sign in to see your usage</div><div class="progress"><i id="usageBar" style="--w:0%"></i></div><div class="metric-row"><span>Plan</span><b id="usagePlan">—</b></div><div class="metric-row"><span>Remaining</span><b id="usageRemaining">—</b></div><div class="metric-row"><span>Resets</span><b id="usageReset">—</b></div></div></div>
+  <div class="card" id="trialBanner" style="display:none;margin-top:20px"><div class="section-title"><h3>ACTIVATE YOUR FREE TRIAL</h3><span>100,000 CHARACTERS</span></div><p class="sub" id="trialText"></p><button class="btn primary" id="trialActivate">ACTIVATE WITH CARD</button></div>
+  <details class="diagnostics"><summary>Advanced diagnostics <span>Telemetry &amp; system tools</span></summary><div class="diagnostics-grid"><div class="card"><div class="section-title"><h3>REQUEST TELEMETRY</h3><span id="telemetryState">Engine stopped</span></div><div class="chart" id="chart"></div></div><div class="card"><h3>System checks</h3><div class="metric-row"><span>Scraper</span><b id="scraperStatus">STANDBY</b></div><button class="btn primary" id="pingBtn">PING INFRASTRUCTURE</button></div><div class="card"><h3>Recent stream</h3><div class="live-stream" id="liveStream"></div></div><div class="card"><h3>Consumption</h3><div class="big" id="usageUsed">—</div><div class="sub" id="usageSummary">Sign in to see your usage</div><div class="progress"><i id="usageBar" style="--w:0%"></i></div><div class="metric-row"><span>Plan</span><b id="usagePlan">—</b></div><div class="metric-row"><span>Remaining</span><b id="usageRemaining">—</b></div><div class="metric-row"><span>Resets</span><b id="usageReset">—</b></div></div></div></details>
 </section>
-
 <section class="page" id="workbench">
-  <div class="card gold">
-    <div class="section-title" style="margin-top:0"><h3>DEVELOPER WORKBENCH</h3><span>REQUEST BUILDER + LIVE TEST</span></div>
-    <div class="builder">
-      <input class="wide" id="targetUrl" placeholder="https://your-public-url.com/page">
-      <select id="method"><option>GET</option><option>POST</option></select>
-      <select id="format"><option>JSON</option><option>HTML</option></select>
-      <button class="btn primary" id="sendBtn">SEND TEST</button>
-    </div>
-    <textarea id="extractInstructions" style="width:100%;margin-top:10px;min-height:90px;background:#080808;color:#eee;border:1px solid #2c2c2c;border-radius:7px;padding:12px" placeholder="AI extraction instructions (optional): e.g. Return only product name, price and availability. Leave empty to return the available page content."></textarea>
-    <div class="preview" id="preview">Ready. Sign in, create an API key, enter a public URL and optionally describe what data you want.</div>
-  </div>
+<div class="playground-layout"><div class="playground-editor"><div class="editor-top"><span class="editor-dots">● ● ●</span><span>REQUEST BUILDER</span><span class="editor-live">● LIVE TEST</span></div><div class="editor-content"><label class="editor-label" for="targetUrl">TARGET URL</label><input id="targetUrl" placeholder="https://your-public-url.com/page"><div class="editor-controls"><div><label class="editor-label" for="method">METHOD</label><select id="method"><option>GET</option><option>POST</option></select></div><div><label class="editor-label" for="format">OUTPUT FORMAT</label><select id="format"><option>JSON</option><option>HTML</option></select></div></div><label class="editor-label" for="extractInstructions">WHAT SHOULD TITAN EXTRACT?</label><textarea id="extractInstructions" placeholder="Describe what you need in plain English. Example: Return the product names, prices and availability."></textarea><button class="run-extraction" id="sendBtn">✦ &nbsp; Run extraction <span>↗</span></button></div></div><div class="playground-result"><div class="result-head"><div><span class="surface-kicker">OUTPUT CONSOLE</span><h3>Your results, beautifully structured.</h3></div><span class="result-badge">JSON / HTML</span></div><div class="preview" id="preview">Ready. Sign in, create an API key, enter a public URL and optionally describe what data you want.</div><div class="result-tip">✧ &nbsp; Results appear here when you run a request.</div></div></div>
 </section>
-
 <section class="page" id="edge"><div class="card gold"><div class="section-title"><h3>PUBLIC TARGET ACCESS</h3><span>NO HARDCODED SITES</span></div><p class="sub">TitanCDN is not restricted to a preset site list. A valid API key can request public HTTP(S) targets subject to network safety checks and the target site's access controls.</p><div class="metric-row"><span>Private / local networks</span><b class="red">BLOCKED</b></div><div class="metric-row"><span>CAPTCHA / login / anti-bot bypass</span><b class="red">NOT BYPASSED</b></div><div class="metric-row"><span>Public pages and authorized APIs</span><b class="green">SUPPORTED</b></div></div></section>
 
 <section class="page" id="analytics">
