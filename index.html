@@ -1,86 +1,334 @@
 <!DOCTYPE html>
-<html lang="bg"><head>
-<style>
-/* TITAN INSIGHTS — GOLD THEME */
-
-#insightsSearch {
-  background: #0b0b0b !important;
-  color: #f5f5f5 !important;
-  border: 1px solid #665116 !important;
-  border-radius: 8px !important;
-  outline: none;
-}
-
-#insightsSearch:focus {
-  border-color: #e0b83e !important;
-  box-shadow: 0 0 12px #d4af3733;
-}
-
-#insightsSearchBtn {
-  background: linear-gradient(135deg, #f1cd55, #bd9021) !important;
-  color: #080808 !important;
-  border: 1px solid #e0b83e !important;
-  border-radius: 8px !important;
-  padding: 12px 22px !important;
-  font-weight: 800 !important;
-  cursor: pointer;
-}
-
-.insightsTopic {
-  background: #15120a !important;
-  color: #e5c35b !important;
-  border: 1px solid #80651c !important;
-  border-radius: 8px !important;
-  padding: 10px 16px !important;
-  font-weight: 700 !important;
-  cursor: pointer;
-}
-
-.insightsTopic:hover,
-#insightsSearchBtn:hover {
-  background: #f1cd55 !important;
-  color: #080808 !important;
-  transform: translateY(-1px);
-}
-
-#insightsNewsResults .insight-card a {
-  color: #e0b83e !important;
-  text-decoration: none;
-  font-weight: 800;
-}
-
-#insightsNewsResults .insight-card a:hover {
-  color: #ffe58a !important;
-  text-decoration: underline;
-}
-</style>
-  <meta name="google-site-verification" content="-pO-bUU70XOm7qiTRx15E6HRplpXubJsu96A2rjNW-o">
+<html lang="en"><head>
 <meta charset="UTF-8">
+<meta name="google-site-verification" content="-pO-bUU70XOm7qiTRx15E6HRplpXubJsu96A2rjNW-o">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TitanCDN — Data Infrastructure Control Plane</title>
-<meta name="theme-color" content="#000000">
+<title>TitanCDN — Any web page, turned into clean data</title>
+<meta name="description" content="Send TitanCDN a link and a plain-English instruction. Get exactly the data you asked for, as clean JSON, through one simple API.">
+<meta name="theme-color" content="#050505">
 <link rel="icon" type="image/png" href="/12.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+/* ============================================================
+   TITAN INSIGHTS — GOLD THEME (inputs of the news page)
+   ============================================================ */
+#insightsSearch{background:#0b0b0b!important;color:#f5f5f5!important;border:1px solid #665116!important;border-radius:8px!important;outline:none}
+#insightsSearch:focus{border-color:#e0b83e!important;box-shadow:0 0 12px #d4af3733}
+#insightsSearchBtn{background:linear-gradient(135deg,#f1cd55,#bd9021)!important;color:#080808!important;border:1px solid #e0b83e!important;border-radius:8px!important;padding:12px 22px!important;font-weight:800!important;cursor:pointer}
+.insightsTopic{background:#15120a!important;color:#e5c35b!important;border:1px solid #80651c!important;border-radius:8px!important;padding:10px 16px!important;font-weight:700!important;cursor:pointer}
+.insightsTopic:hover,#insightsSearchBtn:hover{background:#f1cd55!important;color:#080808!important;transform:translateY(-1px)}
+#insightsNewsResults .insight-card a{color:#e0b83e!important;text-decoration:none;font-weight:800}
+#insightsNewsResults .insight-card a:hover{color:#ffe58a!important;text-decoration:underline}
+</style>
+<style>
+/* ============================================================
+   BASE
+   ============================================================ */
 :root{
-  --bg:#000000;--panel:#0d0d0d;--panel2:#111;--panel3:#151515;
-  --gold:#d4af37;--gold2:#f1d46a;--muted:#8d8d8d;--text:#f4f4f4;
+  --bg:#050505;--panel:#0d0d0d;--panel2:#111;--panel3:#151515;
+  --gold:#d4af37;--gold2:#f1d46a;--gold3:#fbf5b7;--muted:#8d8d8d;--text:#f4f4f4;
   --line:rgba(212,175,55,.18);--green:#22d47b;--red:#ff4040;--blue:#5fa8ff;
+  --paper:#f6f3ec;--paper2:#ece8de;--ink:#0b0b0b;--lmute:#5d5a52;--lline:rgba(10,10,10,.12);
+  --display:'Bricolage Grotesque','Inter',ui-sans-serif,system-ui,sans-serif;
+  --nav-h:68px;
 }
 *{box-sizing:border-box}
-html,body{margin:0;min-height:100%;background:radial-gradient(circle at 75% -10%,rgba(212,175,55,.08),transparent 28%),var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-button,input,select{font:inherit}
+html{scroll-behavior:smooth}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+body{overflow-x:hidden}
+button,input,select,textarea{font:inherit}
 button{cursor:pointer}
-.app{display:flex;min-height:100vh}
-.sidebar{width:260px;background:linear-gradient(180deg,#101010,#080808);border-right:1px solid #292929;padding:24px 14px;position:fixed;inset:0 auto 0 0;z-index:20;overflow-y:auto;display:flex;flex-direction:column}
-.brand{display:flex;align-items:center;gap:12px;padding:8px 10px 28px}
-.logo{width:38px;height:38px;border:1px solid var(--gold);display:grid;place-items:center;transform:rotate(45deg);box-shadow:0 0 24px rgba(212,175,55,.12)}
-.logo span{transform:rotate(-45deg);font-weight:900;color:var(--gold)}
-.brand h1{font-size:17px;letter-spacing:2px;margin:0}.brand small{color:#777;display:block;font-size:9px;letter-spacing:1.5px;margin-top:3px}
-.nav{display:grid;gap:7px}
-.nav button{border:0;background:transparent;color:#999;text-align:left;padding:14px 14px;border-radius:7px;position:relative;transition:.2s;display:flex;gap:12px;align-items:center}
-.nav button:hover,.nav button.active{background:rgba(212,175,55,.045);color:var(--gold2)}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:6px}
+
+/* view switching: landing <-> dashboard (app.js toggles these body classes) */
+body.view-landing #dashboardView{display:none}
+body.view-dashboard #landing,body.view-dashboard #siteFoot{display:none}
+.out-only{display:flex}.in-only{display:none}
+body.signed-in .out-only{display:none}
+body.signed-in .in-only{display:flex}
+
+/* ============================================================
+   LANDING — buttons
+   ============================================================ */
+.t-btn{display:inline-block;border:0;border-radius:10px;padding:12px 22px;font-weight:700;font-size:.95rem;text-decoration:none;text-align:center;cursor:pointer;transition:transform .18s,box-shadow .18s,background .18s,border-color .18s}
+.t-btn:hover{transform:translateY(-2px)}
+.t-lg{padding:15px 30px;font-size:1rem}
+.t-gold{background:linear-gradient(135deg,#b38728,#f1d46a 55%,#d4af37);color:#0a0a0a;box-shadow:0 10px 34px rgba(212,175,55,.25)}
+.t-gold:hover{box-shadow:0 14px 44px rgba(212,175,55,.42)}
+.t-ghost{background:transparent;color:inherit;border:1px solid rgba(255,255,255,.28)}
+.t-ghost:hover{border-color:var(--gold2);color:var(--gold2)}
+.t-dark{background:#0a0a0a;color:#fff}
+.t-dark:hover{background:#1c1c1c}
+.t-ghost-l{background:transparent;color:#0a0a0a;border:1px solid rgba(10,10,10,.28)}
+.t-ghost-l:hover{border-color:#0a0a0a;background:rgba(10,10,10,.05)}
+
+/* ============================================================
+   LANDING — top navigation (turns white over light sections)
+   ============================================================ */
+#siteNav{position:fixed;top:0;left:0;right:0;z-index:80;height:var(--nav-h);color:#fff;border-bottom:1px solid transparent;transition:background .3s,border-color .3s,color .3s}
+#siteNav:not(.scrolled):not(.mega-open){background:linear-gradient(180deg,rgba(5,5,5,.8),rgba(5,5,5,0))}
+#siteNav.scrolled,#siteNav.mega-open{background:rgba(5,5,5,.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom-color:var(--line)}
+#siteNav.on-light{color:#0b0b0b}
+#siteNav.on-light:not(.scrolled){background:linear-gradient(180deg,rgba(246,243,236,.9),rgba(246,243,236,0))}
+#siteNav.on-light.scrolled{background:rgba(246,243,236,.9);border-bottom-color:var(--lline)}
+.t-navin{height:100%;max-width:1360px;margin:0 auto;padding:0 28px;display:flex;align-items:center;gap:34px}
+.t-brand{display:flex;align-items:center;gap:12px;text-decoration:none;flex-shrink:0;cursor:pointer}
+.t-logo{width:34px;height:34px;border:2px solid var(--gold);transform:rotate(45deg);display:grid;place-items:center;background:#090909;box-shadow:0 0 16px rgba(212,175,55,.4)}
+.t-logo span{transform:rotate(-45deg);color:var(--gold);font-weight:900;font-size:1rem;line-height:1}
+.t-brand b{font-family:var(--display);font-size:1.2rem;letter-spacing:1.5px;font-weight:700}
+.t-brand b i{font-style:normal;color:var(--gold)}
+.t-menu{display:flex;align-self:stretch;align-items:stretch;gap:2px}
+.t-menu>div{display:flex;align-items:stretch}
+.nl{background:none;border:0;color:inherit;opacity:.8;font-size:.95rem;font-weight:500;padding:0 14px;display:flex;align-items:center;text-decoration:none;cursor:pointer;transition:opacity .15s}
+.nl:hover,.nl.open{opacity:1}
+.nl[data-mega]::after{content:'';width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg) translateY(-2px);margin-left:9px;transition:transform .2s}
+.nl[data-mega].open::after{transform:rotate(225deg) translate(-1px,-1px)}
+.t-end{margin-left:auto;display:flex;align-items:center;gap:10px}
+.t-end .t-btn{padding:9px 18px;font-size:.9rem}
+#siteNav.on-light .t-ghost{color:#0b0b0b;border-color:rgba(10,10,10,.28)}
+#siteNav.on-light .t-ghost:hover{border-color:#0b0b0b;color:#0b0b0b}
+#navBurger{display:none;background:none;border:1px solid rgba(255,255,255,.28);border-radius:10px;width:42px;height:42px;color:inherit;align-items:center;justify-content:center}
+#siteNav.on-light #navBurger{border-color:rgba(10,10,10,.28)}
+#navBurger span,#navBurger span::before,#navBurger span::after{display:block;width:18px;height:1.5px;background:currentColor;position:relative;content:''}
+#navBurger span::before{position:absolute;top:-6px}#navBurger span::after{position:absolute;top:6px}
+.mega{position:absolute;left:0;right:0;top:100%;background:rgba(7,7,7,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--line);color:#fff;opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity .18s,transform .18s,visibility .18s}
+.mega.open{opacity:1;visibility:visible;transform:none}
+.mega-in{max-width:1360px;margin:0 auto;padding:36px 28px 44px;display:grid;gap:36px;grid-template-columns:1fr 1fr 1.1fr 1.1fr;align-items:start}
+.mcol h4{margin:0 0 14px;font-weight:500;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.mcol a{display:block;text-decoration:none;padding:7px 0;font-family:var(--display);font-size:1.25rem;font-weight:500;letter-spacing:-.015em;cursor:pointer;transition:transform .15s,color .15s}
+.mcol a small{display:block;font-family:Inter,sans-serif;font-size:.8rem;font-weight:400;opacity:.55;letter-spacing:0;margin-top:1px}
+.mcol a:hover{transform:translateX(3px);color:var(--gold2)}
+.mcard{display:block;text-decoration:none;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:18px;padding:10px;cursor:pointer;transition:transform .25s,border-color .25s}
+.mcard:hover{transform:translateY(-3px);border-color:var(--gold)}
+.mcard .media{height:150px;border-radius:12px}
+.mcard span{display:block;padding:12px 6px 4px;font-size:.92rem;font-weight:500}
+.t-mobile{display:none}
+
+/* ============================================================
+   LANDING — media blocks (CSS visuals; drop real photos in /images)
+   ============================================================ */
+.media{position:relative;overflow:hidden;background:linear-gradient(145deg,var(--g1,#2a2412),var(--g2,#0c0a05));background-size:cover;background-position:center}
+.media::before{content:'';position:absolute;inset:0;background:
+  linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px) 0 0/22px 22px,
+  linear-gradient(0deg,rgba(255,255,255,.05) 1px,transparent 1px) 0 0/22px 22px,
+  radial-gradient(70% 60% at 30% 20%,rgba(241,212,106,.35),transparent 70%)}
+.media::after{content:'';position:absolute;left:12%;right:12%;top:30%;height:34%;border-radius:8px;border:1px solid rgba(255,255,255,.22);background:
+  linear-gradient(rgba(255,255,255,.22),rgba(255,255,255,.22)) 10px 12px/38% 5px no-repeat,
+  linear-gradient(rgba(255,255,255,.14),rgba(255,255,255,.14)) 10px 28px/70% 4px no-repeat,
+  linear-gradient(rgba(255,255,255,.14),rgba(255,255,255,.14)) 10px 42px/55% 4px no-repeat,
+  rgba(255,255,255,.05)}
+.media.has-photo{background:var(--photo) center/cover}
+.media.has-photo::before,.media.has-photo::after{display:none}
+
+/* ============================================================
+   LANDING — hero + device
+   ============================================================ */
+.t-hero{position:relative;padding:calc(var(--nav-h) + 90px) 24px 90px;text-align:center;overflow:hidden;background:radial-gradient(900px 520px at 50% 0%,rgba(212,175,55,.2),transparent 70%),radial-gradient(600px 400px at 90% 60%,rgba(212,175,55,.08),transparent 70%),#050505}
+.t-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px) 0 0/64px 64px,linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px) 0 0/64px 64px;-webkit-mask-image:radial-gradient(ellipse at 50% 20%,#000 20%,transparent 70%);mask-image:radial-gradient(ellipse at 50% 20%,#000 20%,transparent 70%);pointer-events:none}
+#heroText{position:relative;z-index:2;max-width:980px;margin:0 auto;will-change:transform,opacity}
+.t-eyebrow{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:7px 16px;font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold2);background:rgba(212,175,55,.06);margin-bottom:26px}
+.t-hero h1{font-family:var(--display);font-weight:700;font-size:clamp(2.8rem,7.4vw,6.4rem);letter-spacing:-.04em;line-height:1;margin:0 0 24px}
+.t-hero h1 em{font-style:normal;background:linear-gradient(100deg,#b38728,#fbf5b7 45%,#d4af37 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.t-lead{color:#b9b9b9;font-size:clamp(1rem,1.5vw,1.25rem);max-width:54ch;margin:0 auto 34px;line-height:1.6}
+.t-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.t-founder{margin-top:34px;color:#7d7d7d;font-size:.88rem}.t-founder b{color:#bdbdbd;font-weight:600}
+.t-devwrap{position:relative;z-index:2;perspective:1800px;max-width:1080px;margin:70px auto 0}
+#heroDevice{--rx:16deg;--sc:1.07;transform:rotateX(var(--rx)) scale(var(--sc));transform-origin:50% 0;border-radius:22px;overflow:hidden;background:#0b0b0b;border:1px solid rgba(212,175,55,.3);box-shadow:0 50px 140px rgba(0,0,0,.75),0 0 90px rgba(212,175,55,.1);text-align:left;will-change:transform}
+.d-bar{height:42px;display:flex;align-items:center;gap:7px;padding:0 16px;background:#131313;border-bottom:1px solid #242424}
+.d-bar i{width:10px;height:10px;border-radius:50%;background:#2e2e2e}
+.d-bar i:first-child{background:#d4af37}
+.d-url{margin-left:10px;background:#070707;color:#8d8d8d;border-radius:7px;padding:5px 14px;font-size:.74rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d-body{display:grid;grid-template-columns:1fr 54px 1fr;align-items:stretch;padding:26px;gap:0;background:radial-gradient(500px 260px at 80% 0%,rgba(212,175,55,.1),transparent 70%),#0a0a0a}
+.d-pane{background:#070707;border:1px solid #232323;border-radius:14px;padding:18px;font:12px/1.75 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfcfcf;overflow:hidden}
+.d-pane.gold{border-color:rgba(212,175,55,.4);box-shadow:inset 0 0 40px rgba(212,175,55,.05)}
+.d-pane small{display:block;font:700 10px/1 Inter,sans-serif;letter-spacing:.16em;color:var(--gold);margin-bottom:12px}
+.d-pane .k{color:var(--gold2)}.d-pane .s{color:#7df0aa}.d-pane .m{color:#707070}
+.d-arrow{display:grid;place-items:center;color:var(--gold);font-size:1.5rem;animation:nudge 1.8s ease-in-out infinite}
+@keyframes nudge{50%{transform:translateX(5px)}}
+.d-line{display:block;white-space:nowrap}
+.d-gold-row{display:inline-block;animation:glow 3.2s ease-in-out infinite}
+@keyframes glow{50%{text-shadow:0 0 12px rgba(251,245,183,.7)}}
+
+/* ============================================================
+   LANDING — generic sections
+   ============================================================ */
+.t-sec{padding:120px 28px}
+.t-in{max-width:1240px;margin:0 auto}
+.t-light{background:var(--paper);color:var(--ink)}
+.t-dark-sec{background:#050505;color:var(--text)}
+.t-head{max-width:760px;margin-bottom:56px}
+.t-head h2{font-family:var(--display);font-weight:600;font-size:clamp(2.2rem,4.8vw,3.9rem);letter-spacing:-.035em;line-height:1.05;margin:0 0 18px}
+.t-head p{font-size:1.12rem;line-height:1.6;max-width:56ch;margin:0;color:#b0b0b0}
+.t-light .t-head p{color:var(--lmute)}
+.t-tag{display:block;font-size:.76rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:16px}
+.t-light .t-tag{color:#9a7a14}
+section[id]{scroll-margin-top:var(--nav-h)}
+.rv{opacity:0;transform:translateY(34px);transition:opacity .8s var(--d,0ms),transform .8s var(--d,0ms)}
+.rv.shown{opacity:1;transform:none}
+
+/* statement: words light up while scrolling */
+.t-statement{padding:140px 28px 70px;background:#050505}
+.t-words{max-width:1040px;margin:0 auto;font-family:var(--display);font-weight:500;font-size:clamp(1.8rem,4vw,3.4rem);line-height:1.18;letter-spacing:-.03em}
+.t-words span{opacity:.18;transition:opacity .35s}
+.t-words span.on{opacity:1}
+.t-words b{color:var(--gold2);font-weight:600}
+
+/* scatter: photo tiles that move and resize while you scroll */
+.t-scatter{position:relative;max-width:1360px;margin:70px auto 0;border-radius:28px;background:var(--paper2);height:118vh;min-height:760px;overflow:hidden;color:#0b0b0b}
+.t-tile{position:absolute;border-radius:16px;box-shadow:0 24px 60px rgba(10,10,10,.22)}
+.t-tile span{position:absolute;z-index:2;left:12px;bottom:10px;font-size:.78rem;font-weight:700;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.7)}
+.t-tile .media::after{top:24%}
+.t-tile{animation:floaty 7s ease-in-out infinite alternate}
+@keyframes floaty{to{translate:0 -14px}}
+@supports (animation-timeline:view()){
+  .t-tile{animation:tilemove linear both;animation-timeline:view();animation-range:entry 0% exit 100%}
+  @keyframes tilemove{from{transform:translateY(calc(var(--k,1)*170px)) scale(.55)}50%{transform:translateY(0) scale(1.12)}to{transform:translateY(calc(var(--k,1)*-170px)) scale(.7)}}
+}
+.t-center{position:absolute;z-index:5;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;width:min(720px,86%);pointer-events:none}
+.t-center h2{font-family:var(--display);font-size:clamp(2.2rem,5vw,4.4rem);letter-spacing:-.04em;line-height:1.02;margin:0;text-shadow:0 0 40px rgba(236,232,222,.95),0 0 20px rgba(236,232,222,.9)}
+.t-center p{color:#3c3a34;margin:16px 0 0;font-size:1.1rem;text-shadow:0 0 20px rgba(236,232,222,.95)}
+
+/* steps */
+.t-steps{max-width:980px;display:flex;flex-direction:column}
+.t-st{display:grid;grid-template-columns:70px 1fr;gap:24px;padding:40px 0;border-top:1px solid var(--lline)}
+.t-st:last-child{border-bottom:1px solid var(--lline)}
+.t-st .n{font-family:var(--display);font-size:2.6rem;color:#b7b2a6;line-height:1;transition:color .5s}
+.t-st.shown .n{color:#9a7a14}
+.t-st h3{font-family:var(--display);font-size:2rem;font-weight:600;letter-spacing:-.025em;margin:0 0 10px}
+.t-st p{color:var(--lmute);max-width:54ch;margin:0 0 20px;font-size:1.05rem;line-height:1.6}
+.t-code{display:block;background:#0a0a0a;color:#e7e7e7;border-radius:14px;padding:18px 20px;font:12.5px/1.8 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto;max-width:640px;border:1px solid #232323}
+.t-code .k{color:var(--gold2)}.t-code .s{color:#7df0aa}.t-code .m{color:#777}
+.t-chips{display:flex;flex-wrap:wrap;gap:8px}
+.t-chip{border:1px solid rgba(10,10,10,.22);border-radius:99px;padding:6px 14px;font-size:.86rem;color:var(--lmute)}
+.t-chip.on{background:#0a0a0a;color:#fff;border-color:#0a0a0a}
+
+/* bento features */
+.t-bento{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+.t-bx{background:linear-gradient(145deg,#141414,#0a0a0a);border:1px solid #242424;border-radius:22px;padding:32px;position:relative;overflow:hidden;display:flex;flex-direction:column;transition:border-color .3s,transform .3s}
+.t-bx:hover{border-color:var(--gold);transform:translateY(-3px)}
+.t-bx h3{font-family:var(--display);font-size:1.5rem;font-weight:600;letter-spacing:-.02em;margin:0 0 8px}
+.t-bx p{color:#a5a5a5;font-size:.97rem;line-height:1.6;max-width:42ch;margin:0}
+.t-bx .vis{margin-top:auto;padding-top:26px}
+.b1{grid-column:span 4}.b2,.b3,.b4,.b5,.b6{grid-column:span 2}
+.t-bx.wide-gold{background:radial-gradient(500px 240px at 90% 0%,rgba(212,175,55,.18),transparent 70%),linear-gradient(145deg,#141414,#0a0a0a);border-color:var(--line)}
+.bars{display:flex;align-items:flex-end;gap:8px;height:90px}
+.bars i{flex:1;border-radius:6px 6px 2px 2px;background:linear-gradient(180deg,var(--gold2),rgba(212,175,55,.2));transform-origin:bottom;animation:grow 2.4s ease-in-out infinite alternate}
+.bars i:nth-child(2n){animation-delay:.3s}.bars i:nth-child(3n){animation-delay:.6s}
+@keyframes grow{from{transform:scaleY(.5)}to{transform:scaleY(1)}}
+.mini-json{background:#070707;border:1px solid #242424;border-radius:12px;padding:14px;font:11.5px/1.7 ui-monospace,monospace;color:#cfcfcf}
+.mini-json .k{color:var(--gold2)}.mini-json .s{color:#7df0aa}
+.t-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:99px;padding:6px 12px;color:var(--gold2);font-size:.78rem;margin:0 6px 6px 0}
+.t-pill i{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+
+/* counters */
+.t-counters{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--lline);margin-top:10px}
+.t-counter{padding:36px 24px 10px 0;border-right:1px solid var(--lline)}
+.t-counter:last-child{border-right:0}
+.t-counter b{display:block;font-family:var(--display);font-size:clamp(2.4rem,4.6vw,4.4rem);font-weight:600;letter-spacing:-.04em;line-height:1}
+.t-counter span{color:var(--lmute);font-size:.98rem}
+.t-lcards{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:70px}
+.t-lcard{position:relative;display:block;height:400px;border-radius:22px;overflow:hidden;color:#fff;cursor:pointer;text-decoration:none}
+.t-lcard .media{position:absolute;inset:0;transition:transform .8s cubic-bezier(.2,.8,.2,1)}
+.t-lcard:hover .media{transform:scale(1.07)}
+.t-lcard::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(5,5,5,.9))}
+.t-lcard .t{position:absolute;z-index:2;left:24px;right:24px;bottom:22px}
+.t-lcard h3{font-family:var(--display);font-size:1.7rem;margin:0 0 6px;letter-spacing:-.02em}
+.t-lcard p{margin:0;color:#d9d9d9;font-size:.93rem;line-height:1.5}
+
+/* pricing */
+.t-trial{background:#0a0a0a;color:#fff;border-radius:22px;padding:34px 38px;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:16px;background:radial-gradient(500px 200px at 90% 0%,rgba(212,175,55,.25),transparent 70%),#0a0a0a;border:1px solid rgba(212,175,55,.4)}
+.t-trial h3{font-family:var(--display);font-size:1.8rem;margin:0 0 6px;font-weight:600}
+.t-trial p{margin:0;color:#b9b9b9;max-width:56ch;line-height:1.55}
+.t-plans{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.t-plan{border:1px solid var(--lline);border-radius:22px;padding:32px 28px;background:#fff;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.t-plan.pop{background:#0a0a0a;color:#fff;border-color:var(--gold);box-shadow:0 0 50px rgba(212,175,55,.18)}
+.t-plan h3{font-size:1.1rem;font-weight:600;margin:0 0 16px}
+.t-plan .price{font-family:var(--display);font-size:2.7rem;letter-spacing:-.04em;line-height:1;font-weight:600}
+.t-plan .price small{font-family:Inter,sans-serif;font-size:.9rem;opacity:.6;letter-spacing:0;font-weight:400}
+.t-plan .chars{margin:12px 0 22px;color:#9a7a14;font-weight:700;font-size:.95rem}
+.t-plan.pop .chars{color:var(--gold2)}
+.t-plan ul{list-style:none;padding:0;margin:0 0 26px;flex:1}
+.t-plan li{padding:10px 0;border-top:1px solid var(--lline);font-size:.92rem}
+.t-plan.pop li{border-top-color:rgba(255,255,255,.14)}
+.t-plan li::before{content:"✓";color:var(--gold);margin-right:9px}
+.t-ribbon{position:absolute;right:-34px;top:16px;transform:rotate(35deg);background:var(--gold);color:#080808;padding:5px 38px;font-size:.66rem;font-weight:900;letter-spacing:.1em}
+.t-note{color:var(--lmute);font-size:.88rem;margin-top:22px;max-width:76ch;line-height:1.6}
+
+/* about */
+.t-about{display:grid;grid-template-columns:1.1fr 1fr;gap:72px;align-items:start}
+.t-about h2{font-family:var(--display);font-weight:600;font-size:clamp(2.2rem,4.4vw,3.6rem);letter-spacing:-.035em;line-height:1.05;margin:0 0 26px}
+.t-about p{color:#b5b5b5;font-size:1.1rem;line-height:1.7;margin:0 0 18px;max-width:54ch}
+.t-about blockquote{font-family:var(--display);font-size:clamp(1.4rem,2.4vw,2rem);font-weight:500;line-height:1.2;letter-spacing:-.02em;margin:34px 0 0;padding-left:22px;border-left:2px solid var(--gold);max-width:24ch}
+.t-person{background:linear-gradient(145deg,#141414,#0a0a0a);border:1px solid var(--line);border-radius:22px;padding:34px}
+.t-person .top{display:flex;align-items:center;gap:18px;margin-bottom:26px}
+.t-avatar{width:68px;height:68px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:1.5rem;color:#000;background:linear-gradient(135deg,#b38728,#fbf5b7 50%,#d4af37);box-shadow:0 0 26px rgba(212,175,55,.35)}
+.t-person .top b{display:block;font-family:var(--display);font-size:1.5rem;font-weight:600}
+.t-person .top span{color:var(--gold);font-size:.82rem;letter-spacing:.14em;font-weight:700}
+.t-tiles{display:grid;gap:12px}
+.t-tilei{border-left:3px solid var(--gold);background:#0a0a0a;border-radius:8px;padding:14px 16px}
+.t-tilei b{display:block;color:var(--gold3);font-size:.8rem;letter-spacing:.12em;margin-bottom:5px}
+.t-tilei span{color:#a8a8a8;font-size:.9rem;line-height:1.55}
+
+.t-band{text-align:center;padding:150px 24px;background:radial-gradient(900px 400px at 50% 100%,rgba(212,175,55,.3),transparent 70%),#050505}
+.t-band h2{font-family:var(--display);font-weight:600;font-size:clamp(2.4rem,6vw,5rem);letter-spacing:-.04em;line-height:1;max-width:16ch;margin:0 auto 30px}
+
+#siteFoot{border-top:1px solid var(--line);background:#050505}
+.f-in{max-width:1240px;margin:0 auto;padding:64px 28px 40px;display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px}
+#siteFoot p{color:#7d7d7d;font-size:.92rem;max-width:34ch;margin:14px 0 0}
+#siteFoot h4{font-weight:500;color:var(--gold);font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;margin:0 0 14px}
+#siteFoot a.fl{display:block;text-decoration:none;color:#bdbdbd;padding:5px 0;font-size:.95rem;cursor:pointer}
+#siteFoot a.fl:hover{color:#fff}
+.f-end{max-width:1240px;margin:0 auto;padding:0 28px 40px;color:#6b6b6b;font-size:.84rem}
+
+@media(max-width:1100px){
+  .t-about{grid-template-columns:1fr;gap:44px}
+  .t-bento{grid-template-columns:repeat(2,1fr)}.b1{grid-column:span 2}.b2,.b3,.b4,.b5,.b6{grid-column:span 1}
+  .mega-in{grid-template-columns:repeat(3,1fr)}.mcard{display:none}
+  .t-lcards{grid-template-columns:repeat(2,1fr)}
+  .t-plans{grid-template-columns:repeat(2,1fr)}
+  .t-counters{grid-template-columns:repeat(2,1fr)}.t-counter:nth-child(2){border-right:0}
+}
+@media(max-width:900px){
+  .t-menu{display:none}
+  #navBurger{display:flex;margin-left:6px}
+  .t-navin{padding:0 18px;gap:12px}
+  body.menu-open .t-mobile{display:flex}
+  .t-mobile{position:absolute;top:100%;left:0;right:0;flex-direction:column;background:rgba(5,5,5,.98);border-bottom:1px solid var(--line);padding:8px 18px 18px;color:#fff}
+  .t-mobile a{display:block;padding:14px 4px;border-bottom:1px solid rgba(255,255,255,.1);text-decoration:none;font-size:1.05rem;cursor:pointer}
+  .mega{display:none}
+  .t-sec{padding:84px 20px}
+  .f-in{grid-template-columns:1fr 1fr}
+  .t-st{grid-template-columns:44px 1fr;gap:14px}
+  .t-scatter{height:90vh;min-height:560px}
+  .d-body{grid-template-columns:1fr;gap:12px;padding:16px}.d-arrow{transform:rotate(90deg);animation:none}
+}
+@media(max-width:560px){
+  .t-brand b{font-size:1rem}
+  .t-end .t-btn{padding:8px 12px;font-size:.82rem;white-space:nowrap}
+  .t-plans,.t-lcards{grid-template-columns:1fr}
+  .f-in{grid-template-columns:1fr}
+  .t-bento{grid-template-columns:1fr}.b1,.b2,.b3,.b4,.b5,.b6{grid-column:span 1}
+  .t-lcard{height:300px}
+}
+@media(prefers-reduced-motion:reduce){
+  .t-tile,.d-arrow,.d-gold-row,.bars i{animation:none!important}
+  .rv{opacity:1;transform:none}.t-words span{opacity:1}
+  html{scroll-behavior:auto}
+}
+
+/* ============================================================
+   DASHBOARD (control plane) — kept dark + gold
+   ============================================================ */
+body.view-dashboard #siteNav{background:rgba(5,5,5,.92);border-bottom-color:var(--line)}
+.app{display:flex;min-height:100vh;padding-top:var(--nav-h)}
+.sidebar{width:260px;background:linear-gradient(180deg,#101010,#080808);border-right:1px solid #292929;padding:20px 14px;position:fixed;top:var(--nav-h);bottom:0;left:0;z-index:20;overflow-y:auto;display:flex;flex-direction:column}
+.nav{display:grid;gap:7px;flex-shrink:0;margin-bottom:20px}
+.nav button{border:0;background:transparent;color:#999;text-align:left;padding:14px;border-radius:7px;position:relative;transition:.2s;display:flex;gap:12px;align-items:center}
+.nav button:hover,.nav button.active{background:rgba(212,175,55,.06);color:var(--gold2)}
 .nav button.active:before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;background:var(--gold);box-shadow:0 0 12px var(--gold)}
-.sidebar-bottom{margin:auto 4px 0;flex-shrink:0;border-top:1px solid #222;padding:15px 0 6px;color:#666;font-size:11px}.nav{flex-shrink:0;margin-bottom:20px}
+.sidebar-bottom{margin:auto 4px 0;flex-shrink:0;border-top:1px solid #222;padding:15px 0 6px;color:#666;font-size:11px}
 .status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 9px var(--green);margin-right:7px}
 .main{margin-left:260px;width:calc(100% - 260px);padding:26px;max-width:1700px}
 .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
@@ -101,8 +349,7 @@ button{cursor:pointer}
 .section-title{display:flex;justify-content:space-between;align-items:center;margin:26px 0 12px}.section-title h3{margin:0;font-size:14px;letter-spacing:.5px}.section-title span{font-size:11px;color:#666}
 .telemetry{grid-template-columns:1.7fr 1fr;margin-top:16px}
 .chart{height:220px;display:flex;align-items:end;gap:7px;padding-top:25px}
-.bar{flex:1;min-width:3px;background:linear-gradient(to top,rgba(212,175,55,.18),var(--gold));border-radius:3px 3px 0 0;box-shadow:0 0 8px rgba(212,175,55,.08);height:25%;transition:height .35s}
-.bar.live{box-shadow:0 0 15px rgba(212,175,55,.65)}
+.bar{flex:1;min-width:3px;background:linear-gradient(to top,rgba(212,175,55,.18),var(--gold));border-radius:3px 3px 0 0;height:25%;transition:height .35s}
 .builder{display:grid;grid-template-columns:1fr 160px 150px auto;gap:9px}
 input,select{background:#080808;color:#eee;border:1px solid #2c2c2c;border-radius:7px;padding:12px;outline:none}
 input:focus,select:focus{border-color:var(--gold)}
@@ -111,36 +358,20 @@ input:focus,select:focus{border-color:var(--gold)}
 .btn.primary{background:linear-gradient(135deg,#b99324,#e0bd4b);border-color:#e0bd4b;color:#090909;font-weight:800}
 .btn.danger{border-color:rgba(255,64,64,.35);color:#ff7070}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
 .preview{margin-top:12px;background:#050505;border:1px solid #1f1f1f;border-radius:7px;min-height:130px;padding:15px;font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:#7df0aa;white-space:pre-wrap;overflow:auto}
-.nodes-head{display:grid;grid-template-columns:1fr 110px 130px 130px;gap:10px;padding:0 12px 9px;color:#666;font-size:10px;text-transform:uppercase;letter-spacing:1px}
-.node{display:grid;grid-template-columns:1fr 110px 130px 130px;gap:10px;align-items:center;padding:15px 12px;border:1px solid #222;background:#0d0d0d;border-radius:7px;margin-bottom:7px}
-.node.blocked{border-color:rgba(255,64,64,.3);background:linear-gradient(90deg,rgba(255,64,64,.07),#0d0d0d)}
-.domain{font-weight:700}.node small{color:#666;display:block;margin-top:4px}
-.badge{font-size:9px;letter-spacing:1px;padding:5px 8px;border-radius:20px;width:max-content}.badge.active{color:var(--green);background:rgba(34,212,123,.08);border:1px solid rgba(34,212,123,.2)}.badge.blocked{color:#ff6b6b;background:rgba(255,64,64,.08);border:1px solid rgba(255,64,64,.2)}
 .search-row{display:flex;gap:10px}.search-row input{flex:1}
 .plans{grid-template-columns:repeat(4,minmax(0,1fr))}.plans .card{padding:16px}.plans .price{font-size:27px}.plans .features{font-size:11px}.plan{position:relative;overflow:hidden}.plan.featured{border-color:var(--gold);box-shadow:0 0 35px rgba(212,175,55,.07)}.ribbon{position:absolute;right:-32px;top:15px;transform:rotate(35deg);background:var(--gold);color:#080808;padding:5px 35px;font-size:9px;font-weight:900}
 .price{font-size:34px;font-weight:900;margin:16px 0 5px}.price small{font-size:12px;color:#666;font-weight:400}.features{list-style:none;padding:0;color:#aaa;font-size:12px;line-height:2.2}.features li:before{content:"✓";color:var(--gold);margin-right:8px}
 .analytics-grid{grid-template-columns:repeat(2,1fr)}.metric-row{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid #1e1e1e;font-size:12px}.progress{height:6px;background:#1c1c1c;border-radius:20px;overflow:hidden;margin-top:8px}.progress i{display:block;height:100%;background:linear-gradient(90deg,#8d6c1d,var(--gold));width:var(--w)}
-.toast{position:fixed;right:22px;bottom:22px;background:#121212;border:1px solid var(--gold);padding:13px 16px;border-radius:7px;box-shadow:0 15px 40px #000;transform:translateY(30px);opacity:0;pointer-events:none;transition:.25s;z-index:100;font-size:12px}.toast.show{transform:none;opacity:1}
-.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:90;place-items:center}.modal-backdrop.show{display:grid}.modal{width:min(520px,92vw);background:#101010;border:1px solid #333;border-radius:12px;padding:24px;box-shadow:0 30px 100px #000}.modal h3{margin-top:0}.modal p{color:#999;font-size:12px;line-height:1.6}
+.toast{position:fixed;right:22px;bottom:22px;background:#121212;border:1px solid var(--gold);padding:13px 16px;border-radius:7px;box-shadow:0 15px 40px #000;transform:translateY(30px);opacity:0;pointer-events:none;transition:.25s;z-index:200;font-size:12px}.toast.show{transform:none;opacity:1}
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:150;place-items:center}.modal-backdrop.show{display:grid}.modal{width:min(520px,92vw);max-height:92vh;overflow-y:auto;background:#101010;border:1px solid #333;border-radius:12px;padding:24px;box-shadow:0 30px 100px #000}.modal h3{margin-top:0}.modal p{color:#999;font-size:12px;line-height:1.6}
 .mobile-menu{display:none}
-.profile-chip{border:1px solid var(--line);background:#101010;color:#eee;border-radius:10px;padding:7px 11px;display:flex;align-items:center;gap:9px}.profile-chip[hidden]{display:none}.profile-chip small{display:block;color:#777;font-size:8px;letter-spacing:1px}.avatar{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:linear-gradient(135deg,#b99324,#f1d46a);color:#090909;font-weight:900}.kpi5{grid-template-columns:repeat(5,1fr)}.split{grid-template-columns:1.2fr .8fr}.code{font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}.keyrow{display:grid;grid-template-columns:1fr auto auto;gap:8px}.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid #2a2a2a;border-radius:999px;padding:5px 8px;color:#999;font-size:10px}.live-stream{height:250px;overflow:auto;background:#070707;border:1px solid #202020;border-radius:8px;padding:12px}.event{display:grid;grid-template-columns:72px 70px 1fr 70px;gap:8px;padding:8px 4px;border-bottom:1px solid #181818;font:10px ui-monospace,monospace}.job,.logrow{display:grid;grid-template-columns:1.3fr .7fr .7fr .7fr auto;gap:10px;align-items:center;padding:13px;border-bottom:1px solid #1f1f1f;font-size:11px}.tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}.setting{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid #1e1e1e}.setting p{margin:4px 0 0;color:#777;font-size:11px}.mini-switch{width:42px;height:23px;border-radius:20px;background:#222;border:1px solid #333;padding:2px}.mini-switch.on{background:rgba(212,175,55,.18);border-color:var(--gold)}.mini-switch i{display:block;width:17px;height:17px;border-radius:50%;background:#777;transition:.2s}.mini-switch.on i{transform:translateX(17px);background:var(--gold)}.auth-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.auth-grid .full{grid-column:1/-1}.auth-note{font-size:10px;color:#777;line-height:1.5;margin-top:12px}.hero-line{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.danger-zone{border-color:rgba(255,64,64,.2)}
-@media(max-width:1050px){.kpi5{grid-template-columns:repeat(2,1fr)}.split{grid-template-columns:1fr}}
-@media(max-width:1050px){.stats{grid-template-columns:repeat(2,1fr)}.telemetry,.analytics-grid{grid-template-columns:1fr}.plans{grid-template-columns:1fr}.builder{grid-template-columns:1fr 1fr}.builder .wide{grid-column:1/-1}}
-@media(max-width:720px){
- .sidebar{transform:translateX(-100%);transition:.25s;width:260px}.sidebar.open{transform:none}.main{margin-left:0;width:100%;padding:17px}.mobile-menu{display:block}.topbar{gap:10px}.topbar h2{font-size:21px}.stats{grid-template-columns:1fr 1fr}.nodes-head{display:none}.node{grid-template-columns:1fr auto;gap:8px}.node>*:nth-child(2){grid-column:2;grid-row:1}.node>*:nth-child(3){grid-column:1}.node>*:nth-child(4){grid-column:2;grid-row:2}.builder{grid-template-columns:1fr}.builder .wide{grid-column:auto}.card{padding:16px}.big{font-size:25px}
-}
-
-.hero{display:flex;justify-content:space-between;align-items:center;gap:24px;padding:28px;margin-bottom:18px;border:1px solid rgba(212,175,55,.2);border-radius:16px;background:radial-gradient(circle at 85% 20%,rgba(212,175,55,.12),transparent 28%),linear-gradient(135deg,#121212,#080808)}.hero h2{font-size:34px;margin:6px 0}.hero p{color:#8c8c8c;max-width:720px;line-height:1.7;font-size:13px}.hero-badge{min-width:125px;aspect-ratio:1;border:1px solid rgba(212,175,55,.28);border-radius:50%;display:grid;place-content:center;text-align:center;box-shadow:inset 0 0 35px rgba(212,175,55,.06),0 0 50px rgba(212,175,55,.05)}.hero-badge b{font-size:29px;color:var(--gold2)}.hero-badge span{font-size:8px;letter-spacing:2px;color:#777}.registry-item{display:grid;grid-template-columns:1.5fr .9fr .7fr .7fr auto;align-items:center;gap:12px;padding:14px 8px;border-bottom:1px solid #202020}.registry-item:last-child{border:0}.channel-id{font:10px ui-monospace,monospace;color:#666}.logline{display:grid;grid-template-columns:180px 1fr 90px;gap:14px;padding:14px 0;border-bottom:1px solid #1e1e1e;font-size:12px}.logline span,.logline time{color:#777}.logline time{text-align:right}@media(max-width:720px){.hero{align-items:flex-start}.hero-badge{display:none}.registry-item{grid-template-columns:1fr auto}.registry-item>*:nth-child(3),.registry-item>*:nth-child(4){display:none}.logline{grid-template-columns:1fr}.logline time{text-align:left}}
-
-.gold-bar{height:36px;border:1px solid #d4af37;border-radius:3px;background:#000;overflow:hidden;margin:12px 0 18px;box-shadow:inset 0 0 14px rgba(0,0,0,.9)}
-.gold-fill{height:100%;width:0;background:linear-gradient(90deg,#b38728 0%,#fbf5b7 50%,#d4af37 100%);box-shadow:0 0 18px rgba(212,175,55,.45);transition:width .9s cubic-bezier(.2,.8,.2,1)}
-.gold-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;font-size:15px;color:#f4f4f4;line-height:1.5}.gold-meta b{color:#fbf5b7;font-weight:800}
+.profile-chip{border:1px solid var(--line);background:#101010;color:#eee;border-radius:10px;padding:7px 11px;display:flex;align-items:center;gap:9px}.profile-chip[hidden]{display:none}.profile-chip small{display:block;color:#777;font-size:8px;letter-spacing:1px}.avatar{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:linear-gradient(135deg,#b99324,#f1d46a);color:#090909;font-weight:900}.kpi5{grid-template-columns:repeat(5,1fr)}.split{grid-template-columns:1.2fr .8fr}.code{font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}.keyrow{display:grid;grid-template-columns:1fr auto auto;gap:8px}.live-stream{height:250px;overflow:auto;background:#070707;border:1px solid #202020;border-radius:8px;padding:12px}.tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}.auth-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.auth-grid .full{grid-column:1/-1}.auth-note{font-size:10px;color:#777;line-height:1.5;margin-top:12px}
+.gold-bar{height:30px;border:1px solid #d4af37;border-radius:3px;background:#000;overflow:hidden;margin:12px 0 18px}
+.gold-fill{height:100%;width:0;background:linear-gradient(90deg,#b38728 0%,#fbf5b7 50%,#d4af37 100%);transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.gold-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;font-size:14px;line-height:1.5}.gold-meta b{color:#fbf5b7;font-weight:800}
 .gold-pct{font-size:22px;font-weight:800;color:#fbf5b7}
 .stripe-box{padding:13px;background:#080808;border:1px solid #2c2c2c;border-radius:7px;margin-top:12px}.err{color:#ff6b6b;font-size:12px;min-height:18px;margin-top:8px}
 .qr{background:#fff;padding:8px;border-radius:8px;display:block;margin:10px auto}
-@media(max-width:720px){.gold-meta{grid-template-columns:1fr}}
-@media(prefers-reduced-motion:reduce){.gold-fill{transition:none}}
-
 .field-label{display:block;font-size:11px;letter-spacing:.1em;color:#a8a8a8;margin:0 0 6px;font-weight:700}
 .stripe-field{padding:12px;background:#000;border:1px solid #2c2c2c;border-radius:7px}
 .insights-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:16px}
@@ -149,68 +380,281 @@ input:focus,select:focus{border-color:var(--gold)}
 .insight-tag{font-size:10px;letter-spacing:.14em;color:#fbf5b7;font-weight:800}
 .insight-card h4{margin:0;font-size:16px;line-height:1.35;color:#fff}
 .insight-card p{margin:0;color:#a0a0a0;font-size:13px;line-height:1.55;flex:1}
-.insight-foot{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#8a8a8a}
-.insight-badge{border:1px solid #d4af37;color:#d4af37;border-radius:999px;padding:3px 9px;font-size:10px;font-weight:800;letter-spacing:.1em}
-@media(prefers-reduced-motion:reduce){.insight-card{transition:none}}
-
-.about-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:16px}
-.about-card{background:#0a0a0a;border:1px solid rgba(212,175,55,.45);border-radius:10px;padding:22px}
-.about-card h4{margin:0 0 10px;font-size:13px;letter-spacing:.14em;color:#fbf5b7;font-weight:800}
-.about-card p{margin:0 0 12px;color:#c9c9c9;font-size:14px;line-height:1.7}.about-card p:last-child{margin-bottom:0}
-.about-hero{display:flex;gap:16px;align-items:center;margin-bottom:14px}
-.about-avatar{flex:none;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#000;background:linear-gradient(135deg,#b38728,#fbf5b7 50%,#d4af37);box-shadow:0 0 22px rgba(212,175,55,.3)}
-.about-name{font-size:18px;font-weight:800;color:#fff}.about-role{font-size:12px;color:#d4af37;letter-spacing:.1em;font-weight:700}
-.about-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:16px}
-.about-tile{background:#0a0a0a;border:1px solid #242424;border-left:3px solid #d4af37;border-radius:8px;padding:16px}
-.about-tile b{display:block;color:#fbf5b7;font-size:13px;letter-spacing:.08em;margin-bottom:6px}.about-tile span{color:#a8a8a8;font-size:13px;line-height:1.6}
+@media(max-width:1050px){.kpi5,.stats{grid-template-columns:repeat(2,1fr)}.split,.telemetry,.analytics-grid{grid-template-columns:1fr}.plans{grid-template-columns:1fr}.builder{grid-template-columns:1fr 1fr}.builder .wide{grid-column:1/-1}}
+@media(max-width:720px){
+ .sidebar{transform:translateX(-100%);transition:.25s}.sidebar.open{transform:none}.main{margin-left:0;width:100%;padding:17px}.mobile-menu{display:block}.topbar{gap:10px;flex-wrap:wrap}.topbar h2{font-size:21px}.stats{grid-template-columns:1fr 1fr}.builder{grid-template-columns:1fr}.builder .wide{grid-column:auto}.card{padding:16px}.big{font-size:25px}.gold-meta{grid-template-columns:1fr}
+}
 </style>
 </head>
-<body>
-<div class="app">
+<body class="view-landing">
+
+<!-- ======================= TOP NAVIGATION ======================= -->
+<header id="siteNav">
+  <div class="t-navin">
+    <a class="t-brand" data-go="landing" aria-label="TitanCDN home">
+      <div class="t-logo"><span>T</span></div>
+      <b>TITAN<i>CDN</i></b>
+    </a>
+
+    <nav class="t-menu" aria-label="Main">
+      <div>
+        <button class="nl" type="button" data-mega="product" aria-expanded="false">Product</button>
+        <div class="mega" id="mega-product"><div class="mega-in">
+          <div class="mcol"><h4>Product</h4>
+            <a data-go="landing:how">How it works<small>Four steps to your first JSON</small></a>
+            <a data-go="landing:features">Features<small>AI extraction, security, analytics</small></a>
+            <a data-go="landing:pricing">Pricing<small>Free trial, then pay by characters</small></a>
+          </div>
+          <div class="mcol"><h4>Control plane</h4>
+            <a data-go="dashboard:overview">Dashboard<small>Usage and live telemetry</small></a>
+            <a data-go="dashboard:workbench">Developer Workbench<small>Send a test request</small></a>
+            <a data-go="dashboard:api">API keys<small>Create and manage keys</small></a>
+          </div>
+          <a class="mcard" data-go="landing:how"><div class="media" style="--g1:#3a2e0c;--g2:#0a0804"></div><span>See how a request becomes data</span></a>
+          <a class="mcard" data-go="dashboard:viewInsights"><div class="media" style="--g1:#2c2410;--g2:#07060a"></div><span>Titan Insights news hub</span></a>
+        </div></div>
+      </div>
+
+      <div>
+        <button class="nl" type="button" data-mega="usecases" aria-expanded="false">Use cases</button>
+        <div class="mega" id="mega-usecases"><div class="mega-in">
+          <div class="mcol"><h4>Monitor</h4>
+            <a data-go="landing:usecases">Price monitoring</a><a data-go="landing:usecases">Catalog tracking</a></div>
+          <div class="mcol"><h4>Research</h4>
+            <a data-go="landing:usecases">Market research</a><a data-go="landing:usecases">Lead lists</a></div>
+          <a class="mcard" data-go="landing:usecases"><div class="media" style="--g1:#3a2e0c;--g2:#0a0804"></div><span>Prices and catalogs</span></a>
+          <a class="mcard" data-go="landing:usecases"><div class="media" style="--g1:#2a2a2a;--g2:#060606"></div><span>Leads and research</span></a>
+        </div></div>
+      </div>
+
+      <div>
+        <button class="nl" type="button" data-mega="company" aria-expanded="false">Company</button>
+        <div class="mega" id="mega-company"><div class="mega-in">
+          <div class="mcol"><h4>TitanCDN</h4>
+            <a data-go="landing:about">About us<small>Who builds it</small></a>
+            <a data-go="dashboard:viewInsights">Titan Insights<small>Live business and tech news</small></a>
+          </div>
+          <div class="mcol"><h4>Start</h4>
+            <a data-auth="signup">Create account<small>Free trial</small></a>
+            <a data-go="landing:pricing">Pricing<small>Plans in characters</small></a>
+          </div>
+          <a class="mcard" data-go="landing:about"><div class="media" style="--g1:#33290e;--g2:#070707"></div><span>Meet the founder</span></a>
+          <a class="mcard" data-go="landing:pricing"><div class="media" style="--g1:#463808;--g2:#0a0a0a"></div><span>Start with 100,000 free characters</span></a>
+        </div></div>
+      </div>
+
+      <div><a class="nl" data-go="landing:pricing">Pricing</a></div>
+    </nav>
+
+    <div class="t-end">
+      <div class="out-only" style="gap:10px;align-items:center">
+        <button class="t-btn t-ghost" type="button" data-auth="signin">Sign in</button>
+        <button class="t-btn t-gold" type="button" data-auth="signup">Get started</button>
+      </div>
+      <div class="in-only" style="gap:10px;align-items:center">
+        <button class="t-btn t-ghost" type="button" data-go="dashboard:overview">Dashboard</button>
+        <button class="t-btn t-ghost" type="button" data-act="profile" id="navUser">Account</button>
+        <button class="t-btn t-gold" type="button" data-act="logout">Log out</button>
+      </div>
+    </div>
+    <button id="navBurger" type="button" aria-label="Open menu"><span></span></button>
+  </div>
+  <div class="t-mobile">
+    <a data-go="landing:how">How it works</a>
+    <a data-go="landing:features">Features</a>
+    <a data-go="landing:usecases">Use cases</a>
+    <a data-go="landing:pricing">Pricing</a>
+    <a data-go="landing:about">About us</a>
+    <a data-go="dashboard:overview">Dashboard</a>
+  </div>
+</header>
+
+<!-- ======================= LANDING (information only) ======================= -->
+<main id="landing">
+
+  <section class="t-hero" data-nav="dark">
+    <div id="heroText">
+      <span class="t-eyebrow">AI-powered web data platform</span>
+      <h1>Any web page.<br><em>Clean data.</em></h1>
+      <p class="t-lead">Send TitanCDN a link and a plain-English instruction. It fetches the page, filters it with AI and returns exactly what you asked for, as tidy JSON through one simple API.</p>
+      <div class="t-cta">
+        <button class="t-btn t-gold t-lg" type="button" data-act="start">Start with the free trial</button>
+        <button class="t-btn t-ghost t-lg" type="button" data-go="landing:how">See how it works</button>
+      </div>
+      <p class="t-founder"><b>Rayan Katsarov, founder.</b> &ldquo;No brittle scripts and no manual cleanup, just the answer you asked for.&rdquo;</p>
+    </div>
+
+    <div class="t-devwrap">
+      <div id="heroDevice" aria-hidden="true">
+        <div class="d-bar"><i></i><i></i><i></i><span class="d-url">POST /api/v1/scrape</span></div>
+        <div class="d-body">
+          <div class="d-pane">
+            <small>REQUEST · EXAMPLE</small>
+            <span class="d-line"><span class="m">x-api-key:</span> titan_sk_••••••••</span>
+            <span class="d-line">&nbsp;</span>
+            <span class="d-line">{</span>
+            <span class="d-line">&nbsp;&nbsp;<span class="k">"targetUrl"</span>: <span class="s">"https://shop.example.com/phones"</span></span>
+            <span class="d-line">}</span>
+            <span class="d-line">&nbsp;</span>
+            <span class="d-line"><span class="m">// instruction saved on the key:</span></span>
+            <span class="d-line"><span class="s">"Return product name, price and availability"</span></span>
+          </div>
+          <div class="d-arrow">➜</div>
+          <div class="d-pane gold">
+            <small>RESPONSE · JSON</small>
+            <span class="d-line">{ <span class="k">"success"</span>: true,</span>
+            <span class="d-line">&nbsp;&nbsp;<span class="k">"responseCode"</span>: 200,</span>
+            <span class="d-line">&nbsp;&nbsp;<span class="k">"extraction"</span>: { <span class="k">"content"</span>: {</span>
+            <span class="d-line d-gold-row">&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"name"</span>: <span class="s">"Phone X"</span>,</span>
+            <span class="d-line d-gold-row">&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"price"</span>: <span class="s">"€499"</span>,</span>
+            <span class="d-line d-gold-row">&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">"availability"</span>: <span class="s">"In stock"</span></span>
+            <span class="d-line">&nbsp;&nbsp;}}, <span class="k">"usage"</span>: { … } }</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="t-statement" id="statement" data-nav="dark">
+    <p class="t-words" id="words">Fragile scrapers break every week. TitanCDN gives you one API: send a link and an instruction, and get back only the data you asked for. No scripts to maintain, no cleanup, no surprises.</p>
+
+    <div class="t-scatter" id="scatter">
+      <div class="t-center"><h2>One link. One instruction. Clean JSON.</h2><p>From any public page to usable data in seconds.</p></div>
+      <div class="t-tile" style="left:4%;top:12%;width:150px;height:190px;--k:1.3"><div class="media" data-photo="images/prices.jpg" style="position:absolute;inset:0;--g1:#4a3a0c;--g2:#0b0903"></div><span>Prices</span></div>
+      <div class="t-tile" style="left:28%;top:6%;width:120px;height:150px;--k:.8"><div class="media" data-photo="images/catalog.jpg" style="position:absolute;inset:0;--g1:#33333a;--g2:#08080a"></div><span>Catalogs</span></div>
+      <div class="t-tile" style="left:52%;top:10%;width:170px;height:210px;--k:1.5"><div class="media" data-photo="images/leads.jpg" style="position:absolute;inset:0;--g1:#5a4410;--g2:#0a0804"></div><span>Lead lists</span></div>
+      <div class="t-tile" style="left:78%;top:4%;width:130px;height:160px;--k:.9"><div class="media" data-photo="images/news.jpg" style="position:absolute;inset:0;--g1:#2b2b2b;--g2:#050505"></div><span>News</span></div>
+      <div class="t-tile" style="left:10%;top:52%;width:140px;height:170px;--k:1.1"><div class="media" data-photo="images/listings.jpg" style="position:absolute;inset:0;--g1:#3d3010;--g2:#080703"></div><span>Listings</span></div>
+      <div class="t-tile" style="left:36%;top:62%;width:170px;height:200px;--k:1.6"><div class="media" data-photo="images/markets.jpg" style="position:absolute;inset:0;--g1:#55420d;--g2:#090703"></div><span>Markets</span></div>
+      <div class="t-tile" style="left:63%;top:56%;width:140px;height:180px;--k:.7"><div class="media" data-photo="images/research.jpg" style="position:absolute;inset:0;--g1:#2f2f35;--g2:#060607"></div><span>Research</span></div>
+      <div class="t-tile" style="left:84%;top:50%;width:150px;height:190px;--k:1.2"><div class="media" data-photo="images/products.jpg" style="position:absolute;inset:0;--g1:#4a3a0c;--g2:#0b0903"></div><span>Products</span></div>
+    </div>
+  </section>
+
+  <section class="t-sec t-light" id="how" data-nav="light">
+    <div class="t-in">
+      <div class="t-head rv"><span class="t-tag">How it works</span><h2>From a link to clean data in four steps.</h2><p>No scraper to build, no hosting to set up. You create a key, describe what you want, and call one endpoint.</p></div>
+      <div class="t-steps">
+        <div class="t-st rv"><div class="n">1</div><div><h3>Create your account</h3><p>Sign up and confirm your email. Then verify a card to unlock the 100,000 free characters. The card is never charged.</p>
+          <div class="t-chips"><span class="t-chip on">Sign up</span><span class="t-chip">Confirm email</span><span class="t-chip">Verify card</span></div></div></div>
+        <div class="t-st rv"><div class="n">2</div><div><h3>Create an API key and say what to extract</h3><p>Describe the data you need in plain English, for example &ldquo;get only the company names&rdquo;. The instruction is saved on the key. Leave it empty for all available data.</p></div></div>
+        <div class="t-st rv"><div class="n">3</div><div><h3>Send a link</h3><p>Call the endpoint with your key and the public page you want to read.</p>
+          <code class="t-code"><span class="m">$</span> curl -X POST <span class="s" id="curlOrigin">https://your-titancdn.com</span>/api/v1/scrape \<br>&nbsp;&nbsp;-H <span class="s">"x-api-key: titan_sk_..."</span> \<br>&nbsp;&nbsp;-H <span class="s">"Content-Type: application/json"</span> \<br>&nbsp;&nbsp;-d <span class="s">'{"targetUrl":"https://example.com/page"}'</span></code></div></div>
+        <div class="t-st rv"><div class="n">4</div><div><h3>Get structured JSON back</h3><p>Titan fetches the page, filters it with AI and returns the result together with your live usage and remaining limit.</p></div></div>
+      </div>
+      <div style="margin-top:56px"><button class="t-btn t-dark t-lg" type="button" data-act="start">Start building</button></div>
+    </div>
+  </section>
+
+  <section class="t-sec t-dark-sec" id="features" data-nav="dark">
+    <div class="t-in">
+      <div class="t-head rv"><span class="t-tag">Features</span><h2>Everything a data pipeline needs. Nothing it does not.</h2><p>Each part does one job, and all of it works from the first day.</p></div>
+      <div class="t-bento">
+        <div class="t-bx b1 wide-gold rv"><h3>AI extraction on every key</h3><p>Tell Titan AI what each API key should extract. The instruction is saved on the key and applied to every request, so your code stays one line long.</p>
+          <div class="vis"><div class="mini-json"><span class="k">"instruction"</span>: <span class="s">"Return only company names"</span><br><span class="k">"extraction"</span>: { <span class="k">"companies"</span>: [<span class="s">"Acme"</span>, <span class="s">"Globex"</span>, <span class="s">"Initech"</span>] }</div></div></div>
+        <div class="t-bx b2 rv" style="--d:80ms"><h3>Pay for what you use</h3><p>Plans are measured in characters processed, with your live usage always visible.</p>
+          <div class="vis"><div class="bars"><i style="height:30%"></i><i style="height:46%"></i><i style="height:40%"></i><i style="height:66%"></i><i style="height:58%"></i><i style="height:92%"></i></div></div></div>
+        <div class="t-bx b3 rv"><h3>Secure by design</h3><p>Hashed passwords, API keys stored only as hashes, two-factor authentication and rate limiting.</p>
+          <div class="vis"><span class="t-pill"><i></i>2FA</span><span class="t-pill"><i></i>Hashed keys</span><span class="t-pill"><i></i>Rate limits</span></div></div>
+        <div class="t-bx b4 rv" style="--d:80ms"><h3>Protected targets</h3><p>Requests to private and local networks are blocked, and every redirect hop is checked.</p></div>
+        <div class="t-bx b5 rv" style="--d:160ms"><h3>Logs and analytics</h3><p>Every request is recorded with status, duration and characters, with 24-hour charts.</p></div>
+        <div class="t-bx b6 rv"><h3>Honest by design</h3><p>TitanCDN does not bypass CAPTCHAs or bot protection. Blocked pages are reported clearly and are not charged.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="t-sec t-light" id="usecases" data-nav="light">
+    <div class="t-in">
+      <div class="t-head rv"><span class="t-tag">Use cases</span><h2>Small to start. Built for real work.</h2><p>Teams use Titan wherever a web page needs to become a data table.</p></div>
+      <div class="t-counters rv">
+        <div class="t-counter"><b data-count="100000">0</b><span>free characters to start</span></div>
+        <div class="t-counter"><b data-count="4">0</b><span>paid plans</span></div>
+        <div class="t-counter"><b data-count="3" data-suffix="B">0</b><span>characters per month at the top plan</span></div>
+        <div class="t-counter"><b data-count="1">0</b><span>API call to get your data</span></div>
+      </div>
+      <div class="t-lcards">
+        <a class="t-lcard rv" data-go="landing:pricing"><div class="media" data-photo="images/prices.jpg" style="--g1:#4a3a0c;--g2:#0b0903"></div><div class="t"><h3>Price monitoring</h3><p>Track competitor prices and stock without writing scrapers.</p></div></a>
+        <a class="t-lcard rv" data-go="landing:pricing" style="--d:90ms"><div class="media" data-photo="images/research.jpg" style="--g1:#2f2f35;--g2:#060607"></div><div class="t"><h3>Market research</h3><p>Collect the facts you need from public sources, fast.</p></div></a>
+        <a class="t-lcard rv" data-go="landing:pricing" style="--d:180ms"><div class="media" data-photo="images/leads.jpg" style="--g1:#5a4410;--g2:#0a0804"></div><div class="t"><h3>Lead lists</h3><p>Turn directory pages into clean lists of companies.</p></div></a>
+        <a class="t-lcard rv" data-go="landing:pricing" style="--d:270ms"><div class="media" data-photo="images/catalog.jpg" style="--g1:#33333a;--g2:#08080a"></div><div class="t"><h3>Catalog tracking</h3><p>Keep product catalogs up to date automatically.</p></div></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="t-sec t-light" id="pricing" data-nav="light" style="padding-top:0">
+    <div class="t-in">
+      <div class="t-head rv"><span class="t-tag">Pricing</span><h2>Start free. Pay when you grow.</h2><p>Every plan is measured in characters processed per month.</p></div>
+      <div class="t-trial rv">
+        <div><h3>Free trial · 100,000 characters</h3><p>One-time package, does not renew. Card verification only, never charged. One card and one device per trial.</p></div>
+        <button class="t-btn t-gold t-lg" type="button" data-act="start">Start free trial</button>
+      </div>
+      <div class="t-plans">
+        <div class="t-plan rv"><h3>Starter</h3><div class="price">€69.99 <small>/ month</small></div><div class="chars">25,000,000 characters</div>
+          <ul><li>Developer workbench</li><li>Titan AI extraction</li><li>Standard support</li></ul>
+          <button class="t-btn t-dark" type="button" data-plan-go="pro">Select plan</button></div>
+        <div class="t-plan pop rv" style="--d:80ms"><div class="t-ribbon">POPULAR</div><h3>Business</h3><div class="price">€299.99 <small>/ month</small></div><div class="chars">250,000,000 characters</div>
+          <ul><li>Advanced analytics</li><li>Priority support</li><li>Team 2FA</li></ul>
+          <button class="t-btn t-gold" type="button" data-plan-go="business">Select plan</button></div>
+        <div class="t-plan rv" style="--d:160ms"><h3>Mega Factory</h3><div class="price">€899.99 <small>/ month</small></div><div class="chars">1,000,000,000 characters</div>
+          <ul><li>Enterprise telemetry</li><li>High-volume extraction</li><li>Priority support</li></ul>
+          <button class="t-btn t-dark" type="button" data-plan-go="enterprise">Select plan</button></div>
+        <div class="t-plan rv" style="--d:240ms"><h3>Titan Enterprise</h3><div class="price">€1,999.99 <small>/ month</small></div><div class="chars">3,000,000,000 characters</div>
+          <ul><li>Maximum-volume extraction</li><li>Enterprise telemetry</li><li>Priority support</li></ul>
+          <button class="t-btn t-dark" type="button" data-plan-go="titan">Select plan</button></div>
+      </div>
+      <p class="t-note">Payment goes through secure Stripe Checkout. Once Stripe confirms it, your account limit changes automatically, and your characters reset on every renewal.</p>
+    </div>
+  </section>
+
+  <section class="t-sec t-dark-sec" id="about" data-nav="dark">
+    <div class="t-in t-about">
+      <div>
+        <span class="t-tag rv">About us</span>
+        <h2 class="rv">We turn any public web page into clean, structured data.</h2>
+        <p class="rv">TitanCDN is an AI-powered web data platform. Send a URL and an instruction such as &ldquo;get only the company names&rdquo;, and Titan fetches the page, filters it with AI and returns tidy JSON through one simple API.</p>
+        <p class="rv">We built it for teams that need reliable data without maintaining fragile scrapers: price monitoring, market research, lead lists and catalog tracking.</p>
+        <blockquote class="rv">No brittle scripts. No manual cleanup. Just the answer you asked for.</blockquote>
+      </div>
+      <div class="t-person rv">
+        <div class="top"><div class="t-avatar" aria-hidden="true">RK</div><div><b>Rayan Katsarov</b><span>FOUNDER</span></div></div>
+        <p style="font-size:.98rem;margin-bottom:22px">I care about clean engineering, honest pricing and a product that works the first time. Every part of the platform is built with security and speed in mind.</p>
+        <div class="t-tiles">
+          <div class="t-tilei"><b>SIMPLE</b><span>One API call, one instruction, structured results.</span></div>
+          <div class="t-tilei"><b>SECURE</b><span>Hashed passwords and keys, two-factor authentication, rate limiting and private-network protection.</span></div>
+          <div class="t-tilei"><b>TRANSPARENT</b><span>Clear usage-based plans. Your live usage and remaining limit are always visible.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="t-band" data-nav="dark">
+    <h2 class="rv">Your first JSON, in minutes.</h2>
+    <button class="t-btn t-gold t-lg rv" type="button" data-act="start" style="--d:120ms">Start with 100,000 free characters</button>
+  </section>
+</main>
+
+<footer id="siteFoot">
+  <div class="f-in">
+    <div>
+      <a class="t-brand" data-go="landing" style="padding:0"><div class="t-logo"><span>T</span></div><b>TITAN<i>CDN</i></b></a>
+      <p>AI-powered web data platform. Any public page, turned into clean JSON.</p>
+    </div>
+    <div><h4>Product</h4><a class="fl" data-go="landing:how">How it works</a><a class="fl" data-go="landing:features">Features</a><a class="fl" data-go="landing:pricing">Pricing</a></div>
+    <div><h4>Platform</h4><a class="fl" data-go="dashboard:overview">Dashboard</a><a class="fl" data-go="dashboard:workbench">Developer Workbench</a><a class="fl" data-go="dashboard:viewInsights">Titan Insights</a></div>
+    <div><h4>Company</h4><a class="fl" data-go="landing:about">About us</a><a class="fl" data-go="landing:usecases">Use cases</a><a class="fl" data-auth="signup">Create account</a></div>
+  </div>
+  <div class="f-end">&copy; 2026 TitanCDN. Founded by Rayan Katsarov.</div>
+</footer>
+
+<!-- ======================= DASHBOARD (control plane) ======================= -->
+<div class="app" id="dashboardView">
 <aside class="sidebar" id="sidebar">
-<!-- TITANCDN PREMIUM DIAMOND LOGO SYSTEM -->
-<div class="brand" style="display: flex !important; align-items: center !important; gap: 15px !important; padding: 15px 25px !important; background: transparent !important; width: auto !important; height: auto !important; visibility: visible !important; opacity: 1 !important;">
-    <!-- LOGO TAG, RENDERED AS A GOLD DIAMOND -->
-    <div class="logo" style="
-        width: 38px !important; 
-        height: 38px !important; 
-        border: 2px solid #d4af37 !important; 
-        transform: rotate(45deg) !important; 
-        display: flex !important; 
-        justify-content: center !important; 
-        align-items: center !important; 
-        background: #090909 !important;
-        box-shadow: 0 0 12px rgba(212, 175, 55, 0.5) !important;
-        box-sizing: border-box !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    ">
-        <!-- LETTER T - FIXED AND GLOWING GOLD -->
-        <span style="
-            transform: rotate(-45deg) !important; 
-            color: #d4af37 !important; 
-            font-family: 'Segoe UI', Arial, sans-serif !important;
-            font-weight: 900 !important; 
-            font-size: 1.2rem !important;
-            display: inline-block !important;
-            line-height: 1 !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        ">T</span>
-    </div>
-
-    <!-- PAGE HEADINGS -->
-    <div style="display: block !important; visibility: visible !important; opacity: 1 !important;">
-        <h1 style="margin: 0 !important; font-size: 1.25rem !important; font-weight: 800 !important; letter-spacing: 1.5px !important; color: #ffffff !important; text-transform: uppercase !important; font-family: 'Segoe UI', sans-serif !important;">TITAN<span style="color: #d4af37 !important;">CDN</span></h1>
-        <small style="margin: 0 !important; font-size: 0.65rem !important; font-weight: 700 !important; letter-spacing: 1px !important; color: #666666 !important; text-transform: uppercase !important; display: block !important; font-family: 'Segoe UI', sans-serif !important;">DATA INFRASTRUCTURE</small>
-    </div>
-</div>
-
   <nav class="nav">
     <button class="active" data-page="overview">◈ <span>Overview</span></button>
-    <button data-page="edge" class="">◎ <span>Edge Network</span></button>
+    <button data-page="workbench">⌥ <span>Developer Workbench</span></button>
+    <button data-page="edge">◎ <span>Edge Network</span></button>
     <button data-page="analytics">◒ <span>Analytics</span></button>
-<button data-page="jobs" style="display:none">◫ <span>Scrape Jobs</span></button>
+    <button data-page="jobs" style="display:none">◫ <span>Scrape Jobs</span></button>
     <button data-page="logs">≡ <span>Request Logs</span></button>
     <button data-page="api">⌘ <span>API &amp; Webhooks</span></button>
     <button data-page="ai">✦ <span>Titan AI</span></button>
@@ -243,34 +687,14 @@ input:focus,select:focus{border-color:var(--gold)}
     <div style="display:flex;gap:8px;margin-top:12px"><button class="btn primary" id="trialActivate">ACTIVATE WITH CARD</button></div>
   </div>
   <div class="grid stats kpi5">
-  <div class="card gold">
-    <div class="card-label">API Requests · 24h</div>
-    <div class="big" id="rps">—</div>
-    <div class="sub">Recorded scraping requests</div>
+    <div class="card gold"><div class="card-label">API Requests · 24h</div><div class="big" id="rps">—</div><div class="sub">Recorded scraping requests</div></div>
+    <div class="card"><div class="card-label">Successful Requests · 24h</div><div class="big" id="ovSuccessful">—</div><div class="sub">HTTP 2xx / 3xx</div></div>
+    <div class="card"><div class="card-label">Failed Requests · 24h</div><div class="big" id="ovFailed">—</div><div class="sub">HTTP 4xx / 5xx</div></div>
+    <div class="card"><div class="card-label">Characters Processed · 24h</div><div class="big" id="ovCharacters">—</div><div class="sub">Successfully processed</div></div>
+    <div class="card"><div class="card-label">Average Duration · 24h</div><div class="big" id="latency">—</div><div class="sub">Measured API processing time</div></div>
   </div>
-  <div class="card">
-    <div class="card-label">Successful Requests · 24h</div>
-    <div class="big" id="ovSuccessful">—</div>
-    <div class="sub">HTTP 2xx / 3xx</div>
-  </div>
-  <div class="card">
-    <div class="card-label">Failed Requests · 24h</div>
-    <div class="big" id="ovFailed">—</div>
-    <div class="sub">HTTP 4xx / 5xx</div>
-  </div>
-  <div class="card">
-    <div class="card-label">Characters Processed · 24h</div>
-    <div class="big" id="ovCharacters">—</div>
-    <div class="sub">Successfully processed</div>
-  </div>
-  <div class="card">
-    <div class="card-label">Average Duration · 24h</div>
-    <div class="big" id="latency">—</div>
-    <div class="sub">Measured API processing time</div>
-  </div>
-</div>
-<div class="grid telemetry">
-    <div class="card gold"><div class="section-title"><h3>LIVE TELEMETRY</h3><span id="telemetryState">Engine stopped</span></div><div class="chart" id="chart"><div class="bar" style="height: 46.67%;"></div><div class="bar" style="height: 36.536%;"></div><div class="bar" style="height: 61.6379%;"></div><div class="bar" style="height: 55.5945%;"></div><div class="bar" style="height: 56.844%;"></div><div class="bar" style="height: 44.5561%;"></div><div class="bar" style="height: 15.5042%;"></div><div class="bar" style="height: 40.8085%;"></div><div class="bar" style="height: 69.4034%;"></div><div class="bar" style="height: 53.7163%;"></div><div class="bar" style="height: 42.1075%;"></div><div class="bar" style="height: 56.6586%;"></div><div class="bar" style="height: 72.8271%;"></div><div class="bar" style="height: 70.8988%;"></div><div class="bar" style="height: 51.167%;"></div><div class="bar" style="height: 36.3394%;"></div><div class="bar" style="height: 47.7628%;"></div><div class="bar" style="height: 48.2273%;"></div><div class="bar" style="height: 58.9834%;"></div><div class="bar" style="height: 73.901%;"></div><div class="bar" style="height: 65.8406%;"></div><div class="bar" style="height: 66.4165%;"></div><div class="bar" style="height: 35.297%;"></div><div class="bar" style="height: 18.7881%;"></div><div class="bar" style="height: 72.9602%;"></div><div class="bar" style="height: 19.93%;"></div><div class="bar" style="height: 59.5921%;"></div><div class="bar" style="height: 27.9745%;"></div><div class="bar" style="height: 62.2367%;"></div><div class="bar live" style="height: 93.825%;"></div></div></div>
+  <div class="grid telemetry">
+    <div class="card gold"><div class="section-title"><h3>LIVE TELEMETRY</h3><span id="telemetryState">Engine stopped</span></div><div class="chart" id="chart"></div></div>
     <div class="card"><div class="section-title"><h3>SYSTEM SIGNAL</h3><span>REAL-TIME</span></div>
       <div class="metric-row"><span>API Gateway</span><b class="green">HEALTHY</b></div>
       <div class="metric-row"><span>Database</span><b class="green">CONNECTED</b></div>
@@ -280,15 +704,19 @@ input:focus,select:focus{border-color:var(--gold)}
     </div>
   </div>
   <div class="grid split" style="margin-top:16px"><div class="card"><div class="section-title"><h3>LIVE REQUEST STREAM</h3><span>CONTROL-PLANE EVENTS</span></div><div class="live-stream" id="liveStream"></div></div><div class="card gold"><div class="section-title"><h3>USAGE &amp; COST</h3><span>CHARACTERS</span></div><div class="big" id="usageUsed">—</div><div class="sub" id="usageSummary">Sign in to see your usage</div><div class="progress"><i id="usageBar" style="--w:0%"></i></div><div class="metric-row"><span>Plan</span><b id="usagePlan">—</b></div><div class="metric-row"><span>Remaining</span><b id="usageRemaining">—</b></div><div class="metric-row"><span>Resets</span><b id="usageReset">—</b></div></div></div>
-  <div class="section-title"><h3>DEVELOPER WORKBENCH</h3><span>REQUEST BUILDER + CURL</span></div>
-  <div class="card">
+</section>
+
+<section class="page" id="workbench">
+  <div class="card gold">
+    <div class="section-title" style="margin-top:0"><h3>DEVELOPER WORKBENCH</h3><span>REQUEST BUILDER + LIVE TEST</span></div>
     <div class="builder">
       <input class="wide" id="targetUrl" placeholder="https://your-public-url.com/page">
       <select id="method"><option>GET</option><option>POST</option></select>
       <select id="format"><option>JSON</option><option>HTML</option></select>
       <button class="btn primary" id="sendBtn">SEND TEST</button>
     </div>
-    <textarea id="extractInstructions" style="width:100%;margin-top:10px;min-height:90px;background:#080808;color:#eee;border:1px solid #2c2c2c;border-radius:7px;padding:12px" placeholder="AI extraction instructions (optional): e.g. Return only product name, price and availability. Leave empty to return the available page content."></textarea><div class="preview" id="preview">Ready. Sign in, create an API key, enter a public URL and optionally describe what data you want.</div>
+    <textarea id="extractInstructions" style="width:100%;margin-top:10px;min-height:90px;background:#080808;color:#eee;border:1px solid #2c2c2c;border-radius:7px;padding:12px" placeholder="AI extraction instructions (optional): e.g. Return only product name, price and availability. Leave empty to return the available page content."></textarea>
+    <div class="preview" id="preview">Ready. Sign in, create an API key, enter a public URL and optionally describe what data you want.</div>
   </div>
 </section>
 
@@ -296,138 +724,70 @@ input:focus,select:focus{border-color:var(--gold)}
 
 <section class="page" id="analytics">
   <div class="grid analytics-grid">
-    <div class="card gold">
-      <div class="card-label">API Requests · 24h</div>
-      <div class="big" id="realRequests">—</div>
-      <div class="sub">Recorded scraping API requests</div>
-    </div>
-    <div class="card">
-      <div class="card-label">Success Rate · 24h</div>
-      <div class="big" id="realSuccess">—</div>
-      <div class="sub" id="realFailures">Waiting for data</div>
-    </div>
-    <div class="card">
-      <div class="card-label">Characters Processed · 24h</div>
-      <div class="big" id="realCharacters">—</div>
-      <div class="sub">Actual processed characters</div>
-    </div>
-    <div class="card">
-      <div class="card-label">Average Request Duration · 24h</div>
-      <div class="big" id="realDuration">—</div>
-      <div class="sub">Measured API processing time</div>
-    </div>
+    <div class="card gold"><div class="card-label">API Requests · 24h</div><div class="big" id="realRequests">—</div><div class="sub">Recorded scraping API requests</div></div>
+    <div class="card"><div class="card-label">Success Rate · 24h</div><div class="big" id="realSuccess">—</div><div class="sub" id="realFailures">Waiting for data</div></div>
+    <div class="card"><div class="card-label">Characters Processed · 24h</div><div class="big" id="realCharacters">—</div><div class="sub">Actual processed characters</div></div>
+    <div class="card"><div class="card-label">Average Request Duration · 24h</div><div class="big" id="realDuration">—</div><div class="sub">Measured API processing time</div></div>
   </div>
 </section>
+
 <section class="page" id="jobs">
   <div class="card gold" style="margin-bottom:16px">
-    <div class="section-title">
-      <h3>SCRAPE EXECUTION HISTORY</h3>
-      <span>MONGODB · LATEST 50</span>
-    </div>
+    <div class="section-title"><h3>SCRAPE EXECUTION HISTORY</h3><span>MONGODB · LATEST 50</span></div>
     <p class="sub">Real scraping requests, HTTP status, duration and processed characters.</p>
     <div id="jobHistory" style="margin-top:16px">Loading request history...</div>
-  </div><div class="card gold"><div class="section-title"><h3>EXTRACTION JOB</h3><span>URL + AI INSTRUCTIONS</span></div><p class="sub">Use the Developer Workbench for live extraction. Persistent scheduled jobs are the next backend module.</p><button class="btn primary" id="createJob">OPEN WORKBENCH</button></div></section>
+  </div>
+  <div class="card gold"><div class="section-title"><h3>EXTRACTION JOB</h3><span>URL + AI INSTRUCTIONS</span></div><p class="sub">Use the Developer Workbench for live extraction. Persistent scheduled jobs are the next backend module.</p><button class="btn primary" id="createJob">OPEN WORKBENCH</button></div>
+</section>
+
 <section class="page" id="logs">
   <div class="card gold">
-    <div class="section-title">
-      <h3>REQUEST LOGS</h3>
-      <span>MONGODB HISTORY · LATEST 50</span>
-    </div>
-    <div id="logTable">
-      <div class="sub">Loading real request history...</div>
-    </div>
+    <div class="section-title"><h3>REQUEST LOGS</h3><span>MONGODB HISTORY · LATEST 50</span></div>
+    <div id="logTable"><div class="sub">Loading real request history...</div></div>
   </div>
 </section>
+
 <section class="page" id="api">
   <div class="card gold">
-    <div class="section-title">
-      <h3>MASTER API CREDENTIAL</h3>
-      <span>REAL SERVER-SIDE KEY</span>
-    </div>
-
+    <div class="section-title"><h3>MASTER API CREDENTIAL</h3><span>REAL SERVER-SIDE KEY</span></div>
     <div id="apiSignedOut">
       <p class="sub">API keys are available only after registration and sign-in.</p>
       <button class="btn primary" id="apiSignupBtn">SIGN UP / SIGN IN</button>
     </div>
-
     <div id="apiSignedIn" hidden>
-      <p class="sub">
-        Create a real TitanCDN credential. The plaintext secret is shown only
-        when it is created; the database stores only its hash.
-      </p>
-
+      <p class="sub">Create a real TitanCDN credential. The plaintext secret is shown only when it is created; the database stores only its hash.</p>
       <div class="keyrow">
         <input class="code" id="apiKey" readonly value="No API key loaded">
         <button class="btn" id="revealKey">REVEAL</button>
         <button class="btn primary" id="rotateKey">CREATE KEY</button>
       </div>
-
-      <div class="auth-note">
-        Format: titan_live_… • quota is enforced on your account plan.
-        The key is created only after its extraction profile is chosen.
-      </div>
-
-      <div class="metric-row">
-        <span>Key extraction profile</span>
-        <b id="apiKeyProfile">Not configured yet</b>
-      </div>
-
+      <div class="auth-note">Format: titan_sk_… • quota is enforced on your account plan. The key is created only after its extraction profile is chosen.</div>
+      <div class="metric-row"><span>Key extraction profile</span><b id="apiKeyProfile">Not configured yet</b></div>
       <div class="card" style="margin-top:16px">
-        <div class="section-title">
-          <h3>YOUR API KEYS</h3>
-          <span id="apiKeyCount">0 KEYS</span>
-        </div>
-
-        <input
-          id="apiKeySearch"
-          type="search"
-          placeholder="Search by key name, prefix or extraction instruction..."
-          autocomplete="off"
-          style="width:100%;margin-bottom:12px"
-        >
-
-        <div
-          id="apiKeyList"
-          style="max-height:320px;overflow-y:auto;padding-right:4px"
-        >
-          <div class="sub">No API keys loaded.</div>
-        </div>
+        <div class="section-title"><h3>YOUR API KEYS</h3><span id="apiKeyCount">0 KEYS</span></div>
+        <input id="apiKeySearch" type="search" placeholder="Search by key name, prefix or extraction instruction..." autocomplete="off" style="width:100%;margin-bottom:12px">
+        <div id="apiKeyList" style="max-height:320px;overflow-y:auto;padding-right:4px"><div class="sub">No API keys loaded.</div></div>
       </div>
-
       <div class="card" style="margin-top:16px">
-        <div class="section-title">
-          <h3>TITAN AI EXTRACTION INSTRUCTION</h3>
-          <span>WHAT SHOULD THIS KEY EXTRACT?</span>
-        </div>
-
-        <p class="sub">
-          Tell Titan AI what this API key should extract from public target pages.
-          Leave it empty for ALL AVAILABLE DATA. This profile is saved on the key
-          and used on every request.
-        </p>
-
-        <textarea
-          id="apiAiInput"
-          style="width:100%;min-height:100px;background:#080808;color:#eee;border:1px solid #2c2c2c;border-radius:7px;padding:12px"
-          placeholder="Tell Titan AI what information you want..."
-        ></textarea>
-
-        <button class="btn primary" id="apiAiUse" style="margin-top:10px">
-          SAVE TO THIS API KEY
-        </button>
+        <div class="section-title"><h3>TITAN AI EXTRACTION INSTRUCTION</h3><span>WHAT SHOULD THIS KEY EXTRACT?</span></div>
+        <p class="sub">Tell Titan AI what this API key should extract from public target pages. Leave it empty for ALL AVAILABLE DATA. This profile is saved on the key and used on every request.</p>
+        <textarea id="apiAiInput" style="width:100%;min-height:100px;background:#080808;color:#eee;border:1px solid #2c2c2c;border-radius:7px;padding:12px" placeholder="Tell Titan AI what information you want..."></textarea>
+        <button class="btn primary" id="apiAiUse" style="margin-top:10px">SAVE TO THIS API KEY</button>
       </div>
     </div>
   </div>
 </section>
+
 <section class="page" id="ai"><div class="card gold"><div class="section-title"><h3>TITAN AI EXTRACTION</h3><span>URL CONTENT → REQUESTED DATA</span></div><div class="preview" id="aiOut">Titan AI is used by the Developer Workbench. Enter a URL and describe exactly what information you want extracted.</div><div class="search-row" style="margin-top:10px"><input id="aiInput" placeholder="Describe the information you want extracted"><button class="btn primary" id="askAi">USE IN WORKBENCH</button></div></div></section>
+
 <section class="page" id="billing">
   <div class="section-title"><h3>PLANS</h3><span>MONTHLY LIMITS IN CHARACTERS</span></div>
   <div class="card gold" style="margin-bottom:16px"><div class="card-label">FREE TRIAL</div><div class="price">€0 <small>/ one-time</small></div><ul class="features"><li>100,000 characters (does not renew)</li><li>Card verification, never charged</li><li>One card and one device per free trial</li><li>Stops automatically when used up</li></ul></div>
   <div class="grid plans">
-   <div class="card plan"><div class="card-label">STARTER</div><div class="price">€69.99 <small>/ month</small></div><ul class="features"><li>25,000,000 characters</li><li>Developer workbench</li><li>Titan AI extraction</li><li>Standard support</li></ul><button class="btn primary buy" data-plan="pro">SELECT PLAN</button></div>
-<div class="card plan featured"><div class="ribbon">POPULAR</div><div class="card-label">BUSINESS</div><div class="price">€299.99 <small>/ month</small></div><ul class="features"><li>250,000,000 characters</li><li>Advanced analytics</li><li>Priority support</li><li>Team 2FA</li></ul><button class="btn primary buy" data-plan="business">SELECT PLAN</button></div>
-<div class="card plan"><div class="card-label">MEGA FACTORY</div><div class="price">€899.99 <small>/ month</small></div><ul class="features"><li>1,000,000,000 characters</li><li>Enterprise telemetry</li><li>High-volume extraction</li><li>Priority support</li></ul><button class="btn primary buy" data-plan="enterprise">SELECT PLAN</button></div>
-<div class="card plan"><div class="card-label">TITAN ENTERPRISE</div><div class="price">€1,999.99 <small>/ month</small></div><ul class="features"><li>3,000,000,000 characters</li><li>Maximum-volume extraction</li><li>Enterprise telemetry</li><li>Priority support</li></ul><button class="btn primary buy" data-plan="titan">SELECT PLAN</button></div>
+    <div class="card plan"><div class="card-label">STARTER</div><div class="price">€69.99 <small>/ month</small></div><ul class="features"><li>25,000,000 characters</li><li>Developer workbench</li><li>Titan AI extraction</li><li>Standard support</li></ul><button class="btn primary buy" data-plan="pro">SELECT PLAN</button></div>
+    <div class="card plan featured"><div class="ribbon">POPULAR</div><div class="card-label">BUSINESS</div><div class="price">€299.99 <small>/ month</small></div><ul class="features"><li>250,000,000 characters</li><li>Advanced analytics</li><li>Priority support</li><li>Team 2FA</li></ul><button class="btn primary buy" data-plan="business">SELECT PLAN</button></div>
+    <div class="card plan"><div class="card-label">MEGA FACTORY</div><div class="price">€899.99 <small>/ month</small></div><ul class="features"><li>1,000,000,000 characters</li><li>Enterprise telemetry</li><li>High-volume extraction</li><li>Priority support</li></ul><button class="btn primary buy" data-plan="enterprise">SELECT PLAN</button></div>
+    <div class="card plan"><div class="card-label">TITAN ENTERPRISE</div><div class="price">€1,999.99 <small>/ month</small></div><ul class="features"><li>3,000,000,000 characters</li><li>Maximum-volume extraction</li><li>Enterprise telemetry</li><li>Priority support</li></ul><button class="btn primary buy" data-plan="titan">SELECT PLAN</button></div>
   </div>
   <div class="card" style="margin-top:16px"><b>Activating a paid plan</b><p style="color:#777;font-size:12px">Payment goes through secure Stripe Checkout. Once Stripe confirms it (webhook), your account limit changes automatically, and your characters reset on every renewal.</p></div>
 </section>
@@ -437,75 +797,29 @@ input:focus,select:focus{border-color:var(--gold)}
     <div class="section-title"><h3>TITAN INSIGHTS</h3><span>MARKET INTELLIGENCE HUB</span></div>
     <p class="sub" style="font-size:13px">Discover current business, technology and AI news from external publishers. Search by company or topic.</p>
   </div>
-
-<div class="card gold" style="margin-bottom:16px">
-  <div class="section-title">
-    <h3>LIVE BUSINESS & TECHNOLOGY NEWS</h3>
-    <span>REAL PUBLISHERS</span>
+  <div class="card gold" style="margin:16px 0">
+    <div class="section-title"><h3>LIVE BUSINESS &amp; TECHNOLOGY NEWS</h3><span>REAL PUBLISHERS</span></div>
+    <p class="sub">Search current news about companies, artificial intelligence, technology and global markets.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+      <input id="insightsSearch" type="search" placeholder="Search companies, AI, markets..." style="flex:1;min-width:220px;padding:12px">
+      <button id="insightsSearchBtn" class="primary">SEARCH NEWS</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+      <button class="insightsTopic" data-topic="technology">Technology</button>
+      <button class="insightsTopic" data-topic="artificial intelligence">AI</button>
+      <button class="insightsTopic" data-topic="business">Business</button>
+      <button class="insightsTopic" data-topic="cybersecurity">Cybersecurity</button>
+      <button class="insightsTopic" data-topic="ecommerce">E-Commerce</button>
+    </div>
   </div>
-  <p class="sub">Search current news about companies, artificial intelligence, technology and global markets.</p>
-
-  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
-    <input id="insightsSearch" type="search"
-      placeholder="Search companies, AI, markets..."
-      style="flex:1;min-width:220px;padding:12px">
-    <button id="insightsSearchBtn" class="primary">SEARCH NEWS</button>
-  </div>
-
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-    <button class="insightsTopic" data-topic="technology">Technology</button>
-    <button class="insightsTopic" data-topic="artificial intelligence">AI</button>
-    <button class="insightsTopic" data-topic="business">Business</button>
-    <button class="insightsTopic" data-topic="cybersecurity">Cybersecurity</button>
-    <button class="insightsTopic" data-topic="ecommerce">E-Commerce</button>
-  </div>
-</div>
-<div id="insightsNewsResults" class="insights-grid">
-  <p class="sub">Live news will appear here once the news API is connected.</p>
-</div>
+  <div id="insightsNewsResults" class="insights-grid"><p class="sub">Live news will appear here once the news API is connected.</p></div>
 </section>
+
 <section class="page" id="about">
   <div class="card gold">
     <div class="section-title" style="margin-top:0"><h3>ABOUT US</h3><span>TITANCDN • WHO WE ARE</span></div>
-    <p class="sub" style="font-size:14px;line-height:1.7;margin:0">We turn any public web page into clean, structured data. You give TitanCDN a link and a plain-English instruction, and it returns exactly the information you asked for.</p>
+    <p class="sub" style="font-size:14px;line-height:1.7;margin:0">We turn any public web page into clean, structured data. You give TitanCDN a link and a plain-English instruction, and it returns exactly the information you asked for. Founded by Rayan Katsarov.</p>
   </div>
-
-  <div class="about-grid">
-    <!-- EDIT: company text -->
-    <article class="about-card">
-      <h4>OUR COMPANY</h4>
-      <p>TitanCDN is an AI-powered web data platform. Send a URL and an instruction such as &ldquo;get only the company names&rdquo;, and Titan fetches the page, filters it with AI and returns tidy JSON through one simple API.</p>
-      <p>We built it for teams that need reliable data without maintaining fragile scrapers: price monitoring, market research, lead lists and catalog tracking.</p>
-      <p>Plans are measured in characters processed, so you only pay for the volume you actually use. Start with a free trial, then scale from Starter up to Mega Factory.</p>
-    </article>
-
-    <!-- EDIT: founder name, role and bio -->
-    <article class="about-card">
-      <h4>MEET THE FOUNDER</h4>
-      <div class="about-hero">
-        <div class="about-avatar" aria-hidden="true">RK</div>
-        <div><div class="about-name">Rayan Katsarov</div><div class="about-role">FOUNDER</div></div>
-      </div>
-      <p>I started TitanCDN to take the pain out of collecting web data: no brittle scripts and no manual cleanup, just the answer you asked for.</p>
-      <p>I care about clean engineering, honest pricing and a product that works the first time. Every part of the platform is built with security and speed in mind.</p>
-    </article>
-  </div>
-
-  <div class="about-tiles">
-    <div class="about-tile"><b>SIMPLE</b><span>One API call, one instruction, structured results. No scraper to maintain.</span></div>
-    <div class="about-tile"><b>SECURE</b><span>Hashed passwords, API keys stored only as hashes, two-factor authentication, rate limiting and protection against private-network requests.</span></div>
-    <div class="about-tile"><b>TRANSPARENT</b><span>Clear usage-based plans. Your live usage and remaining limit are always visible on your dashboard.</span></div>
-  </div>
-</section>
-<section class="page" id="registry">
-  <div class="hero"><div><div class="eyebrow">UNIVERSAL DOMAIN CONTROL</div><h2>Domain Registry</h2><p>Register any valid public hostname as a Titan channel. Channels are isolated and can be connected to compliant providers or first-party APIs by the backend.</p></div><div class="hero-badge"><b id="registryCount">12</b><span>CHANNELS</span></div></div>
-  <div class="card gold"><div class="section-title"><h3>ADD DOMAIN CHANNEL</h3><span>BACKEND-READY REGISTRY</span></div><div class="builder"><input class="wide" id="newDomain" placeholder="example.com"><select id="channelRegion"><option>Auto region</option><option>EU West</option><option>EU Central</option><option>US East</option><option>AP Southeast</option></select><select id="channelMode"><option>Public web</option><option>Official API</option><option>First-party</option></select><button class="btn primary" id="addDomain">CREATE CHANNEL</button></div></div>
-  <div class="section-title"><h3>REGISTERED CHANNELS</h3><span>SEARCH • ISOLATE • OBSERVE</span></div><div class="card"><div class="search-row"><input id="registrySearch" placeholder="Search hostname, channel ID or region..."><button class="btn" id="exportRegistry">EXPORT JSON</button></div><div id="registryList" style="margin-top:16px"></div></div>
-</section>
-<section class="page" id="security">
- <div class="hero"><div><div class="eyebrow">ZERO-TRUST CONTROL PLANE</div><h2>Security Center</h2><p>Credential lifecycle, access policies, audit visibility and account protection.</p></div><div class="hero-badge"><b>92</b><span>SECURITY SCORE</span></div></div>
- <div class="grid analytics-grid"><div class="card gold"><h3>Account protection</h3><div class="metric-row"><span>Password</span><b class="green">HASHED SERVER-SIDE</b></div><div class="metric-row"><span>Two-factor authentication</span><b>READY FOR BACKEND</b></div><div class="metric-row"><span>Session policy</span><b>12 HOURS</b></div><div class="metric-row"><span>Suspicious login alerts</span><b class="green">ENABLED</b></div><button class="btn primary" style="margin-top:18px">ENABLE 2FA</button></div><div class="card"><h3>API policy</h3><div class="metric-row"><span>Default scope</span><b>scrape:read</b></div><div class="metric-row"><span>IP allowlist</span><b>OPTIONAL</b></div><div class="metric-row"><span>Key rotation</span><b>90 DAYS</b></div><div class="metric-row"><span>Webhook signatures</span><b class="green">REQUIRED</b></div><button class="btn" style="margin-top:18px">EDIT POLICY</button></div></div>
- <div class="card" style="margin-top:16px"><div class="section-title"><h3>AUDIT TRAIL</h3><span>IMMUTABLE EVENT VIEW</span></div><div class="logline"><b>credential.created</b><span>Master API credential provisioned</span><time>Today</time></div><div class="logline"><b>session.login</b><span>Dashboard session established</span><time>Today</time></div><div class="logline"><b>policy.checked</b><span>Domain isolation policy healthy</span><time>Today</time></div></div>
 </section>
 </main>
 </div>
@@ -525,7 +839,7 @@ input:focus,select:focus{border-color:var(--gold)}
       <input id="authCompany" placeholder="Company">
       <input id="authEmail" class="full" type="email" placeholder="Email">
       <input id="authPassword" class="full" type="password" placeholder="Password • 12+ characters">
-      <input type="password" id="authPasswordConfirm" placeholder="Repeat Password" style="margin-top: 10px;">
+      <input type="password" id="authPasswordConfirm" placeholder="Repeat Password" style="margin-top:10px;">
       <input id="authTotp" class="full" style="display:none" inputmode="numeric" autocomplete="one-time-code" placeholder="2FA Code (6 digits) or Recovery Code">
       <div class="full" id="forgotRow" style="display:none;text-align:right"><a href="#" id="forgotLink" style="color:#d4af37;font-size:12px;text-decoration:underline">Forgot password?</a></div>
       <div class="full" id="backRow" style="display:none"><a href="#" id="backToSignin" style="color:#d4af37;font-size:12px;text-decoration:underline">&larr; Back to sign in</a></div>
@@ -647,6 +961,6 @@ input:focus,select:focus{border-color:var(--gold)}
 </div>
 
 <script src="https://js.stripe.com/v3/" defer></script>
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>
