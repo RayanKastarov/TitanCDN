@@ -918,8 +918,9 @@ link.textContent = isGoogleNews
       card.append(source, title, date, link);
       box.appendChild(card);
     }
-  } catch {
-    box.textContent = "Live news temporarily unavailable.";
+  } catch (err) {
+    box.textContent = "News could not be loaded. Check your internet connection and the news service, then try again.";
+    console.error("Titan Insights:", err);
   }
 }
 
@@ -983,12 +984,20 @@ setInterval(() => {
       window.scrollTo(0, 0);
     } else {
       body.classList.add("view-landing"); body.classList.remove("view-dashboard");
-      requestAnimationFrame(() => {
-        const el = target ? document.getElementById(target) : null;
-        if (el) el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
-        else window.scrollTo(0, 0);
-        onScroll();
-      });
+      const caseInfo = {
+        "price-monitoring": ["Price monitoring","Track public competitor prices, product availability and changes with structured extraction.","Extract product name, price, currency and stock status from public listings."],
+        "catalog-tracking": ["Catalog tracking","Keep product information consistent across public catalogs.","Collect SKUs, names, categories, specifications and availability."],
+        "market-research": ["Market research","Turn publicly available sources into research-ready data.","Extract company profiles, industry signals and comparable facts."],
+        "lead-lists": ["Lead lists","Build organized company lists from public business directories.","Collect company names, websites and publicly listed business information."]
+      };
+      const caseData = caseInfo[target];
+      body.dataset.publicPage = caseData ? "case-" + target : (target || "home");
+      if (caseData) {
+        $q("#caseTitle").textContent = caseData[0];
+        $q("#caseDescription").textContent = caseData[1];
+        $q("#caseExample").textContent = caseData[2];
+      }
+      requestAnimationFrame(() => { window.scrollTo(0, 0); onScroll(); });
     }
   }
   window.TitanSite = { showView };

@@ -489,9 +489,69 @@ body.view-dashboard .insight-card{background:#fff;border:1px solid #e6e9f0;borde
 @media(max-width:720px){body.view-dashboard .sidebar{width:230px}body.view-dashboard .main{margin-left:0;width:100%;padding:22px 15px}.welcome-hero{padding:32px 25px;min-height:0}.overview-stats{gap:10px}.mini-stat{padding:18px}.mini-stat strong{font-size:28px}.diagnostics-grid{grid-template-columns:1fr}.studio-overview-grid{grid-template-columns:1fr}.topbar .engine{flex-wrap:wrap;justify-content:flex-end}}
 @media(max-width:480px){.overview-stats{grid-template-columns:1fr 1fr}.usage-detail{grid-template-columns:1fr}.welcome-hero h3{font-size:36px}.editor-controls{grid-template-columns:1fr}.diagnostics summary span{display:none}}
 
+
+/* V4 public site: genuine page-level navigation, not one endless home */
+body.view-landing #landing>section{display:none}
+body.view-landing:not([data-public-page]),body.view-landing[data-public-page="home"]{--public-view:1}
+body.view-landing:not([data-public-page]) #landing>.t-hero,
+body.view-landing:not([data-public-page]) #landing>.t-statement,
+body.view-landing:not([data-public-page]) #landing>.t-band,
+body.view-landing[data-public-page="home"] #landing>.t-hero,
+body.view-landing[data-public-page="home"] #landing>.t-statement,
+body.view-landing[data-public-page="home"] #landing>.t-band{display:block}
+body.view-landing[data-public-page="how"] #how,
+body.view-landing[data-public-page="features"] #features,
+body.view-landing[data-public-page="usecases"] #usecases,
+body.view-landing[data-public-page="pricing"] #pricing,
+body.view-landing[data-public-page="about"] #about,
+body.view-landing[data-public-page^="case-"] #case-detail{display:block}
+body.view-landing #landing>section:not(.t-hero){min-height:calc(100vh - 260px)}
+body.view-landing #landing>section:not(.t-hero):not(.t-statement){padding-top:calc(var(--nav-h) + 76px)!important;padding-bottom:90px}
+body.view-landing #landing #pricing{background:var(--paper)}
+body.view-landing #siteFoot{display:block}
+body.view-dashboard #siteFoot{display:none}
+#case-detail{background:#f6f3ec;color:#0b0b0b}
+.case-demo{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin:45px 0;padding:30px;border:1px solid #dedbd3;border-radius:20px;background:#fff}
+.case-demo p{font-size:1.1rem;line-height:1.65;color:#515761}
+.mega-in{grid-template-columns:repeat(2,minmax(0,1fr));max-width:850px}
+body.view-dashboard .studio-glyph{background:#e2f4ef;color:#197e71}
+body.view-dashboard .nav button.active{background:#e2f4ef;color:#176e64}
+body.view-dashboard .nav button:hover{background:#eff8f5;color:#176e64}
+body.view-dashboard .hero-action{background:#b6f1df;color:#173c35}
+body.view-dashboard .welcome-hero{background:#152c2c}
+body.view-dashboard .welcome-hero h3 em{color:#a7e9d5}
+body.view-dashboard .float-center{color:#a7e9d5}
+body.view-dashboard .quick-icon{background:#e5f5f0;color:#207d70}
+body.view-dashboard .usage-surface .gold-fill{background:linear-gradient(90deg,#20917c,#73d3b9)}
+body.view-dashboard .usage-surface .gold-pct{color:#178775}
+body.view-dashboard .btn.primary,body.view-dashboard .run-extraction{background:#188a78!important;border-color:#188a78!important;color:white!important}
+body.view-dashboard .playground-result{background:#eaf5f1;border-color:#d6eae3}
+body.view-dashboard .result-badge{background:#d1ece2;color:#137866}
+body.view-dashboard .insight-tag,body.view-dashboard #insightsNewsResults .insight-card a{color:#178775!important}
+@media(max-width:650px){.case-demo{grid-template-columns:1fr}.mega-in{grid-template-columns:1fr}}
+
+
+/* Titan Insights: public-access UI, legible black/white messages */
+body.view-dashboard #viewInsights .insights-public-header{padding:28px 30px;background:#fff;border:1px solid #e1e4e8;border-radius:20px;margin-bottom:20px}
+body.view-dashboard #viewInsights .insights-public-header h3{font-size:32px;letter-spacing:-1px;color:#101114;margin:9px 0}
+body.view-dashboard #viewInsights .insights-public-header p{color:#535963;line-height:1.6;margin:0}
+body.view-dashboard #viewInsights .insights-public-search{display:flex;gap:12px;margin-bottom:12px}
+body.view-dashboard #viewInsights #insightsSearch{flex:1;min-width:0;background:#fff!important;color:#101114!important;border:1px solid #c9cdd4!important;padding:15px!important}
+body.view-dashboard #viewInsights .insights-public-topics{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:25px}
+body.view-dashboard #viewInsights .insightsTopic{background:#fff!important;color:#17191d!important;border:1px solid #cfd3da!important;border-radius:99px!important}
+body.view-dashboard #viewInsights .insightsTopic:hover{background:#111!important;color:#fff!important}
+body.view-dashboard #viewInsights .insight-card{background:#fff!important;border:1px solid #e1e3e7!important}
+body.view-dashboard #viewInsights .insight-card h4{color:#111!important}
+body.view-dashboard #viewInsights .insight-card p{color:#4b5563!important}
+body.view-dashboard #viewInsights .insight-tag,body.view-dashboard #viewInsights .insight-card a{color:#111!important}
+body.view-dashboard #viewInsights #insightsNewsResults:not(:has(.insight-card)){color:#111;background:#fff;padding:24px;border-radius:14px}
+#toast{background:#fff!important;color:#111!important;border:2px solid #111!important;box-shadow:0 15px 35px #0003!important;font-weight:650!important;max-width:min(420px,calc(100vw - 30px));white-space:normal;overflow-wrap:anywhere}
+body.view-dashboard .err,body.view-landing .err{color:#111!important;background:#fff!important;border:1px solid #c9c9c9;border-left:4px solid #111;border-radius:7px;padding:8px 10px}
+@media(max-width:600px){body.view-dashboard #viewInsights .insights-public-search{flex-direction:column}}
+
 </style>
 </head>
-<body class="view-landing">
+<body class="view-landing" data-public-page="home">
 
 <!-- ======================= TOP NAVIGATION ======================= -->
 <header id="siteNav">
@@ -508,15 +568,13 @@ body.view-dashboard .insight-card{background:#fff;border:1px solid #e6e9f0;borde
           <div class="mcol"><h4>Product</h4>
             <a data-go="landing:how">How it works<small>Four steps to your first JSON</small></a>
             <a data-go="landing:features">Features<small>AI extraction, security, analytics</small></a>
-            <a data-go="landing:pricing">Pricing<small>Free trial, then pay by characters</small></a>
+            
           </div>
           <div class="mcol"><h4>Control plane</h4>
             <a data-go="dashboard:overview">Dashboard<small>Usage and live telemetry</small></a>
             <a data-go="dashboard:workbench">Developer Workbench<small>Send a test request</small></a>
             <a data-go="dashboard:api">API keys<small>Create and manage keys</small></a>
           </div>
-          <a class="mcard" data-go="landing:how"><div class="media" style="--g1:#3a2e0c;--g2:#0a0804"></div><span>See how a request becomes data</span></a>
-          <a class="mcard" data-go="dashboard:viewInsights"><div class="media" style="--g1:#2c2410;--g2:#07060a"></div><span>Titan Insights news hub</span></a>
         </div></div>
       </div>
 
@@ -524,11 +582,9 @@ body.view-dashboard .insight-card{background:#fff;border:1px solid #e6e9f0;borde
         <button class="nl" type="button" data-mega="usecases" aria-expanded="false">Use cases</button>
         <div class="mega" id="mega-usecases"><div class="mega-in">
           <div class="mcol"><h4>Monitor</h4>
-            <a data-go="landing:usecases">Price monitoring</a><a data-go="landing:usecases">Catalog tracking</a></div>
+            <a data-go="landing:price-monitoring">Price monitoring</a><a data-go="landing:catalog-tracking">Catalog tracking</a></div>
           <div class="mcol"><h4>Research</h4>
-            <a data-go="landing:usecases">Market research</a><a data-go="landing:usecases">Lead lists</a></div>
-          <a class="mcard" data-go="landing:usecases"><div class="media" style="--g1:#3a2e0c;--g2:#0a0804"></div><span>Prices and catalogs</span></a>
-          <a class="mcard" data-go="landing:usecases"><div class="media" style="--g1:#2a2a2a;--g2:#060606"></div><span>Leads and research</span></a>
+            <a data-go="landing:market-research">Market research</a><a data-go="landing:lead-lists">Lead lists</a></div>
         </div></div>
       </div>
 
@@ -541,10 +597,8 @@ body.view-dashboard .insight-card{background:#fff;border:1px solid #e6e9f0;borde
           </div>
           <div class="mcol"><h4>Start</h4>
             <a data-auth="signup">Create account<small>Free trial</small></a>
-            <a data-go="landing:pricing">Pricing<small>Plans in characters</small></a>
+            
           </div>
-          <a class="mcard" data-go="landing:about"><div class="media" style="--g1:#33290e;--g2:#070707"></div><span>Meet the founder</span></a>
-          <a class="mcard" data-go="landing:pricing"><div class="media" style="--g1:#463808;--g2:#0a0a0a"></div><span>Start with 100,000 free characters</span></a>
         </div></div>
       </div>
 
@@ -678,7 +732,7 @@ body.view-dashboard .insight-card{background:#fff;border:1px solid #e6e9f0;borde
         <div class="t-counter"><b data-count="1">0</b><span>API call to get your data</span></div>
       </div>
       <div class="t-lcards">
-        <a class="t-lcard rv" data-go="landing:pricing"><div class="media" data-photo="images/prices.jpg" style="--g1:#4a3a0c;--g2:#0b0903"></div><div class="t"><h3>Price monitoring</h3><p>Track competitor prices and stock without writing scrapers.</p></div></a>
+        <a class="t-lcard rv" data-go="landing:price-monitoring"><div class="media" data-photo="images/prices.jpg" style="--g1:#4a3a0c;--g2:#0b0903"></div><div class="t"><h3>Price monitoring</h3><p>Track competitor prices and stock without writing scrapers.</p></div></a>
         <a class="t-lcard rv" data-go="landing:pricing" style="--d:90ms"><div class="media" data-photo="images/research.jpg" style="--g1:#2f2f35;--g2:#060607"></div><div class="t"><h3>Market research</h3><p>Collect the facts you need from public sources, fast.</p></div></a>
         <a class="t-lcard rv" data-go="landing:pricing" style="--d:180ms"><div class="media" data-photo="images/leads.jpg" style="--g1:#5a4410;--g2:#0a0804"></div><div class="t"><h3>Lead lists</h3><p>Turn directory pages into clean lists of companies.</p></div></a>
         <a class="t-lcard rv" data-go="landing:pricing" style="--d:270ms"><div class="media" data-photo="images/catalog.jpg" style="--g1:#33333a;--g2:#08080a"></div><div class="t"><h3>Catalog tracking</h3><p>Keep product catalogs up to date automatically.</p></div></a>
@@ -686,6 +740,7 @@ body.view-dashboard .insight-card{background:#fff;border:1px solid #e6e9f0;borde
     </div>
   </section>
 
+<section id="case-detail" class="t-sec t-light" data-nav="light"><div class="t-in"><span class="t-tag">USE CASE / TITANCDN</span><h2 id="caseTitle" style="font-size:clamp(2.7rem,5vw,5rem);letter-spacing:-.05em;margin:10px 0 20px"></h2><p id="caseDescription" style="font-size:1.25rem;color:#575b63;max-width:680px;line-height:1.7"></p><div class="case-demo"><div><span class="t-tag">WHAT TO EXTRACT</span><p id="caseExample"></p></div><div><span class="t-tag">TRY IT</span><p>Open the Playground to create your own extraction request.</p><button class="t-btn t-dark" data-go="dashboard:workbench">Open Playground ↗</button></div></div><button class="t-btn t-ghost-l" data-go="landing:usecases">← All use cases</button></div></section>
   <section class="t-sec t-light" id="pricing" data-nav="light" style="padding-top:0">
     <div class="t-in">
       <div class="t-head rv"><span class="t-tag">Pricing</span><h2>Start free. Pay when you grow.</h2><p>Every plan is measured in characters processed per month.</p></div>
@@ -863,6 +918,20 @@ body.view-dashboard .insight-card{background:#fff;border:1px solid #e6e9f0;borde
 </section>
 
 <section class="page view-pane" id="viewInsights">
+  <div class="insights-public-header">
+    <div><span class="dash-kicker">PUBLIC NEWS · NO ACCOUNT REQUIRED</span><h3>Titan Insights</h3><p>Business, technology and AI news from public publishers. Search without signing in or creating an API key.</p></div>
+  </div>
+  <div class="insights-public-search">
+    <input id="insightsSearch" type="search" placeholder="Search companies, AI, markets..." aria-label="Search news">
+    <button id="insightsSearchBtn" class="btn primary" type="button">Search news</button>
+  </div>
+  <div class="insights-public-topics">
+    <button class="insightsTopic" data-topic="technology" type="button">Technology</button>
+    <button class="insightsTopic" data-topic="artificial intelligence" type="button">AI</button>
+    <button class="insightsTopic" data-topic="business" type="button">Business</button>
+    <button class="insightsTopic" data-topic="cybersecurity" type="button">Cybersecurity</button>
+    <button class="insightsTopic" data-topic="ecommerce" type="button">E-Commerce</button>
+  </div>
   <div id="insightsNewsResults" class="insights-grid"><p class="sub">Live news will appear here once the news API is connected.</p></div>
 </section>
 
@@ -1006,7 +1075,7 @@ body.view-dashboard .insight-card{background:#fff;border:1px solid #e6e9f0;borde
 </div>
 
 <!-- Stripe.js is loaded only when payment is initiated; Firefox tracking protection may block it. -->
-<script src="app.js?v=6" defer=""></script>
+<script src="app.js?v=7" defer=""></script>
 
 
 </body></html>
