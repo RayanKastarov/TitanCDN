@@ -391,6 +391,58 @@ input:focus,select:focus{border-color:var(--gold)}
 .rv{opacity:1;transform:none}
 @media(max-width:900px){.t-scatter{height:540px;min-height:0}.t-statement{padding:65px 16px 35px}}
 @media(max-width:560px){.t-scatter{height:460px}.t-tile{max-width:30vw;max-height:140px}.t-center h2{font-size:clamp(1.6rem,7vw,2.4rem)}}
+
+/* TITAN STUDIO — redesigned application shell */
+body.view-dashboard{--nav-h:72px;background:#090b10;color:#edf0f5}
+body.view-dashboard #siteNav{background:#0c0e13!important;border-bottom:1px solid #272b34;box-shadow:none}
+body.view-dashboard .app{min-height:100vh;background:radial-gradient(ellipse at 80% 5%,#171c29 0,transparent 42%),#090b10}
+body.view-dashboard .sidebar{top:72px;width:244px;background:#10131a;border-right:1px solid #252b36;padding:26px 12px}
+body.view-dashboard .sidebar::before{content:"WORKSPACE";display:block;color:#737f93;font-size:10px;font-weight:800;letter-spacing:2px;margin:5px 16px 22px}
+body.view-dashboard .nav{gap:5px}
+body.view-dashboard .nav button{padding:13px 15px;border-radius:12px;color:#a2adbf;font-size:13px;font-weight:600;gap:12px}
+body.view-dashboard .nav button:hover{background:#1b2230;color:#f3f6fa}
+body.view-dashboard .nav button.active{background:#242e3e;color:#f5f7fb;box-shadow:inset 0 0 0 1px #39465b}
+body.view-dashboard .nav button.active::before{background:#79a8ff;box-shadow:none;top:11px;bottom:11px;border-radius:4px}
+body.view-dashboard .sidebar-bottom{border-top:1px solid #29303b;color:#78859a;line-height:1.9}
+body.view-dashboard .main{margin-left:244px;width:calc(100% - 244px);max-width:none;padding:38px clamp(22px,3.3vw,64px) 70px}
+body.view-dashboard .topbar{margin-bottom:30px;padding-bottom:25px;border-bottom:1px solid #252c37}
+body.view-dashboard .eyebrow{color:#91a6c5;font-size:10px;letter-spacing:2px}
+body.view-dashboard .topbar h2{font-size:clamp(28px,3vw,40px);font-weight:750;letter-spacing:-1.5px;margin-top:9px}
+body.view-dashboard .engine{gap:12px}
+body.view-dashboard .engine-state{color:#93a1b7}
+body.view-dashboard .switch.on{border-color:#5c85ce;background:#24395b}
+body.view-dashboard .switch.on i{background:#91b7ff;box-shadow:none}
+body.view-dashboard .btn.primary,body.view-dashboard #insightsSearchBtn{background:#d9e5ff!important;border:1px solid #d9e5ff!important;color:#111827!important;box-shadow:none!important;border-radius:10px}
+body.view-dashboard .card{background:#141820;border:1px solid #29303b;border-radius:18px;box-shadow:none;padding:25px}
+body.view-dashboard .card.gold{border-color:#334158;background:#171d28;box-shadow:none}
+body.view-dashboard .card-label{color:#94a4b9;font-weight:700;letter-spacing:1.4px}
+body.view-dashboard .section-title h3{font-size:13px;letter-spacing:.8px}
+body.view-dashboard .section-title span{color:#8c9aaf}
+body.view-dashboard .big{font-size:36px;letter-spacing:-1.2px}
+body.view-dashboard .sub{color:#8d9bb0}
+body.view-dashboard .gold-bar{border:0;background:#303b4d;height:13px;border-radius:20px}
+body.view-dashboard .gold-fill{background:linear-gradient(90deg,#719cfa,#b5cbff)}
+body.view-dashboard .gold-meta b,body.view-dashboard .gold-pct{color:#bad0ff}
+body.view-dashboard .telemetry{margin-top:20px;gap:20px}
+body.view-dashboard .grid{gap:18px}
+body.view-dashboard input,body.view-dashboard select,body.view-dashboard textarea{background:#0c1017!important;color:#f2f5fa!important;border:1px solid #384253!important;border-radius:11px!important}
+body.view-dashboard input:focus,body.view-dashboard textarea:focus{border-color:#8bb2ff!important}
+body.view-dashboard .preview,body.view-dashboard .live-stream{background:#0a1019;border:1px solid #303d52;border-radius:12px}
+body.view-dashboard .btn{border-radius:10px}
+body.view-dashboard .insight-card{background:#161c27;border:1px solid #344159;border-radius:15px;padding:22px}
+body.view-dashboard .insight-card:hover{border-color:#90b5f7;box-shadow:0 8px 28px #05080e}
+body.view-dashboard .insight-tag,body.view-dashboard #insightsNewsResults .insight-card a{color:#a8c5ff!important}
+body.view-dashboard .insightsTopic{background:#202b3b!important;color:#c4d8ff!important;border:1px solid #425777!important;border-radius:10px!important}
+body.view-dashboard .profile-chip{background:#1d2532;border-color:#39465b}
+body.view-dashboard .dash-intro{margin-bottom:22px;max-width:650px}
+body.view-dashboard .dash-kicker{font-size:11px;letter-spacing:2px;color:#92b4eb;font-weight:700}
+body.view-dashboard .dash-intro h3{font-size:25px;margin:9px 0}
+body.view-dashboard .dash-intro p{color:#9ba9bd;line-height:1.6}
+body.view-dashboard .page{animation:fade .18s ease}
+@media(max-width:1050px){body.view-dashboard .kpi5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){body.view-dashboard .sidebar{width:244px}body.view-dashboard .main{margin-left:0;width:100%;padding:20px 15px 50px}body.view-dashboard .topbar{align-items:flex-start}body.view-dashboard .engine{flex-wrap:wrap}body.view-dashboard .kpi5{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){body.view-dashboard .kpi5,body.view-dashboard .stats{grid-template-columns:1fr}body.view-dashboard .card{padding:18px}}
+
 </style>
 </head>
 <body class="view-landing">
@@ -667,7 +719,6 @@ input:focus,select:focus{border-color:var(--gold)}
     <button data-page="ai">✦ <span>Titan AI</span></button>
     <button data-page="billing">◇ <span>Billing &amp; Usage</span></button>
     <button id="navInsights" data-page="viewInsights">◭ <span>Titan Insights</span></button>
-    <button id="navAbout" data-page="about">◉ <span>About Us</span></button>
   </nav>
   <div class="sidebar-bottom"><span class="status-dot"></span>CONTROL PLANE ONLINE<br><span style="margin-left:14px">v2.0.0 • BETA</span></div>
 </aside>
@@ -788,46 +839,17 @@ input:focus,select:focus{border-color:var(--gold)}
 <section class="page" id="ai"><div class="card gold"><div class="section-title"><h3>TITAN AI EXTRACTION</h3><span>URL CONTENT → REQUESTED DATA</span></div><div class="preview" id="aiOut">Titan AI is used by the Developer Workbench. Enter a URL and describe exactly what information you want extracted.</div><div class="search-row" style="margin-top:10px"><input id="aiInput" placeholder="Describe the information you want extracted"><button class="btn primary" id="askAi">USE IN WORKBENCH</button></div></div></section>
 
 <section class="page" id="billing">
-  <div class="section-title"><h3>PLANS</h3><span>MONTHLY LIMITS IN CHARACTERS</span></div>
-  <div class="card gold" style="margin-bottom:16px"><div class="card-label">FREE TRIAL</div><div class="price">€0 <small>/ one-time</small></div><ul class="features"><li>100,000 characters (does not renew)</li><li>Card verification, never charged</li><li>One card and one device per free trial</li><li>Stops automatically when used up</li></ul></div>
-  <div class="grid plans">
-    <div class="card plan"><div class="card-label">STARTER</div><div class="price">€69.99 <small>/ month</small></div><ul class="features"><li>25,000,000 characters</li><li>Developer workbench</li><li>Titan AI extraction</li><li>Standard support</li></ul><button class="btn primary buy" data-plan="pro">SELECT PLAN</button></div>
-    <div class="card plan featured"><div class="ribbon">POPULAR</div><div class="card-label">BUSINESS</div><div class="price">€299.99 <small>/ month</small></div><ul class="features"><li>250,000,000 characters</li><li>Advanced analytics</li><li>Priority support</li><li>Team 2FA</li></ul><button class="btn primary buy" data-plan="business">SELECT PLAN</button></div>
-    <div class="card plan"><div class="card-label">MEGA FACTORY</div><div class="price">€899.99 <small>/ month</small></div><ul class="features"><li>1,000,000,000 characters</li><li>Enterprise telemetry</li><li>High-volume extraction</li><li>Priority support</li></ul><button class="btn primary buy" data-plan="enterprise">SELECT PLAN</button></div>
-    <div class="card plan"><div class="card-label">TITAN ENTERPRISE</div><div class="price">€1,999.99 <small>/ month</small></div><ul class="features"><li>3,000,000,000 characters</li><li>Maximum-volume extraction</li><li>Enterprise telemetry</li><li>Priority support</li></ul><button class="btn primary buy" data-plan="titan">SELECT PLAN</button></div>
-  </div>
-  <div class="card" style="margin-top:16px"><b>Activating a paid plan</b><p style="color:#777;font-size:12px">Payment goes through secure Stripe Checkout. Once Stripe confirms it (webhook), your account limit changes automatically, and your characters reset on every renewal.</p></div>
+<div class="dash-intro"><span class="dash-kicker">ACCOUNT / CONSUMPTION</span><h3>Usage &amp; subscription</h3><p>Track your current allowance here. All plan comparisons are on the public pricing page.</p></div>
+<div class="card gold"><div class="section-title"><h3>MANAGE YOUR SUBSCRIPTION</h3><span>ACCOUNT BILLING</span></div>
+<p class="sub" style="font-size:14px;line-height:1.8">Your active plan and remaining characters are shown in Overview. To compare plans or change your subscription, open Pricing.</p>
+<button class="btn primary" type="button" data-go="landing:pricing">VIEW PRICING &amp; PLANS →</button></div>
+<div hidden="" aria-hidden="true"><button class="btn primary buy" data-plan="pro">SELECT PLAN</button><button class="btn primary buy" data-plan="business">SELECT PLAN</button><button class="btn primary buy" data-plan="enterprise">SELECT PLAN</button><button class="btn primary buy" data-plan="titan">SELECT PLAN</button></div>
 </section>
 
 <section class="page view-pane" id="viewInsights">
-  <div class="card gold">
-    <div class="section-title"><h3>TITAN INSIGHTS</h3><span>MARKET INTELLIGENCE HUB</span></div>
-    <p class="sub" style="font-size:13px">Discover current business, technology and AI news from external publishers. Search by company or topic.</p>
-  </div>
-  <div class="card gold" style="margin:16px 0">
-    <div class="section-title"><h3>LIVE BUSINESS &amp; TECHNOLOGY NEWS</h3><span>REAL PUBLISHERS</span></div>
-    <p class="sub">Search current news about companies, artificial intelligence, technology and global markets.</p>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
-      <input id="insightsSearch" type="search" placeholder="Search companies, AI, markets..." style="flex:1;min-width:220px;padding:12px">
-      <button id="insightsSearchBtn" class="primary">SEARCH NEWS</button>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-      <button class="insightsTopic" data-topic="technology">Technology</button>
-      <button class="insightsTopic" data-topic="artificial intelligence">AI</button>
-      <button class="insightsTopic" data-topic="business">Business</button>
-      <button class="insightsTopic" data-topic="cybersecurity">Cybersecurity</button>
-      <button class="insightsTopic" data-topic="ecommerce">E-Commerce</button>
-    </div>
-  </div>
   <div id="insightsNewsResults" class="insights-grid"><p class="sub">Live news will appear here once the news API is connected.</p></div>
 </section>
 
-<section class="page" id="about">
-  <div class="card gold">
-    <div class="section-title" style="margin-top:0"><h3>ABOUT US</h3><span>TITANCDN • WHO WE ARE</span></div>
-    <p class="sub" style="font-size:14px;line-height:1.7;margin:0">We turn any public web page into clean, structured data. You give TitanCDN a link and a plain-English instruction, and it returns exactly the information you asked for. Founded by Rayan Katsarov.</p>
-  </div>
-</section>
 </main>
 </div>
 
