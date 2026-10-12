@@ -1,6 +1,6 @@
 "use strict";
 const API_BASE = "";
-const pages = { overview: "Overview", edge: "Edge Network", analytics: "Analytics", jobs: "Scrape Jobs", logs: "Request Logs", api: "API & Webhooks", ai: "Titan AI", billing: "Billing & Usage", viewInsights: "Titan Insights", about: "About Us" };
+const pages = { overview: "Overview", workbench: "Developer Workbench", edge: "Edge Network", analytics: "Analytics", jobs: "Scrape Jobs", logs: "Request Logs", api: "API & Webhooks", ai: "Titan AI", billing: "Billing & Usage", viewInsights: "Titan Insights", about: "About Us" };
 const $ = id => document.getElementById(id);
 const toast = $("toast");
 let currentProfile = null, currentKeyMeta = null, secretVisible = false;
@@ -541,9 +541,9 @@ $("sendBtn").onclick = async () => {
 $("askAi").onclick = () => {
   const q = $("aiInput").value.trim(); if (!q) return;
   $("extractInstructions").value = q; $("aiOut").textContent = "Instruction loaded into Developer Workbench: " + q;
-  document.querySelector('[data-page="overview"]').click(); showToast("AI instruction loaded");
+  document.querySelector('[data-page="workbench"]').click(); showToast("AI instruction loaded");
 };
-$("createJob").onclick = () => document.querySelector('[data-page="overview"]').click();
+$("createJob").onclick = () => document.querySelector('[data-page="workbench"]').click();
 $("apiSignupBtn").onclick = () => openAuth("signup");
 $("apiAiUse").onclick = async () => {
   try {
@@ -960,3 +960,166 @@ setInterval(() => {
   const query = searchInput.value.trim() || "technology AI business";
   loadTitanInsightsNews(query);
 }, 5 * 60 * 1000);
+
+/* ======================================================================
+   TitanCDN site shell: landing page, top navigation, view switching
+   ====================================================================== */
+(function () {
+  const $q = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const body = document.body;
+  const nav = $q("#siteNav");
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ----- view switching (landing <-> dashboard) ----- */
+  function closeMenus() { closeMega(); body.classList.remove("menu-open"); }
+  function showView(view, target) {
+    closeMenus();
+    if (view === "dashboard") {
+      body.classList.add("view-dashboard"); body.classList.remove("view-landing");
+      const btn = $q('.nav button[data-page="' + (target || "overview") + '"]');
+      if (btn) btn.click();
+      window.scrollTo(0, 0);
+    } else {
+      body.classList.add("view-landing"); body.classList.remove("view-dashboard");
+      requestAnimationFrame(() => {
+        const el = target ? document.getElementById(target) : null;
+        if (el) el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+        else window.scrollTo(0, 0);
+        onScroll();
+      });
+    }
+  }
+  window.TitanSite = { showView };
+
+  const hasToken = () => !!sessionStorage.getItem("titanJwt");
+  const openAuthTab = tab => { const trigger = $q("#authBtn"); if (!trigger) { console.error("Missing auth trigger"); return; } trigger.click(); if (tab === "signin") $q("#signinTab")?.click(); };
+
+  document.addEventListener("click", e => {
+    const go = e.target.closest("[data-go]");
+    if (go) { e.preventDefault(); const [v, t] = go.dataset.go.split(":"); showView(v, t); return; }
+    const au = e.target.closest("[data-auth]");
+    if (au) { closeMenus(); openAuthTab(au.dataset.auth); return; }
+    const ac = e.target.closest("[data-act]");
+    if (ac) {
+      const a = ac.dataset.act;
+      if (a === "start") { if (hasToken()) showView("dashboard", "overview"); else openAuthTab("signup"); }
+      else if (a === "profile") $q("#profileBtn").click();
+      else if (a === "logout") { $q("#logoutBtn").click(); showView("landing"); }
+      return;
+    }
+    const pg = e.target.closest("[data-plan-go]");
+    if (pg) {
+      if (!hasToken()) { openAuthTab("signup"); return; }
+      showView("dashboard", "billing");
+      const buy = $q('.buy[data-plan="' + pg.dataset.planGo + '"]');
+      if (buy) buy.click();
+      return;
+    }
+    if (!e.target.closest(".mega") && !e.target.closest(".nl[data-mega]")) closeMega();
+  });
+
+  /* ----- signed-in state mirrored into the nav ----- */
+  function syncAuthUi() {
+    const pb = $q("#profileBtn"); if (!pb) return;
+    const signed = !pb.hidden;
+    body.classList.toggle("signed-in", signed);
+    const nm = ($q("#profileName") || {}).textContent;
+    const u = $q("#navUser"); if (u) u.textContent = signed && nm ? nm : "Account";
+  }
+  const pb = $q("#profileBtn");
+  if (pb) new MutationObserver(syncAuthUi).observe(pb, { attributes: true, childList: true, subtree: true, characterData: true });
+  syncAuthUi();
+
+  /* ----- mega menus ----- */
+  let closeT = null;
+  function openMega(id) {
+    clearTimeout(closeT);
+    $$(".mega").forEach(m => m.classList.toggle("open", m.id === "mega-" + id));
+    $$(".nl[data-mega]").forEach(b => { const on = b.dataset.mega === id; b.classList.toggle("open", on); b.setAttribute("aria-expanded", on); });
+    nav.classList.add("mega-open");
+  }
+  function closeMega() {
+    $$(".mega").forEach(m => m.classList.remove("open"));
+    $$(".nl[data-mega]").forEach(b => { b.classList.remove("open"); b.setAttribute("aria-expanded", false); });
+    nav && nav.classList.remove("mega-open");
+  }
+  $$(".nl[data-mega]").forEach(b => {
+    b.addEventListener("mouseenter", () => openMega(b.dataset.mega));
+    b.addEventListener("click", e => { e.stopPropagation(); b.classList.contains("open") ? closeMega() : openMega(b.dataset.mega); });
+  });
+  $$(".nl:not([data-mega])").forEach(a => a.addEventListener("mouseenter", closeMega));
+  const leave = () => { closeT = setTimeout(closeMega, 180); };
+  const stay = () => clearTimeout(closeT);
+  $$(".mega").forEach(m => { m.addEventListener("mouseenter", stay); m.addEventListener("mouseleave", leave); });
+  nav.addEventListener("mouseleave", leave); nav.addEventListener("mouseenter", stay);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeMenus(); });
+  $q("#navBurger").addEventListener("click", () => { closeMega(); body.classList.toggle("menu-open"); });
+
+  /* ----- scroll effects ----- */
+  const device = $q("#heroDevice"), heroText = $q("#heroText"), wordsEl = $q("#words"), stmt = $q("#statement");
+  let words = [];
+  if (wordsEl) {
+    const txt = wordsEl.textContent.trim().split(/\s+/);
+    wordsEl.textContent = "";
+    words = txt.map((w, i) => { const s = document.createElement("span"); s.textContent = w + (i < txt.length - 1 ? " " : ""); wordsEl.appendChild(s); return s; });
+  }
+  const lightSecs = () => $$('[data-nav="light"]');
+  let ticking = false;
+  function onScroll() {
+    ticking = false;
+    const y = window.scrollY, vh = window.innerHeight;
+    if (body.classList.contains("view-dashboard")) { nav.classList.remove("on-light"); nav.classList.add("scrolled"); return; }
+    nav.classList.toggle("scrolled", y > 10);
+    // nav turns light over light sections
+    const probe = 36; let light = false;
+    for (const s of lightSecs()) { const r = s.getBoundingClientRect(); if (r.top <= probe && r.bottom > probe) { light = true; break; } }
+    nav.classList.toggle("on-light", light && !nav.classList.contains("mega-open"));
+    // hero: the device shrinks and flattens while you scroll
+    if (device && !reduced) {
+      const p = clamp(y / (vh * 0.9), 0, 1);
+      const base = window.innerWidth < 900 ? 1 : 1.07;
+      device.style.setProperty("--rx", (16 * (1 - p)).toFixed(2) + "deg");
+      device.style.setProperty("--sc", (base - 0.2 * p).toFixed(3));
+      if (heroText) { heroText.style.opacity = "1"; heroText.style.transform = "none"; }
+    }
+    // statement: words light up as you read
+    if (stmt && words.length) {
+      const r = stmt.getBoundingClientRect();
+      const t = reduced ? 1 : clamp((vh * 0.82 - r.top) / (r.height * 0.8 + vh * 0.2), 0, 1);
+      const lit = Math.round(t * words.length * 1.15);
+      words.forEach((w, i) => w.classList.toggle("on", i < lit));
+    }
+  }
+  window.addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
+  window.addEventListener("resize", onScroll);
+
+  /* ----- reveal on scroll + count-up ----- */
+  const io = new IntersectionObserver(entries => entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add("shown"); io.unobserve(en.target); } }), { threshold: 0.12, rootMargin: "0px 0px -6% 0px" });
+  $$(".rv").forEach(el => io.observe(el));
+  const countIo = new IntersectionObserver(entries => entries.forEach(en => {
+    if (!en.isIntersecting) return; countIo.unobserve(en.target);
+    const el = en.target, target = +el.dataset.count, suf = el.dataset.suffix || "";
+    if (reduced) { el.textContent = target.toLocaleString("en-US") + suf; return; }
+    const t0 = performance.now(), dur = 1300;
+    (function step(now) { const k = clamp((now - t0) / dur, 0, 1), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(target * e).toLocaleString("en-US") + (k === 1 ? suf : ""); if (k < 1) requestAnimationFrame(step); })(t0);
+  }), { threshold: 0.6 });
+  $$("[data-count]").forEach(el => countIo.observe(el));
+
+  /* ----- optional real photos: drop files into /images ----- */
+  $$(".media[data-photo]").forEach(m => {
+    const img = new Image();
+    img.onload = () => { m.style.setProperty("--photo", 'url("' + m.dataset.photo + '")'); m.classList.add("has-photo"); };
+    img.src = m.dataset.photo;
+  });
+
+  const co = $q("#curlOrigin"); if (co && location.origin.startsWith("http")) co.textContent = location.origin;
+
+  /* ----- initial view ----- */
+  const sp = new URLSearchParams(location.search);
+  if (sp.get("checkout")) showView("dashboard", "billing");
+  else if (location.hash === "#dashboard") showView("dashboard", "overview");
+  else body.classList.add("view-landing");
+  onScroll();
+})();

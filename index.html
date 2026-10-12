@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8">
 <meta name="google-site-verification" content="-pO-bUU70XOm7qiTRx15E6HRplpXubJsu96A2rjNW-o">
@@ -7,8 +6,8 @@
 <meta name="description" content="Send TitanCDN a link and a plain-English instruction. Get exactly the data you asked for, as clean JSON, through one simple API.">
 <meta name="theme-color" content="#050505">
 <link rel="icon" type="image/png" href="/12.png">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
 <style>
 /* ============================================================
    TITAN INSIGHTS — GOLD THEME (inputs of the news page)
@@ -384,6 +383,14 @@ input:focus,select:focus{border-color:var(--gold)}
 @media(max-width:720px){
  .sidebar{transform:translateX(-100%);transition:.25s}.sidebar.open{transform:none}.main{margin-left:0;width:100%;padding:17px}.mobile-menu{display:block}.topbar{gap:10px;flex-wrap:wrap}.topbar h2{font-size:21px}.stats{grid-template-columns:1fr 1fr}.builder{grid-template-columns:1fr}.builder .wide{grid-column:auto}.card{padding:16px}.big{font-size:25px}.gold-meta{grid-template-columns:1fr}
 }
+/* Layout and accessibility fixes */
+.t-scatter{height:clamp(490px,70vh,760px);min-height:0;margin-top:44px}
+.t-statement{padding:90px 24px 55px}
+.t-sec{padding-top:88px;padding-bottom:88px}
+.t-hero{padding-bottom:65px}
+.rv{opacity:1;transform:none}
+@media(max-width:900px){.t-scatter{height:540px;min-height:0}.t-statement{padding:65px 16px 35px}}
+@media(max-width:560px){.t-scatter{height:460px}.t-tile{max-width:30vw;max-height:140px}.t-center h2{font-size:clamp(1.6rem,7vw,2.4rem)}}
 </style>
 </head>
 <body class="view-landing">
@@ -481,7 +488,7 @@ input:focus,select:focus{border-color:var(--gold)}
         <button class="t-btn t-gold t-lg" type="button" data-act="start">Start with the free trial</button>
         <button class="t-btn t-ghost t-lg" type="button" data-go="landing:how">See how it works</button>
       </div>
-      <p class="t-founder"><b>Rayan Katsarov, founder.</b> &ldquo;No brittle scripts and no manual cleanup, just the answer you asked for.&rdquo;</p>
+      <p class="t-founder"><b>Rayan Katsarov, founder.</b> “No brittle scripts and no manual cleanup, just the answer you asked for.”</p>
     </div>
 
     <div class="t-devwrap">
@@ -537,7 +544,7 @@ input:focus,select:focus{border-color:var(--gold)}
       <div class="t-steps">
         <div class="t-st rv"><div class="n">1</div><div><h3>Create your account</h3><p>Sign up and confirm your email. Then verify a card to unlock the 100,000 free characters. The card is never charged.</p>
           <div class="t-chips"><span class="t-chip on">Sign up</span><span class="t-chip">Confirm email</span><span class="t-chip">Verify card</span></div></div></div>
-        <div class="t-st rv"><div class="n">2</div><div><h3>Create an API key and say what to extract</h3><p>Describe the data you need in plain English, for example &ldquo;get only the company names&rdquo;. The instruction is saved on the key. Leave it empty for all available data.</p></div></div>
+        <div class="t-st rv"><div class="n">2</div><div><h3>Create an API key and say what to extract</h3><p>Describe the data you need in plain English, for example “get only the company names”. The instruction is saved on the key. Leave it empty for all available data.</p></div></div>
         <div class="t-st rv"><div class="n">3</div><div><h3>Send a link</h3><p>Call the endpoint with your key and the public page you want to read.</p>
           <code class="t-code"><span class="m">$</span> curl -X POST <span class="s" id="curlOrigin">https://your-titancdn.com</span>/api/v1/scrape \<br>&nbsp;&nbsp;-H <span class="s">"x-api-key: titan_sk_..."</span> \<br>&nbsp;&nbsp;-H <span class="s">"Content-Type: application/json"</span> \<br>&nbsp;&nbsp;-d <span class="s">'{"targetUrl":"https://example.com/page"}'</span></code></div></div>
         <div class="t-st rv"><div class="n">4</div><div><h3>Get structured JSON back</h3><p>Titan fetches the page, filters it with AI and returns the result together with your live usage and remaining limit.</p></div></div>
@@ -611,7 +618,7 @@ input:focus,select:focus{border-color:var(--gold)}
       <div>
         <span class="t-tag rv">About us</span>
         <h2 class="rv">We turn any public web page into clean, structured data.</h2>
-        <p class="rv">TitanCDN is an AI-powered web data platform. Send a URL and an instruction such as &ldquo;get only the company names&rdquo;, and Titan fetches the page, filters it with AI and returns tidy JSON through one simple API.</p>
+        <p class="rv">TitanCDN is an AI-powered web data platform. Send a URL and an instruction such as “get only the company names”, and Titan fetches the page, filters it with AI and returns tidy JSON through one simple API.</p>
         <p class="rv">We built it for teams that need reliable data without maintaining fragile scrapers: price monitoring, market research, lead lists and catalog tracking.</p>
         <blockquote class="rv">No brittle scripts. No manual cleanup. Just the answer you asked for.</blockquote>
       </div>
@@ -643,7 +650,7 @@ input:focus,select:focus{border-color:var(--gold)}
     <div><h4>Platform</h4><a class="fl" data-go="dashboard:overview">Dashboard</a><a class="fl" data-go="dashboard:workbench">Developer Workbench</a><a class="fl" data-go="dashboard:viewInsights">Titan Insights</a></div>
     <div><h4>Company</h4><a class="fl" data-go="landing:about">About us</a><a class="fl" data-go="landing:usecases">Use cases</a><a class="fl" data-auth="signup">Create account</a></div>
   </div>
-  <div class="f-end">&copy; 2026 TitanCDN. Founded by Rayan Katsarov.</div>
+  <div class="f-end">© 2026 TitanCDN. Founded by Rayan Katsarov.</div>
 </footer>
 
 <!-- ======================= DASHBOARD (control plane) ======================= -->
@@ -754,10 +761,10 @@ input:focus,select:focus{border-color:var(--gold)}
       <p class="sub">API keys are available only after registration and sign-in.</p>
       <button class="btn primary" id="apiSignupBtn">SIGN UP / SIGN IN</button>
     </div>
-    <div id="apiSignedIn" hidden>
+    <div id="apiSignedIn" hidden="">
       <p class="sub">Create a real TitanCDN credential. The plaintext secret is shown only when it is created; the database stores only its hash.</p>
       <div class="keyrow">
-        <input class="code" id="apiKey" readonly value="No API key loaded">
+        <input class="code" id="apiKey" readonly="" value="No API key loaded">
         <button class="btn" id="revealKey">REVEAL</button>
         <button class="btn primary" id="rotateKey">CREATE KEY</button>
       </div>
@@ -842,7 +849,7 @@ input:focus,select:focus{border-color:var(--gold)}
       <input type="password" id="authPasswordConfirm" placeholder="Repeat Password" style="margin-top:10px;">
       <input id="authTotp" class="full" style="display:none" inputmode="numeric" autocomplete="one-time-code" placeholder="2FA Code (6 digits) or Recovery Code">
       <div class="full" id="forgotRow" style="display:none;text-align:right"><a href="#" id="forgotLink" style="color:#d4af37;font-size:12px;text-decoration:underline">Forgot password?</a></div>
-      <div class="full" id="backRow" style="display:none"><a href="#" id="backToSignin" style="color:#d4af37;font-size:12px;text-decoration:underline">&larr; Back to sign in</a></div>
+      <div class="full" id="backRow" style="display:none"><a href="#" id="backToSignin" style="color:#d4af37;font-size:12px;text-decoration:underline">← Back to sign in</a></div>
       <label class="full auth-note" id="termsRow"><input type="checkbox" id="terms"> I agree to the Terms and Privacy Policy.</label>
     </div>
     <div class="auth-note" id="authHint">Already have an account? Use SIGN IN above. Your free account will be instantly created and activated.</div>
@@ -960,7 +967,8 @@ input:focus,select:focus{border-color:var(--gold)}
   </div>
 </div>
 
-<script src="https://js.stripe.com/v3/" defer></script>
-<script src="app.js?v=5"></script>
-</body>
-</html>
+<!-- Stripe.js is loaded only when payment is initiated; Firefox tracking protection may block it. -->
+<script src="app.js?v=6" defer=""></script>
+
+
+</body></html>
