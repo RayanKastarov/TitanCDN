@@ -352,6 +352,7 @@ body.view-dashboard #siteNav{background:rgba(5,5,5,.92);border-bottom-color:var(
 .builder{display:grid;grid-template-columns:1fr 160px 150px auto;gap:9px}
 input,select{background:#080808;color:#eee;border:1px solid #2c2c2c;border-radius:7px;padding:12px;outline:none}
 input:focus,select:focus{border-color:var(--gold)}
+.pw-wrap{position:relative}.pw-wrap input{width:100%;padding-right:46px}.pw-eye{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:0;border-radius:8px;background:transparent!important;color:#8d8d8d;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:color .15s}.pw-eye:hover,.pw-eye[aria-pressed=true]{color:var(--gold2)}.pw-eye .off{display:none}.pw-eye[aria-pressed=true] .on{display:none}.pw-eye[aria-pressed=true] .off{display:block}
 .btn{border:1px solid #333;background:#171717;color:#ddd;padding:11px 15px;border-radius:7px;transition:.18s}
 .btn:hover{border-color:var(--gold);color:var(--gold2);transform:translateY(-1px)}
 .btn.primary{background:linear-gradient(135deg,#b99324,#e0bd4b);border-color:#e0bd4b;color:#090909;font-weight:800}
@@ -952,8 +953,8 @@ body.view-dashboard .err,body.view-landing .err{color:#111!important;background:
       <input id="authName" placeholder="Full name">
       <input id="authCompany" placeholder="Company">
       <input id="authEmail" class="full" type="email" placeholder="Email">
-      <input id="authPassword" class="full" type="password" placeholder="Password • 12+ characters">
-      <input type="password" id="authPasswordConfirm" placeholder="Repeat Password" style="margin-top:10px;">
+      <div class="full pw-wrap" id="authPasswordWrap"><input id="authPassword" class="full" type="password" autocomplete="current-password" placeholder="Password • 12+ characters"><button type="button" class="pw-eye" aria-label="Show password" aria-pressed="false"><svg class="on" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="off" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.9 17.9A10.7 10.7 0 0 1 12 19C5.5 19 1.5 12 1.5 12a19 19 0 0 1 4.6-5.4M9.9 5.2A10 10 0 0 1 12 5c6.5 0 10.5 7 10.5 7a19 19 0 0 1-2.2 3.1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M2 2l20 20"/></svg></button></div>
+      <div class="full pw-wrap" id="authPasswordConfirmWrap"><input type="password" id="authPasswordConfirm" autocomplete="new-password" placeholder="Repeat Password"><button type="button" class="pw-eye" aria-label="Show password" aria-pressed="false"><svg class="on" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="off" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.9 17.9A10.7 10.7 0 0 1 12 19C5.5 19 1.5 12 1.5 12a19 19 0 0 1 4.6-5.4M9.9 5.2A10 10 0 0 1 12 5c6.5 0 10.5 7 10.5 7a19 19 0 0 1-2.2 3.1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M2 2l20 20"/></svg></button></div>
       <input id="authTotp" class="full" style="display:none" inputmode="numeric" autocomplete="one-time-code" placeholder="2FA Code (6 digits) or Recovery Code">
       <div class="full" id="forgotRow" style="display:none;text-align:right"><a href="#" id="forgotLink" style="color:#d4af37;font-size:12px;text-decoration:underline">Forgot password?</a></div>
       <div class="full" id="backRow" style="display:none"><a href="#" id="backToSignin" style="color:#d4af37;font-size:12px;text-decoration:underline">← Back to sign in</a></div>
@@ -1036,7 +1037,7 @@ body.view-dashboard .err,body.view-landing .err{color:#111!important;background:
       <button class="btn primary" id="twofaEnable" style="width:100%;margin-top:10px">ENABLE 2FA</button>
     </div>
     <div id="twofaDisable" style="display:none">
-      <input id="twofaPassword" type="password" placeholder="Password" style="width:100%;margin-bottom:8px">
+      <div class="pw-wrap" style="margin-bottom:8px"><input id="twofaPassword" type="password" autocomplete="current-password" placeholder="Password" style="width:100%"><button type="button" class="pw-eye" aria-label="Show password" aria-pressed="false"><svg class="on" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="off" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.9 17.9A10.7 10.7 0 0 1 12 19C5.5 19 1.5 12 1.5 12a19 19 0 0 1 4.6-5.4M9.9 5.2A10 10 0 0 1 12 5c6.5 0 10.5 7 10.5 7a19 19 0 0 1-2.2 3.1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M2 2l20 20"/></svg></button></div>
       <input id="twofaOffCode" placeholder="2FA code or recovery code" style="width:100%">
       <button class="btn danger" id="twofaOff" style="width:100%;margin-top:10px">DISABLE 2FA</button>
     </div>

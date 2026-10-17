@@ -151,14 +151,15 @@ function syncAuthTabs() {
   $("authTitle").textContent = forgot ? "Reset your password" : up ? "Create TitanCDN account" : "Sign in to TitanCDN";
   $("authSubmit").textContent = forgot ? "SEND RESET LINK" : up ? "CREATE ACCOUNT" : "SIGN IN";
   $("authName").style.display = up ? "block" : "none"; $("authCompany").style.display = "none";
-  $("authPassword").style.display = forgot ? "none" : "block";
+  $("authPasswordWrap").style.display = forgot ? "none" : "block";
+  $("authPasswordConfirmWrap").style.display = up ? "block" : "none";
   $("termsRow").style.display = forgot ? "none" : "";
   $("authTotp").style.display = "none";
   $("forgotRow").style.display = authMode === "signin" ? "block" : "none";
   $("backRow").style.display = forgot ? "block" : "none";
   $("authHint").textContent = forgot ? "Enter the email you registered with. We will send you a link that is valid for 1 hour." : DEFAULT_AUTH_HINT;
 }
-function openAuth(mode = "signup") { authMode = mode; syncAuthTabs(); authModal.classList.add("show"); }
+function openAuth(mode = "signup") { authMode = mode; syncAuthTabs(); hidePasswords(); authModal.classList.add("show"); }
 $("authBtn").onclick = () => openAuth("signup");
 $("signupTab").onclick = () => { authMode = "signup"; syncAuthTabs(); };
 $("signinTab").onclick = () => { authMode = "signin"; syncAuthTabs(); };
@@ -600,6 +601,8 @@ async function restoreSession() {
   await restoreSession();
   if (q.get("verified") === "1") { showToast("Email confirmed. Sign in to your account."); if (!getToken()) openAuth("signin"); }
   else if (q.get("verified") === "0") showToast("The confirmation link is invalid or expired.");
+  if (q.get("reset") === "1") { showToast("Password updated. Sign in with your new password."); if (!getToken()) openAuth("signin"); }
+  if (q.get("forgot") === "1" && !getToken()) openAuth("forgot");
   if (q.get("checkout") === "success") showToast("Payment received. Your plan activates once Stripe confirms it (usually a few seconds).");
   if (q.toString()) history.replaceState(null, "", location.pathname);
 })();
@@ -1135,3 +1138,21 @@ setInterval(() => {
 
 // Workspace shortcuts: delegate to the existing page router.
 document.querySelectorAll("[data-jump]").forEach(el => el.addEventListener("click", () => document.querySelector(`.nav button[data-page="${el.dataset.jump}"]`)?.click()));
+
+/* ---------- Password fields: eye button at the end of the line ---------- */
+function hidePasswords() {
+  document.querySelectorAll(".pw-eye").forEach(b => {
+    const input = b.parentElement.querySelector("input");
+    if (input) input.type = "password";
+    b.setAttribute("aria-pressed", "false"); b.setAttribute("aria-label", "Show password");
+  });
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest(".pw-eye"); if (!b) return;
+  const input = b.parentElement.querySelector("input"); if (!input) return;
+  const reveal = input.type === "password";
+  input.type = reveal ? "text" : "password";
+  b.setAttribute("aria-pressed", String(reveal));
+  b.setAttribute("aria-label", reveal ? "Hide password" : "Show password");
+  input.focus({ preventScroll: true });
+});

@@ -73,21 +73,34 @@ const { sendMail, emailShell, verifyMailer, mailStatus, activeProvider, logMailE
   const mailStatus = () => ({ provider: activeProvider(), ready: state.ready, lastOkAt: state.lastOkAt, lastError: state.lastError });
 
   /* ---------- building the message ---------- */
-  const htmlToPlain = html => String(html).replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<a [^>]*href="([^"]+)"[^>]*>([^<]*)<\/a>/gi, "$2 ($1)").replace(/<\/(p|h2|tr|div)>|<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&middot;/g, "·").replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n\n").trim();
+  const htmlToPlain = html => String(html).replace(/<head>[\s\S]*?<\/head>/gi, "").replace(/<(tr|table|p)[^>]*data-skip[^>]*>[\s\S]*?<\/\1>/gi, "").replace(/<\/td>/gi, " ").replace(/<div[^>]*data-preheader[^>]*>[\s\S]*?<\/div>/gi, "").replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<a [^>]*href="([^"]+)"[^>]*>([^<]*)<\/a>/gi, "$2 ($1)").replace(/<\/(p|h2|tr|div)>|<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&middot;/g, "·").replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n\n").trim();
 
-  function emailShell({ heading, intro, buttonText, link, footnote }) {
-    const l = esc(link);
-    return `<!doctype html><html><body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:24px 0;"><tr><td align="center">
-<table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e6e6e6;">
-<tr><td style="background:#000000;padding:22px 28px;border-bottom:3px solid #d4af37;"><span style="color:#d4af37;font-size:22px;font-weight:bold;letter-spacing:2px;">TITAN<span style="color:#ffffff;">CDN</span></span></td></tr>
-<tr><td style="padding:30px 28px;color:#222222;font-size:15px;line-height:1.6;">
-<h2 style="margin:0 0 14px;font-size:20px;color:#111111;">${heading}</h2>
-<p style="margin:0 0 6px;">${intro}</p>
-<p style="margin:26px 0;"><a href="${l}" style="background:#d4af37;color:#000000;text-decoration:none;font-weight:bold;padding:13px 26px;border-radius:6px;display:inline-block;">${buttonText}</a></p>
-<p style="font-size:13px;color:#666666;margin:0;">${footnote}</p>
+  // One modern layout for every email: dark card, gold accent, round icon, optional details table and button.
+  function emailShell({ heading, intro, icon, buttonText, link, details, footnote, preheader }) {
+    const l = link ? esc(link) : "";
+    const rows = (details || []).map(([k, v], i, all) =>
+      `<tr><td style="padding:11px 16px;font-size:13px;color:#8d8d8d;width:34%;${i < all.length - 1 ? "border-bottom:1px solid #2a2a2a;" : ""}">${esc(k)}</td><td style="padding:11px 16px;font-size:14px;color:#f4f4f4;font-weight:600;${i < all.length - 1 ? "border-bottom:1px solid #2a2a2a;" : ""}">${esc(v)}</td></tr>`).join("");
+    const detailsBlock = rows ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 26px;background:#0c0c0c;border:1px solid #2a2a2a;border-radius:12px;">${rows}</table>` : "";
+    const button = l && buttonText ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 26px;"><tr><td style="border-radius:10px;background:#d4af37;background-image:linear-gradient(135deg,#f6dc7d,#d4af37);"><a href="${l}" style="display:inline-block;padding:15px 30px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;color:#0b0b0b;text-decoration:none;border-radius:10px;">${buttonText}</a></td></tr></table>` : "";
+    const fallback = l && buttonText ? `<p data-skip style="margin:0 0 24px;font-size:12px;line-height:1.6;color:#7d7d7d;">Button not working? Copy this link into your browser:<br><a href="${l}" style="color:#d4af37;word-break:break-all;text-decoration:none;">${l}</a></p>` : "";
+    return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark light"><meta name="supported-color-schemes" content="dark light"><title>TitanCDN</title></head>
+<body style="margin:0;padding:0;background:#070707;font-family:Arial,Helvetica,sans-serif;">
+<div data-preheader style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:#070707;">${preheader || ""}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#070707;"><tr><td align="center" style="padding:34px 12px;">
+<table role="presentation" width="560" cellpadding="0" cellspacing="0" style="width:100%;max-width:560px;">
+<tr><td align="center" style="padding:0 0 22px;"><span style="font-size:22px;font-weight:800;letter-spacing:3px;color:#d4af37;">TITAN<span style="color:#ffffff;">CDN</span></span></td></tr>
+<tr><td style="background:#121212;border:1px solid #2b2b2b;border-radius:18px;overflow:hidden;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+<tr data-skip><td style="height:4px;line-height:4px;font-size:0;background:#d4af37;background-image:linear-gradient(90deg,#a8841f,#f6dc7d,#a8841f);">&nbsp;</td></tr>
+<tr><td style="padding:38px 34px 30px;color:#c9c9c9;font-size:15px;line-height:1.65;">
+<table data-skip role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 22px;"><tr><td align="center" width="58" height="58" style="width:58px;height:58px;border-radius:50%;background:#1d1a0e;border:1px solid #5e4c14;font-size:26px;line-height:58px;color:#f1d46a;">${icon || "&#10003;"}</td></tr></table>
+<h1 style="margin:0 0 12px;font-size:25px;line-height:1.25;color:#ffffff;font-weight:700;">${heading}</h1>
+<p style="margin:0 0 26px;color:#c9c9c9;">${intro}</p>
+${detailsBlock}${button}${fallback}
+<p style="margin:0;padding-top:20px;border-top:1px solid #2a2a2a;font-size:13px;line-height:1.6;color:#8d8d8d;">${footnote}</p>
+</td></tr></table>
 </td></tr>
-<tr><td style="padding:16px 28px;background:#fafafa;color:#999999;font-size:12px;">TitanCDN &middot; This is an automated message, please do not reply.</td></tr>
+<tr><td align="center" style="padding:22px 10px 0;font-size:12px;line-height:1.6;color:#6e6e6e;">TitanCDN &middot; This is an automated message, please do not reply.</td></tr>
 </table></td></tr></table></body></html>`;
   }
 
@@ -255,7 +268,7 @@ app.use("/api", apiLimiter);
 
 // Front-end lives one folder above server.js. Only these assets are public
 // (serving the whole parent folder would expose server/server.js and package.json).
-const WEB_ROOT = path.join(__dirname, "..");
+const WEB_ROOT = __dirname;
 const staticHandler = express.static(WEB_ROOT, { dotfiles: "deny", index: false, etag: true, maxAge: NODE_ENV === "production" ? "1h" : 0 });
 const PUBLIC_ASSET = /^\/(?:app\.js|index\.html|reset-password\.(?:html|js)|(?:images\/)?[\w.-]+\.(?:png|jpe?g|svg|webp|ico))$/i;
 app.use((req, res, next) => (PUBLIC_ASSET.test(req.path) ? staticHandler(req, res, next) : next()));
@@ -497,11 +510,48 @@ async function issueVerification(user) {
   await User.updateOne({ _id: user._id }, { $set: { emailVerifyHash: sha256(token), emailVerifyExpires: new Date(Date.now() + 24 * 3600 * 1000), verifySentAt: new Date() } });
   const link = `${APP_URL}/api/auth/verify-email?token=${token}`;
   await sendMail(user.email, "Confirm your email — TitanCDN", emailShell({
+    icon: "&#9993;",
+    preheader: "One click to activate your TitanCDN account.",
     heading: "Confirm your email address",
-    intro: `Hi ${esc(user.username)}, welcome to TitanCDN. Confirm your email to activate your account.`,
+    intro: `Hi ${esc(user.username)}, welcome to TitanCDN. Confirm your email to activate your account and get started.`,
     buttonText: "Confirm my email", link,
     footnote: "This link is valid for 24 hours. If you did not create an account, you can safely ignore this email."
   }));
+}
+
+// Short, human description of the browser that made the request (no IP address is stored or sent).
+function deviceOf(req) {
+  const ua = String((req && req.get && req.get("user-agent")) || "");
+  const browser = /Edg\//.test(ua) ? "Edge" : /OPR\/|Opera/.test(ua) ? "Opera" : /Firefox\//.test(ua) ? "Firefox" : /Chrome\//.test(ua) ? "Chrome" : /Safari\//.test(ua) ? "Safari" : "Unknown browser";
+  const os = /Windows/.test(ua) ? "Windows" : /Android/.test(ua) ? "Android" : /iPhone|iPad|iOS/.test(ua) ? "iOS" : /Mac OS X|Macintosh/.test(ua) ? "macOS" : /Linux/.test(ua) ? "Linux" : "an unknown system";
+  return `${browser} on ${os}`;
+}
+const whenNow = () => new Date().toLocaleString("en-GB", { timeZone: "Europe/Sofia", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) + " (Sofia time)";
+
+// Sent after every successful sign-in. Never awaited, so signing in never waits for email.
+function notifyLogin(user, req) {
+  sendMail(user.email, "New sign-in to your TitanCDN account", emailShell({
+    icon: "&#128274;",
+    preheader: "Your account was just used to sign in.",
+    heading: "New sign-in to your account",
+    intro: `Hi ${esc(user.username)}, we noticed a sign-in to your TitanCDN account. If this was you, there is nothing to do.`,
+    details: [["When", whenNow()], ["Device", deviceOf(req)]],
+    buttonText: APP_URL ? "This was not me" : "", link: APP_URL ? `${APP_URL}/?forgot=1` : "",
+    footnote: "If you do not recognise this sign-in, reset your password right away. Changing it signs out every other device."
+  })).catch(e => logMailError(e));
+}
+
+// Sent after the password was changed through the reset link.
+function notifyPasswordChanged(user, req) {
+  sendMail(user.email, "Your TitanCDN password was changed", emailShell({
+    icon: "&#10003;",
+    preheader: "Your password was changed and all devices were signed out.",
+    heading: "Your password was changed",
+    intro: `Hi ${esc(user.username)}, the password of your TitanCDN account was just changed. For your safety, every device was signed out.`,
+    details: [["When", whenNow()], ["Device", deviceOf(req)]],
+    buttonText: APP_URL ? "I did not do this" : "", link: APP_URL ? `${APP_URL}/?forgot=1` : "",
+    footnote: "If you changed it yourself, you can ignore this email. If not, reset your password again right now and contact us."
+  })).catch(e => logMailError(e));
 }
 
 const isVerified = u => !REQUIRE_EMAIL_VERIFICATION || u.emailVerified === true;
@@ -889,6 +939,7 @@ app.post("/api/auth/login", loginLimiter, async (req, res) => {
   //   throw new HttpError(401, supplied ? "Invalid 2FA code." : "Enter your 2FA code.", { twoFactorRequired: true });
   // }
 
+  notifyLogin(user, req);
   const token = jwt.sign({ tv: user.tokenVersion }, JWT_SECRET, { algorithm: "HS256", subject: String(user._id), issuer: "titancdn", expiresIn: "2h" });
   res.json({ success: true, token, user: { id: user._id, username: user.username, email: user.email, plan: user.plan } });
 });
@@ -911,8 +962,10 @@ app.post("/api/auth/forgot-password", sensitiveLimiter, async (req, res) => {
     const token = jwt.sign({ pwv: pwFingerprint(user.passwordHash) }, RESET_SECRET, { algorithm: "HS256", subject: String(user._id), issuer: "titancdn-reset", audience: "password-reset", expiresIn: "1h" });
     await User.updateOne({ _id: user._id }, { $set: { resetSentAt: new Date() } });
     await sendMail(user.email, "Reset your TitanCDN password", emailShell({
+      icon: "&#128273;",
+      preheader: "Choose a new password. The link works once and expires in 1 hour.",
       heading: "Reset your password",
-      intro: `Hi ${esc(user.username)}, we received a request to reset the password for your TitanCDN account.`,
+      intro: `Hi ${esc(user.username)}, we received a request to reset the password for your TitanCDN account. Press the button to choose a new one.`,
       buttonText: "Choose a new password", link: `${APP_URL}/reset-password.html?token=${encodeURIComponent(token)}`,
       footnote: "This link is valid for 1 hour and works only once. If you did not request this, ignore this email: your password will not change."
     }));
@@ -934,6 +987,7 @@ app.post("/api/auth/reset-password", sensitiveLimiter, async (req, res) => {
   // Compare-and-set on the old hash: two simultaneous uses of one link cannot both win.
   const r = await User.updateOne({ _id: user._id, passwordHash: user.passwordHash }, { $set: { passwordHash, emailVerified: true, resetSentAt: null }, $inc: { tokenVersion: 1 } }); // tokenVersion+1 signs out every old session; opening the mailbox link also proves email ownership
   if (!r.modifiedCount) throw invalid();
+  notifyPasswordChanged(user, req);
   res.json({ success: true, message: "Password updated. You can now sign in with your new password." });
 });
 
@@ -1409,38 +1463,71 @@ const RESET_PAGE_JS = String.raw`"use strict";
 const $ = id => document.getElementById(id);
 const token = new URLSearchParams(location.search).get("token") || "";
 history.replaceState(null, "", location.pathname); // remove the token from the address bar and browser history
-const form = $("resetForm"), msg = $("msg"), back = $("backLink");
-function show(text, ok) { msg.textContent = text; msg.className = "msg " + (ok ? "ok" : "bad"); }
+const form = $("resetForm"), msg = $("msg"), pw = $("pw"), pw2 = $("pw2"), btn = $("submitBtn");
+function show(text, ok) { msg.textContent = text; msg.className = "msg " + (ok ? "ok" : "bad"); msg.hidden = !text; }
 if (!/^[\w-]+\.[\w-]+\.[\w-]+$/.test(token)) {
-  form.style.display = "none";
-  show("This reset link is missing or damaged. Go back and use \u201cForgot password?\u201d to get a new one.", false);
-  back.style.display = "block"; back.textContent = "BACK TO TITANCDN";
+  form.hidden = true; $("intro").hidden = true;
+  show("This reset link is missing or damaged. Go back and use “Forgot password?” to get a new one.", false);
+  $("backLink").textContent = "← Back to TitanCDN";
 }
-$("showPw").addEventListener("change", e => { const t = e.target.checked ? "text" : "password"; $("pw").type = t; $("pw2").type = t; });
-form.addEventListener("submit", async e => {
+
+// Eye button at the end of each password field
+document.querySelectorAll(".pw-eye").forEach(function (b) {
+  b.addEventListener("click", function () {
+    const input = b.parentElement.querySelector("input"), on = input.type === "password";
+    input.type = on ? "text" : "password";
+    b.setAttribute("aria-pressed", String(on));
+    b.setAttribute("aria-label", on ? "Hide password" : "Show password");
+    input.focus({ preventScroll: true });
+  });
+});
+
+// Live strength meter and checklist
+const LEVELS = ["", "Too short", "Okay", "Good", "Strong"];
+function level(p) {
+  if (!p) return 0;
+  if (p.length < 12) return 1;
+  const kinds = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter(function (r) { return r.test(p); }).length;
+  return Math.min(4, 2 + (p.length >= 16 ? 1 : 0) + (kinds >= 3 ? 1 : 0));
+}
+function update() {
+  const a = pw.value, b = pw2.value, lv = level(a);
+  $("meter").dataset.level = lv;
+  $("meterLabel").textContent = LEVELS[lv];
+  const lenOk = a.length >= 12 && a.length <= 128, matchOk = !!b && a === b;
+  $("ruleLen").classList.toggle("ok", lenOk);
+  $("ruleMatch").classList.toggle("ok", matchOk);
+  btn.disabled = !(lenOk && matchOk);
+}
+pw.addEventListener("input", update); pw2.addEventListener("input", update); update();
+
+form.addEventListener("submit", async function (e) {
   e.preventDefault();
-  const pw = $("pw").value, pw2 = $("pw2").value, btn = $("submitBtn");
-  if (pw.length < 12) return show("Password must be at least 12 characters.", false);
-  if (pw.length > 128) return show("Password must be at most 128 characters.", false);
-  if (pw !== pw2) return show("The two passwords do not match.", false);
-  btn.disabled = true; show("Updating...", true);
+  const a = pw.value, b = pw2.value;
+  if (a.length < 12) return show("Password must be at least 12 characters.", false);
+  if (a.length > 128) return show("Password must be at most 128 characters.", false);
+  if (a !== b) return show("The two passwords do not match.", false);
+  btn.disabled = true; btn.classList.add("busy"); show("Saving your new password...", true);
   try {
-    const r = await fetch("/api/auth/reset-password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: token, password: pw }) });
+    const r = await fetch("/api/auth/reset-password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: token, password: a }) });
     let d = {}; try { d = await r.json(); } catch (_) { d = {}; }
     if (!r.ok) throw new Error(d.error || ("HTTP " + r.status));
-    form.style.display = "none"; $("pw").value = ""; $("pw2").value = "";
-    show((d.message || "Password updated.") + " Redirecting to sign in...", true); back.style.display = "block";
-    setTimeout(function () { location.href = "/"; }, 4000);
-  } catch (err) { show(err.message, false); btn.disabled = false; }
+    pw.value = ""; pw2.value = "";
+    form.hidden = true; $("intro").hidden = true; msg.hidden = true; $("backLink").hidden = true;
+    $("done").hidden = false;
+    let left = 6;
+    const tick = setInterval(function () {
+      left -= 1; $("count").textContent = String(left);
+      if (left <= 0) { clearInterval(tick); location.href = "/?reset=1"; }
+    }, 1000);
+  } catch (err) { show(err.message, false); btn.classList.remove("busy"); update(); }
 });
 `;
 app.get("/reset-password.js", (req, res) => res.set("Cache-Control", "no-store").type("application/javascript").send(RESET_PAGE_JS));
 app.get("/google1a515c3efc6e5a68.html", (req, res) => res.type("text/plain").send("google-site-verification: google1a515c3efc6e5a68.html"));
-app.get("/*splat", (req, res) => res.sendFile(path.join(__dirname, "../index.html")));
-// serve the home page at the root URL
+app.get("/*splat", (req, res) => res.sendFile(path.join(__dirname, "index.html")));// serve the home page at the root URL
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../index.html"));
-});
+res.sendFile(path.join(__dirname, 'index.html'));});
 
 
 app.use((err, req, res, next) => {
